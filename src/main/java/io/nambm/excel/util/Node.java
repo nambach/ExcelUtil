@@ -10,10 +10,10 @@ import java.util.Map;
 
 public class Node<T> {
     private final String id;
+    private final Map<String, Node<T>> children;
     @Setter
     @Getter
     private T data;
-    private final Map<String, Node<T>> children;
 
     public Node(String id, T data) {
         this.id = id;

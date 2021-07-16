@@ -38,6 +38,10 @@ public class ReaderConfig<T> {
         this.tClass = tClass;
     }
 
+    public static <T> ReaderConfig<T> fromClass(Class<T> tClass) {
+        return new ReaderConfig<>(tClass);
+    }
+
     BiConsumer<T, ?> getConsumer(int index, String fieldName, String columnTitle) {
         if (setterByColIndex.containsKey(index)) {
             return setterByColIndex.get(index);
@@ -49,10 +53,6 @@ public class ReaderConfig<T> {
             return setterByColTitle.get(columnTitle);
         }
         return null;
-    }
-
-    public static <T> ReaderConfig<T> fromClass(Class<T> tClass) {
-        return new ReaderConfig<>(tClass);
     }
 
     public ReaderConfig<T> sheets(int... indexes) {

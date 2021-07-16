@@ -52,94 +52,6 @@ public class Style {
         return new StyleBuilder();
     }
 
-    public static class StyleBuilder {
-        private final Style style = new Style();
-
-        public StyleBuilder fontName(String s) {
-            style.fontName = s;
-            return this;
-        }
-
-        public StyleBuilder fontSize(Short i) {
-            style.fontSize = i;
-            return this;
-        }
-
-        public StyleBuilder bold(Boolean b) {
-            style.bold = b;
-            return this;
-        }
-
-        public StyleBuilder underline(Boolean b) {
-            style.underline = b;
-            return this;
-        }
-
-        public StyleBuilder date(Boolean b) {
-            style.date = b;
-            return this;
-        }
-
-        public StyleBuilder datePattern(String s) {
-            style.datePattern = s;
-            return this;
-        }
-
-        public StyleBuilder fontColorInHex(String s) {
-            style.fontColorInHex = s;
-            return this;
-        }
-
-        public StyleBuilder backgroundColorInHex(String s) {
-            style.backgroundColorInHex = s;
-            return this;
-        }
-
-        public StyleBuilder horizontalAlignment(HorizontalAlignment alignment) {
-            style.horizontalAlignment = alignment;
-            return this;
-        }
-
-        public StyleBuilder verticalAlignment(VerticalAlignment alignment) {
-            style.verticalAlignment = alignment;
-            return this;
-        }
-
-        private StyleBuilder borders(LinkedHashSet<Border> borders) {
-            style.borders = borders;
-            return this;
-        }
-
-        private void addBorderSafely(Border border) {
-            if (style.borders == null) {
-                style.borders = new LinkedHashSet<>();
-            }
-            style.borders.add(border);
-        }
-
-        @SneakyThrows
-        public StyleBuilder border(BorderSide borderSide) {
-            addBorderSafely(new Border(borderSide));
-            return this;
-        }
-
-        @SneakyThrows
-        public StyleBuilder border(BorderSide borderSide, String borderColor) {
-            addBorderSafely(new Border(borderSide, borderColor));
-            return this;
-        }
-
-        @SneakyThrows
-        public StyleBuilder border(BorderSide borderSide, String borderColor, BorderStyle borderStyle) {
-            addBorderSafely(new Border(borderSide, borderColor, borderStyle));
-            return this;
-        }
-
-        public Style build() {
-            return style;
-        }
-    }
-
     public XSSFCellStyle process(CacheStyle cacheStyle) {
         // fetch from cache
         if (cacheStyle.containStyle(uuid)) {
@@ -286,5 +198,93 @@ public class Style {
 
     public boolean isDate() {
         return date == Boolean.TRUE;
+    }
+
+    public static class StyleBuilder {
+        private final Style style = new Style();
+
+        public StyleBuilder fontName(String s) {
+            style.fontName = s;
+            return this;
+        }
+
+        public StyleBuilder fontSize(Short i) {
+            style.fontSize = i;
+            return this;
+        }
+
+        public StyleBuilder bold(Boolean b) {
+            style.bold = b;
+            return this;
+        }
+
+        public StyleBuilder underline(Boolean b) {
+            style.underline = b;
+            return this;
+        }
+
+        public StyleBuilder date(Boolean b) {
+            style.date = b;
+            return this;
+        }
+
+        public StyleBuilder datePattern(String s) {
+            style.datePattern = s;
+            return this;
+        }
+
+        public StyleBuilder fontColorInHex(String s) {
+            style.fontColorInHex = s;
+            return this;
+        }
+
+        public StyleBuilder backgroundColorInHex(String s) {
+            style.backgroundColorInHex = s;
+            return this;
+        }
+
+        public StyleBuilder horizontalAlignment(HorizontalAlignment alignment) {
+            style.horizontalAlignment = alignment;
+            return this;
+        }
+
+        public StyleBuilder verticalAlignment(VerticalAlignment alignment) {
+            style.verticalAlignment = alignment;
+            return this;
+        }
+
+        private StyleBuilder borders(LinkedHashSet<Border> borders) {
+            style.borders = borders;
+            return this;
+        }
+
+        private void addBorderSafely(Border border) {
+            if (style.borders == null) {
+                style.borders = new LinkedHashSet<>();
+            }
+            style.borders.add(border);
+        }
+
+        @SneakyThrows
+        public StyleBuilder border(BorderSide borderSide) {
+            addBorderSafely(new Border(borderSide));
+            return this;
+        }
+
+        @SneakyThrows
+        public StyleBuilder border(BorderSide borderSide, String borderColor) {
+            addBorderSafely(new Border(borderSide, borderColor));
+            return this;
+        }
+
+        @SneakyThrows
+        public StyleBuilder border(BorderSide borderSide, String borderColor, BorderStyle borderStyle) {
+            addBorderSafely(new Border(borderSide, borderColor, borderStyle));
+            return this;
+        }
+
+        public Style build() {
+            return style;
+        }
     }
 }

@@ -14,17 +14,6 @@ import java.util.function.Function;
 
 public class ReflectUtil {
 
-    public enum Type {
-        STRING,
-        LONG,
-        INTEGER,
-        DOUBLE,
-        FLOAT,
-        BOOLEAN,
-        DATE,
-        OBJECT
-    }
-
     private static final Map<String, Map<String, PropertyDescriptor>> CACHED_SCHEME = new HashMap<>();
 
     public static <T> PropertyDescriptor getField(String fieldName, Class<T> tClass) {
@@ -146,6 +135,17 @@ public class ReflectUtil {
             return Type.DATE;
         }
         return Type.OBJECT;
+    }
+
+    public enum Type {
+        STRING,
+        LONG,
+        INTEGER,
+        DOUBLE,
+        FLOAT,
+        BOOLEAN,
+        DATE,
+        OBJECT
     }
 
 }
