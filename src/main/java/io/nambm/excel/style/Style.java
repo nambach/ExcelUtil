@@ -123,6 +123,12 @@ public class Style {
                 return;
             }
             switch (border.getBorderSide()) {
+                case NONE:
+                    style.setBorderTop(BorderStyle.NONE);
+                    style.setBorderBottom(BorderStyle.NONE);
+                    style.setBorderLeft(BorderStyle.NONE);
+                    style.setBorderRight(BorderStyle.NONE);
+                    return;
                 case LEFT:
                     style.setBorderLeft(border.getBorderStyle());
                     style.setLeftBorderColor(border.getBorderColor());

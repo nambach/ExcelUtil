@@ -11,20 +11,27 @@ public interface Writer {
 
     <T> void writeData(Collection<T> data, Table<T> table);
 
-    <T> void writeData(Collection<T> data, Table<T> table, int colAt);
-
-    ByteArrayInputStream exportToFile();
-
-    void resetAll();
+    <T> void writeData(Collection<T> data, Table<T> table, int rowAt, int colAt);
 
     void skipLines(int numberOfLines);
+
+    void writeLine(String content);
+
+    void writeLine(String content, int colAt, int colSpan);
+
+    void writeLine(String content, int colAt, int colSpan, Style style);
 
     void writeAnywhere(String content, int rowAt, int colAt);
 
     void writeAnywhere(String content, int rowAt, int colAt, int rowSpan, int colSpan);
 
+    void writeAnywhere(String content, int rowAt, int colAt, int rowSpan, int colSpan, Style style);
+
     void freeze(int rows, int cols);
 
-    void setCurrentStyle(Style style, boolean accumulate);
+    void setCurrentStyle(Style style, Style... accumulate);
 
+    ByteArrayInputStream exportToFile();
+
+    void resetAll();
 }

@@ -1,5 +1,5 @@
 import io.nambm.excel.SimpleWriter;
-import io.nambm.excel.writer.SimpleWriterImpl;
+import io.nambm.excel.writer.DeclarativeWriter;
 import io.nambm.excel.writer.Table;
 import io.nambm.excel.style.BorderSide;
 import io.nambm.excel.style.Style;
@@ -56,7 +56,7 @@ public class TestMerge {
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(Transportation.SAMPLE, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);

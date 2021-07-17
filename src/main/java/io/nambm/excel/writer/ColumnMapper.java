@@ -27,6 +27,14 @@ public class ColumnMapper<T> {
     ColumnMapper() {
     }
 
+    public String getField() {
+        return fieldName;
+    }
+
+    public String getTitle() {
+        return displayName;
+    }
+
     public ColumnMapper<T> field(String fieldName) {
         this.fieldName = fieldName;
         return this;

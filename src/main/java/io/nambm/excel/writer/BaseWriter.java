@@ -50,13 +50,7 @@ class BaseWriter {
         }
     }
 
-    public void createNewSheet(String sheetName) {
-        firstRowReached = false;
-        Sheet sheet = workbook.createSheet(sheetName);
-        sheets.add(sheet);
-    }
-
-    int getRowCount(Sheet sheet) {
+    int getLastRowIndex(Sheet sheet) {
         int rowCount = Math.max(sheet.getLastRowNum(), 0);
         if (!firstRowReached) {
             firstRowReached = true;
@@ -67,19 +61,41 @@ class BaseWriter {
 
     Sheet getLastSheet() {
         if (sheets.isEmpty()) {
-            createNewSheet("Sheet 1");
+            return createNewSheet("Sheet 1");
         }
         return sheets.get(sheets.size() - 1);
     }
 
-    public <T> void writeDataIntoSheet(Collection<T> data, Table<T> table) {
-        writeDataIntoSheet(data, table, 0);
+    Row getRowAt(Sheet sheet, int rowAt) {
+        Row row = sheet.getRow(rowAt);
+        if (row == null) {
+            row = sheet.createRow(rowAt);
+        }
+        return row;
     }
 
-    public <T> void writeDataIntoSheet(Collection<T> data, Table<T> table, int colAt) {
+    Cell getCellAt(Row row, int colAt) {
+        Cell cell = row.getCell(colAt);
+        if (cell == null) {
+            cell = row.createCell(colAt, CellType.STRING);
+        }
+        return cell;
+    }
+
+    public Sheet createNewSheet(String sheetName) {
+        firstRowReached = false;
+        Sheet sheet = workbook.createSheet(sheetName);
+        sheets.add(sheet);
+        return sheet;
+    }
+
+    public <T> void writeDataIntoSheet(Sheet sheet, Collection<T> data, Table<T> table, int rowAt, int colAt) {
 
         if (data == null) {
             data = Collections.emptyList();
+        }
+        if (rowAt < 0) {
+            rowAt = 0;
         }
         if (colAt < 0) {
             colAt = 0;
@@ -89,15 +105,9 @@ class BaseWriter {
         Style internalHeaderStyle = table.getHeaderStyle();
         Style internalDataStyle = table.getDataStyle();
 
-        // update on latest sheet
-        Sheet sheet = getLastSheet();
-
-        // current row's number
-        int rowCount = getRowCount(sheet);
-
         // This row to store entity's metadata
         if (table.isReuseForImport()) {
-            Row metadataRow = sheet.createRow(rowCount++);
+            Row metadataRow = getRowAt(sheet, rowAt++);
             int cellCount = colAt;
             for (ColumnMapper<T> mapper : mappers) {
                 Cell cell = metadataRow.createCell(cellCount++, CellType.STRING);
@@ -109,7 +119,7 @@ class BaseWriter {
 
         // This is title row
         if (!table.isNoHeader()) {
-            Row headerRow = sheet.createRow(rowCount++);
+            Row headerRow = getRowAt(sheet, rowAt++);
             CellStyle defaultHeaderStyle = cachedStyles.accumulate(internalHeaderStyle);
             int cellCount = colAt;
             for (ColumnMapper<T> mapper : mappers) {
@@ -127,7 +137,7 @@ class BaseWriter {
         for (T object : data) {
             objectCount++;
 
-            Row dataRow = sheet.createRow(rowCount++);
+            Row dataRow = getRowAt(sheet, rowAt++);
 
             // Create all columns in a row
             int i = colAt - 1;
@@ -248,49 +258,13 @@ class BaseWriter {
 
     public void skipLines(int numberOfLines) {
         Sheet sheet = getLastSheet();
-        int rowCount = getRowCount(sheet);
+        int rowCount = getLastRowIndex(sheet);
         for (int i = 0; i < numberOfLines; i++) {
             sheet.createRow(rowCount++);
         }
     }
 
-    public void writeLine(String content, int startAt, int numberOfMerged, Style style) {
-        Sheet sheet = getLastSheet();
-        int rowCount = getRowCount(sheet);
-        Row row = sheet.createRow(rowCount);
-
-        // indent to startAt
-        for (int i = 0; i < startAt; i++) {
-            row.createCell(i);
-        }
-
-        Cell cell = row.createCell(startAt, CellType.STRING);
-        CellStyle cellStyle = cachedStyles.accumulate(dataStyle, style);
-        cell.setCellStyle(cellStyle);
-        cell.setCellValue(content);
-        if (numberOfMerged > 1) {
-            sheet.addMergedRegion(new CellRangeAddress(rowCount, rowCount, startAt, startAt + numberOfMerged - 1));
-        }
-    }
-
-    private Row getRowAt(Sheet sheet, int rowAt) {
-        Row row = sheet.getRow(rowAt);
-        if (row == null) {
-            row = sheet.createRow(rowAt);
-        }
-        return row;
-    }
-
-    public Cell getCellAt(Row row, int colAt) {
-        Cell cell = row.getCell(colAt);
-        if (cell == null) {
-            cell = row.createCell(colAt, CellType.STRING);
-        }
-        return cell;
-    }
-
-    public void writeAnywhere(String content, int rowAt, int colAt, int rowSpan, int colSpan, Style style) {
-        Sheet sheet = getLastSheet();
+    public void writeAnywhere(Sheet sheet, String content, int rowAt, int colAt, int rowSpan, int colSpan, Style style) {
         Row row = getRowAt(sheet, rowAt);
         Cell cell = getCellAt(row, colAt);
 

@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
@@ -45,6 +46,13 @@ public class Table<T> {
         return this;
     }
 
+    public Table<T> split(Predicate<ColumnMapper<T>> condition) {
+        Objects.requireNonNull(condition);
+        Table<T> clone = this.cloneSelf();
+        clone.mappers = this.mappers.stream().filter(condition).collect(Collectors.toList());
+        return clone;
+    }
+
     public Table<T> concat(Table<T> other) {
         if (other == null || other == this) {
             return this;
@@ -58,10 +66,10 @@ public class Table<T> {
         Table<T> clone = new Table<>(tClass);
         clone.mappers.addAll(this.mappers);
         clone.headerStyle = headerStyle;
-        clone.dataStyle = (dataStyle);
-        clone.autoResizeColumns = (autoResizeColumns);
-        clone.reuseForImport = (reuseForImport);
-        clone.conditionalRowStyle = (conditionalRowStyle);
+        clone.dataStyle = dataStyle;
+        clone.autoResizeColumns = autoResizeColumns;
+        clone.reuseForImport = reuseForImport;
+        clone.conditionalRowStyle = conditionalRowStyle;
         return clone;
     }
 

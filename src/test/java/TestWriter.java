@@ -3,9 +3,9 @@ import io.nambm.excel.Writer;
 import io.nambm.excel.style.BorderSide;
 import io.nambm.excel.style.Style;
 import io.nambm.excel.util.FileUtil;
-import io.nambm.excel.writer.SimpleWriterImpl;
+import io.nambm.excel.writer.DeclarativeWriter;
+import io.nambm.excel.writer.ImperativeWriter;
 import io.nambm.excel.writer.Table;
-import io.nambm.excel.writer.WriterImpl;
 import lombok.SneakyThrows;
 import model.Address;
 import model.Student;
@@ -69,7 +69,7 @@ public class TestWriter {
 
     @SneakyThrows
     public static void main(String[] args) {
-        useCase3();
+        useCase8();
     }
 
     public static void useCase1() {
@@ -77,7 +77,7 @@ public class TestWriter {
                 .fromClass(Student.class)
                 .cols("firstName", "mark", "date");
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -88,7 +88,7 @@ public class TestWriter {
                 .fromClass(Student.class)
                 .cols("firstName", "mark", "date");
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.writeTemplate(table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -103,7 +103,7 @@ public class TestWriter {
                 .col(m -> m.field("date").style(DATE))
                 .config(config -> config.autoResizeColumns(true));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -116,7 +116,7 @@ public class TestWriter {
                 .col(m -> m.field("lastName").title("LName"))
                 .col(m -> m.field("mark").title("GPA"));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -133,7 +133,7 @@ public class TestWriter {
                            .transform(s -> s.getMark() * 100))
                 .config(config -> config.autoResizeColumns(true));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -147,7 +147,7 @@ public class TestWriter {
                 .col(m -> m.field("mark").title("GPA")
                            .style(GRAY_BACKGROUND));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -162,7 +162,7 @@ public class TestWriter {
                            .conditionalStyle(s -> s.getMark() < 5 ? red : green))
                 .config(cf -> cf.headerStyle(HEADER_STYLE).dataStyle(DATA_STYLE));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -178,7 +178,7 @@ public class TestWriter {
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -198,7 +198,7 @@ public class TestWriter {
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -219,7 +219,7 @@ public class TestWriter {
                                                                   s.getMark() < 5 ? GRAY_BACKGROUND :
                                                                   null));
 
-        SimpleWriter exporter = new SimpleWriterImpl();
+        SimpleWriter exporter = new DeclarativeWriter();
         InputStream stream = exporter.write(students, table);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -242,7 +242,7 @@ public class TestWriter {
                                         .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
                                                                   s.getMark() < 5 ? GRAY_BACKGROUND : null));
 
-        Writer writer = new WriterImpl();
+        Writer writer = new ImperativeWriter();
         writer.createNewSheet("A");
         writer.writeData(students, table);
         writer.createNewSheet("B");
@@ -260,17 +260,18 @@ public class TestWriter {
         Style center = Style
                 .builder()
                 .horizontalAlignment(HorizontalAlignment.CENTER)
-                .verticalAlignment(VerticalAlignment.CENTER).build();
+                .verticalAlignment(VerticalAlignment.CENTER)
+                .build();
         Style fontRed = Style.builder().fontColorInHex("#FF0000").build();
-        Writer writer = new WriterImpl();
+        Writer writer = new ImperativeWriter();
         writer.createNewSheet("Sheet 1");
-        writer.setCurrentStyle(title, false);
+        writer.setCurrentStyle(title);
         writer.writeAnywhere("Factory", 0, 0);
         writer.writeAnywhere("Line", 1, 0);
         writer.writeAnywhere("Station", 2, 0);
         writer.writeAnywhere("From Date", 0, 3);
         writer.writeAnywhere("To Date", 1, 3);
-        writer.setCurrentStyle(center, true);
+        writer.setCurrentStyle(title, center);
         String[] headers = new String[]{"DAY", "SHIFT", "TAKT", "Cycle Time", "Demand /Actual", "Takt attainment", "Takt time"};
         for (int i = 0; i < headers.length; i++) {
             writer.writeAnywhere(headers[i], 4, i, 2, 0);
@@ -278,7 +279,7 @@ public class TestWriter {
         writer.writeAnywhere("eAndon", 4, 7, 0, 3);
         writer.writeAnywhere("Type", 5, 7);
         writer.writeAnywhere("Detail", 5, 8);
-        writer.setCurrentStyle(red, true);
+        writer.setCurrentStyle(title, center, fontRed);
         writer.writeAnywhere("Alert Duration [M]", 5, 9);
 
         writer.freeze(6, 0);

@@ -8,4 +8,5 @@ public enum BorderSide {
     VERTICAL,
     HORIZONTAL,
     FULL,
+    NONE
 }
