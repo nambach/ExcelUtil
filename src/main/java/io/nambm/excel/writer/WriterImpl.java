@@ -7,12 +7,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import java.io.ByteArrayInputStream;
 import java.util.Collection;
 
-public class ImperativeWriter implements Writer {
+public class WriterImpl implements Writer {
     private BaseWriter writer;
     private Style currentStyle;
 
-    public ImperativeWriter() {
-        writer = new BaseWriter(null);
+    public WriterImpl() {
+        writer = new BaseWriter();
     }
 
     @Override
@@ -21,16 +21,22 @@ public class ImperativeWriter implements Writer {
     }
 
     @Override
-    public <T> void writeData(Collection<T> data, Table<T> table) {
+    public <T> void writeData(DataTemplate<T> table, Collection<T> data) {
         Sheet sheet = writer.getLastSheet();
         int rowIndex = writer.getLastRowIndex(sheet);
-        writer.writeDataIntoSheet(sheet, data, table, rowIndex, 0);
+        writer.writeDataIntoSheet(sheet, table, data, rowIndex, 0);
     }
 
     @Override
-    public <T> void writeData(Collection<T> data, Table<T> table, int rowAt, int colAt) {
+    public <T> void writeData(DataTemplate<T> table, Collection<T> data, int rowAt, int colAt) {
         Sheet sheet = writer.getLastSheet();
-        writer.writeDataIntoSheet(sheet, data, table, rowAt, colAt);
+        writer.writeDataIntoSheet(sheet, table, data, rowAt, colAt);
+    }
+
+    @Override
+    public void writeTemplate(Template template) {
+        Sheet sheet = writer.getLastSheet();
+        writer.writeTemplate(sheet, template);
     }
 
     @Override
@@ -84,14 +90,8 @@ public class ImperativeWriter implements Writer {
     }
 
     @Override
-    public void setCurrentStyle(Style style, Style... accumulate) {
+    public void setCurrentStyle(Style style) {
         this.currentStyle = style;
-        if (accumulate == null || accumulate.length == 0) {
-            return;
-        }
-        for (Style subStyle : accumulate) {
-            this.currentStyle = writer.cachedStyles.unsafeAccumulate(this.currentStyle, subStyle);
-        }
     }
 
     @Override
@@ -101,6 +101,6 @@ public class ImperativeWriter implements Writer {
 
     @Override
     public void resetAll() {
-        writer = new BaseWriter(null);
+        writer = new BaseWriter();
     }
 }

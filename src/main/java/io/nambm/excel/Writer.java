@@ -1,7 +1,8 @@
 package io.nambm.excel;
 
 import io.nambm.excel.style.Style;
-import io.nambm.excel.writer.Table;
+import io.nambm.excel.writer.DataTemplate;
+import io.nambm.excel.writer.Template;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collection;
@@ -9,9 +10,11 @@ import java.util.Collection;
 public interface Writer {
     void createNewSheet(String sheetName);
 
-    <T> void writeData(Collection<T> data, Table<T> table);
+    <T> void writeData(DataTemplate<T> table, Collection<T> data);
 
-    <T> void writeData(Collection<T> data, Table<T> table, int rowAt, int colAt);
+    <T> void writeData(DataTemplate<T> table, Collection<T> data, int rowAt, int colAt);
+
+    void writeTemplate(Template template);
 
     void skipLines(int numberOfLines);
 
@@ -29,7 +32,7 @@ public interface Writer {
 
     void freeze(int rows, int cols);
 
-    void setCurrentStyle(Style style, Style... accumulate);
+    void setCurrentStyle(Style style);
 
     ByteArrayInputStream exportToFile();
 

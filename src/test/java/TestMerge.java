@@ -1,9 +1,7 @@
-import io.nambm.excel.SimpleWriter;
-import io.nambm.excel.writer.DeclarativeWriter;
-import io.nambm.excel.writer.Table;
 import io.nambm.excel.style.BorderSide;
 import io.nambm.excel.style.Style;
 import io.nambm.excel.util.FileUtil;
+import io.nambm.excel.writer.DataTemplate;
 import lombok.SneakyThrows;
 import model.Transportation;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -43,21 +41,20 @@ public class TestMerge {
     }
 
     public static void useCase8() {
-        Table<Transportation> table = Table
+        DataTemplate<Transportation> table = DataTemplate
                 .fromClass(Transportation.class)
-                .col(m -> m.field("name"))
-                .col(m -> m.field("quantity"))
-                .col(m -> m.field("brand")
-                           .mergeOnValue(true))
-                .col(m -> m.title("Type")
-                           .transform(t -> t.getCategory().getName())
-                           .mergeOnId(t -> t.getCategory().getId()))
+                .column(m -> m.field("name"))
+                .column(m -> m.field("quantity"))
+                .column(m -> m.field("brand")
+                              .mergeOnValue(true))
+                .column(m -> m.title("Type")
+                              .transform(t -> t.getCategory().getName())
+                              .mergeOnId(t -> t.getCategory().getId()))
                 .config(config -> config.headerStyle(HEADER_STYLE)
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(Transportation.SAMPLE, table);
+        InputStream stream = table.writeData(Transportation.SAMPLE);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }

@@ -1,11 +1,10 @@
-import io.nambm.excel.SimpleWriter;
 import io.nambm.excel.Writer;
 import io.nambm.excel.style.BorderSide;
 import io.nambm.excel.style.Style;
 import io.nambm.excel.util.FileUtil;
-import io.nambm.excel.writer.DeclarativeWriter;
-import io.nambm.excel.writer.ImperativeWriter;
-import io.nambm.excel.writer.Table;
+import io.nambm.excel.writer.DataTemplate;
+import io.nambm.excel.writer.Template;
+import io.nambm.excel.writer.WriterImpl;
 import lombok.SneakyThrows;
 import model.Address;
 import model.Student;
@@ -69,149 +68,140 @@ public class TestWriter {
 
     @SneakyThrows
     public static void main(String[] args) {
-        useCase8();
+        useCaseTakt2();
     }
 
     public static void useCase1() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
                 .cols("firstName", "mark", "date");
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase1_1() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
                 .cols("firstName", "mark", "date");
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.writeTemplate(table);
+        InputStream stream = table.getFileForImport();
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase2() {
-        Table<Student> table = Table
+        DataTemplate<Student> template = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.title("FName").transform(Student::getFirstName))
-                .col(m -> m.title("LName").transform(Student::getLastName))
-                .col(m -> m.title("GPA").transform(Student::getMark))
-                .col(m -> m.field("date").style(DATE))
+                .column(m -> m.title("FName").transform(Student::getFirstName))
+                .column(m -> m.title("LName").transform(Student::getLastName))
+                .column(m -> m.title("GPA").transform(Student::getMark))
+                .column(m -> m.field("date").style(DATE))
                 .config(config -> config.autoResizeColumns(true));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = template.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase2_1() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.field("firstName").title("FName"))
-                .col(m -> m.field("lastName").title("LName"))
-                .col(m -> m.field("mark").title("GPA"));
+                .column(m -> m.field("firstName").title("FName"))
+                .column(m -> m.field("lastName").title("LName"))
+                .column(m -> m.field("mark").title("GPA"));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase3() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.title("Address")
-                           .transform(s -> s.getAddress().getCity()))
-                .col(m -> m.title("Full Name")
-                           .transform(s -> s.getFirstName() + " " + s.getLastName()))
-                .col(m -> m.title("GPA (Scale 100)")
-                           .transform(s -> s.getMark() * 100))
+                .column(m -> m.title("Address")
+                              .transform(s -> s.getAddress().getCity()))
+                .column(m -> m.title("Full Name")
+                              .transform(s -> s.getFirstName() + " " + s.getLastName()))
+                .column(m -> m.title("GPA (Scale 100)")
+                              .transform(s -> s.getMark() * 100))
                 .config(config -> config.autoResizeColumns(true));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase4() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.field("firstName"))
-                .col(m -> m.field("lastName"))
-                .col(m -> m.field("mark").title("GPA")
-                           .style(GRAY_BACKGROUND));
+                .column(m -> m.field("firstName"))
+                .column(m -> m.field("lastName"))
+                .column(m -> m.field("mark").title("GPA")
+                              .style(GRAY_BACKGROUND));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase5() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.field("firstName"))
-                .col(m -> m.field("lastName"))
-                .col(m -> m.field("mark").title("GPA")
-                           .conditionalStyle(s -> s.getMark() < 5 ? red : green))
+                .column(m -> m.field("firstName"))
+                .column(m -> m.field("lastName"))
+                .column(m -> m.field("mark").title("GPA")
+                              .conditionalStyle(s -> s.getMark() < 5 ? red : green))
                 .config(cf -> cf.headerStyle(HEADER_STYLE).dataStyle(DATA_STYLE));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase6() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.field("firstName"))
-                .col(m -> m.field("lastName"))
-                .col(m -> m.field("mark").title("GPA"))
+                .column(m -> m.field("firstName"))
+                .column(m -> m.field("lastName"))
+                .column(m -> m.field("mark").title("GPA"))
                 .config(config -> config.headerStyle(HEADER_STYLE)
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
 
     public static void useCase7() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.field("firstName")
-                           .style(FIRST_NAME_STYLE))
-                .col(m -> m.field("lastName")
-                           .style(LAST_NAME_STYLE))
-                .col(m -> m.field("mark")
-                           .style(MARK_STYLE)
-                           .title("GPA"))
+                .column(m -> m.field("firstName")
+                              .style(FIRST_NAME_STYLE))
+                .column(m -> m.field("lastName")
+                              .style(LAST_NAME_STYLE))
+                .column(m -> m.field("mark")
+                              .style(MARK_STYLE)
+                              .title("GPA"))
                 .config(config -> config.headerStyle(HEADER_STYLE)
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
 
     }
 
     public static void useCase8() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.field("firstName"))
-                .col(m -> m.field("lastName"))
-                .col(m -> m.field("mark").title("GPA")
-                           .conditionalStyle(s -> s.getMark() < 5 ? red : green))
+                .column(m -> m.field("firstName"))
+                .column(m -> m.field("lastName"))
+                .column(m -> m.field("mark").title("GPA")
+                              .conditionalStyle(s -> s.getMark() < 5 ? red : green))
                 .config(config -> config.headerStyle(HEADER_STYLE)
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true)
@@ -219,8 +209,7 @@ public class TestWriter {
                                                                   s.getMark() < 5 ? GRAY_BACKGROUND :
                                                                   null));
 
-        SimpleWriter exporter = new DeclarativeWriter();
-        InputStream stream = exporter.write(students, table);
+        InputStream stream = table.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }
@@ -229,12 +218,12 @@ public class TestWriter {
      * multiple sheets
      */
     public static void useCase9() {
-        Table<Student> table = Table
+        DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .col(m -> m.field("firstName"))
-                .col(m -> m.field("lastName"))
-                .col(m -> m.field("mark").title("GPA")
-                           .conditionalStyle(s -> s.getMark() < 5 ? red : green))
+                .column(m -> m.field("firstName"))
+                .column(m -> m.field("lastName"))
+                .column(m -> m.field("mark").title("GPA")
+                              .conditionalStyle(s -> s.getMark() < 5 ? red : green))
                 .config(config -> config.headerStyle(HEADER_STYLE)
                                         .dataStyle(DATA_STYLE)
                                         .autoResizeColumns(true)
@@ -242,11 +231,11 @@ public class TestWriter {
                                         .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
                                                                   s.getMark() < 5 ? GRAY_BACKGROUND : null));
 
-        Writer writer = new ImperativeWriter();
+        Writer writer = new WriterImpl();
         writer.createNewSheet("A");
-        writer.writeData(students, table);
+        writer.writeData(table, students);
         writer.createNewSheet("B");
-        writer.writeData(students, table);
+        writer.writeData(table, students);
         InputStream stream = writer.exportToFile();
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -258,12 +247,16 @@ public class TestWriter {
                 .backgroundColorInHex("#9bc2e6")
                 .bold(true).border(BorderSide.FULL).build();
         Style center = Style
-                .builder()
+                .builder(title)
                 .horizontalAlignment(HorizontalAlignment.CENTER)
                 .verticalAlignment(VerticalAlignment.CENTER)
                 .build();
-        Style fontRed = Style.builder().fontColorInHex("#FF0000").build();
-        Writer writer = new ImperativeWriter();
+        Style fontRed = Style
+                .builder(center)
+                .fontColorInHex("#FF0000")
+                .build();
+
+        Writer writer = new WriterImpl();
         writer.createNewSheet("Sheet 1");
         writer.setCurrentStyle(title);
         writer.writeAnywhere("Factory", 0, 0);
@@ -271,7 +264,7 @@ public class TestWriter {
         writer.writeAnywhere("Station", 2, 0);
         writer.writeAnywhere("From Date", 0, 3);
         writer.writeAnywhere("To Date", 1, 3);
-        writer.setCurrentStyle(title, center);
+        writer.setCurrentStyle(center);
         String[] headers = new String[]{"DAY", "SHIFT", "TAKT", "Cycle Time", "Demand /Actual", "Takt attainment", "Takt time"};
         for (int i = 0; i < headers.length; i++) {
             writer.writeAnywhere(headers[i], 4, i, 2, 0);
@@ -279,11 +272,54 @@ public class TestWriter {
         writer.writeAnywhere("eAndon", 4, 7, 0, 3);
         writer.writeAnywhere("Type", 5, 7);
         writer.writeAnywhere("Detail", 5, 8);
-        writer.setCurrentStyle(title, center, fontRed);
+        writer.setCurrentStyle(fontRed);
         writer.writeAnywhere("Alert Duration [M]", 5, 9);
 
         writer.freeze(6, 0);
 
+        InputStream stream = writer.exportToFile();
+
+        FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
+    }
+
+    public static void useCaseTakt2() {
+        Style title = Style
+                .builder()
+                .backgroundColorInHex("#9bc2e6")
+                .bold(true).border(BorderSide.FULL).build();
+        Style center = Style
+                .builder()
+                .horizontalAlignment(HorizontalAlignment.CENTER)
+                .verticalAlignment(VerticalAlignment.CENTER)
+                .build();
+        Style fontRed = Style.builder().fontColorInHex("#FF0000").build();
+
+        Template template = Template
+                .builder()
+                .baseStyle(title)
+                .cell(c -> c.at("A1").text("Factory"))
+                .cell(c -> c.at("A2").text("Line"))
+                .cell(c -> c.at("A3").text("Station"))
+                .cell(c -> c.at("D1").text("From Date"))
+                .cell(c -> c.at("D2").text("To Date"));
+
+        String[] headers = new String[]{"DAY", "SHIFT", "TAKT", "Cycle Time", "Demand /Actual", "Takt attainment", "Takt time"};
+        for (int i = 0; i < headers.length; i++) {
+            int colAt = i;
+            template.cell(c -> c.at(4, colAt)
+                                .text(headers[colAt])
+                                .rowSpan(2)
+                                .style(center));
+        }
+
+        template.cell(c -> c.at("H5").text("eAndon").style(center).colSpan(3))
+                .cell(c -> c.at("H6").text("Type").style(center))
+                .cell(c -> c.at("I6").text("Detail").style(center))
+                .cell(c -> c.at("J6").text("Alert Duration [M]").style(center).style(fontRed));
+
+        Writer writer = new WriterImpl();
+        writer.writeTemplate(template);
+        writer.freeze(6, 0);
         InputStream stream = writer.exportToFile();
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);

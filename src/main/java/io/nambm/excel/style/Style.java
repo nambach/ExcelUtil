@@ -49,7 +49,15 @@ public class Style {
     }
 
     public static StyleBuilder builder() {
-        return new StyleBuilder();
+        return new StyleBuilder(new Style());
+    }
+
+    public static StyleBuilder builder(Style style) {
+        if (style != null) {
+            return new StyleBuilder(style.cloneSelf());
+        } else {
+            return new StyleBuilder(new Style());
+        }
     }
 
     public XSSFCellStyle process(CacheStyle cacheStyle) {
@@ -207,7 +215,11 @@ public class Style {
     }
 
     public static class StyleBuilder {
-        private final Style style = new Style();
+        private final Style style;
+
+        public StyleBuilder(Style style) {
+            this.style = style;
+        }
 
         public StyleBuilder fontName(String s) {
             style.fontName = s;

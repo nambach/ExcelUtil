@@ -7,9 +7,12 @@ import io.nambm.excel.util.TextUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.poi.ss.usermodel.Sheet;
 
 import java.beans.PropertyDescriptor;
+import java.io.ByteArrayInputStream;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +22,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
-public class Table<T> {
+public class DataTemplate<T> implements WriterTemplate {
 
     private List<ColumnMapper<T>> mappers = new LinkedList<>();
     private Class<T> tClass;
@@ -27,43 +30,44 @@ public class Table<T> {
     private boolean reuseForImport;
     private boolean autoResizeColumns;
     private boolean noHeader;
+
     private Style headerStyle = DefaultStyle.HEADER_STYLE;
     private Style dataStyle = DefaultStyle.DATA_STYLE;
     private Function<T, Style> conditionalRowStyle;
 
-    Table(Class<T> tClass) {
+    DataTemplate(Class<T> tClass) {
         this.tClass = tClass;
     }
 
-    public static <T> Table<T> fromClass(Class<T> tClass) {
-        return new Table<>(tClass);
+    public static <T> DataTemplate<T> fromClass(Class<T> tClass) {
+        return new DataTemplate<>(tClass);
     }
 
-    public Table<T> config(Function<Builder<T>, Builder<T>> configBuilder) {
+    public DataTemplate<T> config(Function<Builder<T>, Builder<T>> configBuilder) {
         Objects.requireNonNull(configBuilder);
         Builder<T> cf = new Builder<>(this);
         configBuilder.apply(cf);
         return this;
     }
 
-    public Table<T> split(Predicate<ColumnMapper<T>> condition) {
+    public DataTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
         Objects.requireNonNull(condition);
-        Table<T> clone = this.cloneSelf();
+        DataTemplate<T> clone = this.cloneSelf();
         clone.mappers = this.mappers.stream().filter(condition).collect(Collectors.toList());
         return clone;
     }
 
-    public Table<T> concat(Table<T> other) {
+    public DataTemplate<T> concat(DataTemplate<T> other) {
         if (other == null || other == this) {
             return this;
         }
-        Table<T> clone = this.cloneSelf();
+        DataTemplate<T> clone = this.cloneSelf();
         clone.mappers.addAll(other.mappers);
         return clone;
     }
 
-    private Table<T> cloneSelf() {
-        Table<T> clone = new Table<>(tClass);
+    private DataTemplate<T> cloneSelf() {
+        DataTemplate<T> clone = new DataTemplate<>(tClass);
         clone.mappers.addAll(this.mappers);
         clone.headerStyle = headerStyle;
         clone.dataStyle = dataStyle;
@@ -77,7 +81,7 @@ public class Table<T> {
         return ReflectUtil.safeApply(conditionalRowStyle, object);
     }
 
-    public Table<T> cols(String... fieldNames) {
+    public DataTemplate<T> cols(String... fieldNames) {
         List<ColumnMapper<T>> list = Arrays
                 .stream(fieldNames)
                 .map(s -> new ColumnMapper<T>().field(s))
@@ -87,7 +91,7 @@ public class Table<T> {
         return this;
     }
 
-    public Table<T> col(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
+    public DataTemplate<T> column(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
         ColumnMapper<T> mapper = builder.apply(new ColumnMapper<>());
         if (validateMapper(mapper)) {
             mappers.add(mapper);
@@ -118,10 +122,26 @@ public class Table<T> {
         return true;
     }
 
-    public static class Builder<T> {
-        private final Table<T> config;
+    public ByteArrayInputStream getFileForImport() {
+        DataTemplate<T> clone = this.cloneSelf();
+        clone.setReuseForImport(true);
+        BaseWriter writer = new BaseWriter();
+        Sheet sheet = writer.createNewSheet("Sheet 1");
+        writer.writeDataIntoSheet(sheet, clone, null, 0, 0);
+        return writer.exportToFile();
+    }
 
-        public Builder(Table<T> config) {
+    public ByteArrayInputStream writeData(Collection<T> data) {
+        BaseWriter writer = new BaseWriter();
+        Sheet sheet = writer.createNewSheet("Sheet 1");
+        writer.writeDataIntoSheet(sheet, this, data, 0, 0);
+        return writer.exportToFile();
+    }
+
+    public static class Builder<T> {
+        private final DataTemplate<T> config;
+
+        public Builder(DataTemplate<T> config) {
             this.config = config;
         }
 
