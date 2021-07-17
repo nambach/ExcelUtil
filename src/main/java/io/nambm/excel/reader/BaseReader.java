@@ -98,6 +98,9 @@ class BaseReader {
     private <T> void handleConsumer(BiConsumer<T, ?> consumer, T object, Cell cell) {
         switch (ConsumerChecker.determineSecondParamType(consumer)) {
             case STRING:
+                if (cell.getCellType() != CellType.STRING) {
+                    cell.setCellType(CellType.STRING);
+                }
                 ReflectUtil.safeConsume((ConsumerString<T>) consumer,
                                         object, cell.getStringCellValue());
                 break;
@@ -122,29 +125,46 @@ class BaseReader {
     private <T> void handleField(PropertyDescriptor pd, T object, Cell cell) {
         Method setter = pd.getWriteMethod();
         try {
+            Object cellValue = null;
             switch (ReflectUtil.checkType(pd.getPropertyType())) {
                 case STRING:
-                    setter.invoke(object, cell.getStringCellValue());
+                    if (cell.getCellType() != CellType.STRING) {
+                        cell.setCellType(CellType.STRING);
+                    }
+                    cellValue = cell.getStringCellValue();
                     break;
                 case LONG:
-                    setter.invoke(object, (long) cell.getNumericCellValue());
+                    if (cell.getCellType() == CellType.NUMERIC) {
+                        cellValue = (long) cell.getNumericCellValue();
+                    }
                     break;
                 case INTEGER:
-                    setter.invoke(object, (int) cell.getNumericCellValue());
+                    if (cell.getCellType() == CellType.NUMERIC) {
+                        cellValue = (int) cell.getNumericCellValue();
+                    }
                     break;
                 case DOUBLE:
-                    setter.invoke(object, cell.getNumericCellValue());
+                    if (cell.getCellType() == CellType.NUMERIC) {
+                        cellValue = cell.getNumericCellValue();
+                    }
                     break;
                 case FLOAT:
-                    setter.invoke(object, (float) cell.getNumericCellValue());
+                    if (cell.getCellType() == CellType.NUMERIC) {
+                        cellValue = (float) cell.getNumericCellValue();
+                    }
                     break;
                 case BOOLEAN:
-                    setter.invoke(object, cell.getBooleanCellValue());
+                    if (cell.getCellType() == CellType.BOOLEAN) {
+                        cellValue = cell.getBooleanCellValue();
+                    }
                     break;
                 case DATE:
-                    setter.invoke(object, cell.getDateCellValue());
+                    cellValue = cell.getDateCellValue();
                     break;
+                default:
+                    return;
             }
+            setter.invoke(object, cellValue);
         } catch (Exception e) {
             System.out.println("Error while invoking setter: " + e.getMessage());
             e.printStackTrace();

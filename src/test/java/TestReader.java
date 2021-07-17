@@ -9,18 +9,8 @@ import java.util.List;
 
 public class TestReader {
     public static void main(String[] args) throws FileNotFoundException {
-        ReaderConfig<Student> config = ReaderConfig
-                .fromClass(Student.class)
-                .rowDataFrom(1)
-                .handlers(builder -> builder
-                        .byColIndex(1, (Student s, String v) -> {
-                            String[] arr = v.split(" ");
-                            s.setFirstName(arr[0]);
-                            s.setLastName(arr[1]);
-                        })
-                        .byColIndex(2, (Student s, Double v) -> {
-                            s.setMark(v / 100);
-                        }));
+        ReaderConfig<Student> config = TestWriter.TEMPLATE_8
+                .getReaderConfig();
 
         Reader reader = new ReaderImpl();
         List<Student> students = reader.read(FileUtil.readFromDisk("src/main/resources/basic-example.xlsx"), config);

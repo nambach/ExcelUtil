@@ -66,6 +66,19 @@ public class TestWriter {
                                                 .border(BorderSide.BOTTOM, "#00ff33", BorderStyle.DOUBLE)
                                                 .border(BorderSide.RIGHT, "#ff002b", BorderStyle.DOUBLE).build();
 
+    public static final DataTemplate<Student> TEMPLATE_8 = DataTemplate
+            .fromClass(Student.class)
+            .column(m -> m.field("firstName"))
+            .column(m -> m.field("lastName"))
+            .column(m -> m.field("mark").title("GPA")
+                          .conditionalStyle(s -> s.getMark() < 5 ? red : green))
+            .config(config -> config
+                    .headerStyle(HEADER_STYLE)
+                    .dataStyle(DATA_STYLE)
+                    .autoResizeColumns(true)
+                    .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
+                                              s.getMark() < 5 ? GRAY_BACKGROUND : null));
+
     @SneakyThrows
     public static void main(String[] args) {
         useCase8();
@@ -196,20 +209,7 @@ public class TestWriter {
     }
 
     public static void useCase8() {
-        DataTemplate<Student> table = DataTemplate
-                .fromClass(Student.class)
-                .column(m -> m.field("firstName"))
-                .column(m -> m.field("lastName"))
-                .column(m -> m.field("mark").title("GPA")
-                              .conditionalStyle(s -> s.getMark() < 5 ? red : green))
-                .config(config -> config
-                        .headerStyle(HEADER_STYLE)
-                        .dataStyle(DATA_STYLE)
-                        .autoResizeColumns(true)
-                        .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
-                                                  s.getMark() < 5 ? GRAY_BACKGROUND : null));
-
-        InputStream stream = table.writeData(students);
+        InputStream stream = TEMPLATE_8.writeData(students);
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
     }

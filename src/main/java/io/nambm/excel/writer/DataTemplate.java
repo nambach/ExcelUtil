@@ -1,5 +1,6 @@
 package io.nambm.excel.writer;
 
+import io.nambm.excel.reader.ReaderConfig;
 import io.nambm.excel.style.DefaultStyle;
 import io.nambm.excel.style.Style;
 import io.nambm.excel.util.ReflectUtil;
@@ -141,6 +142,21 @@ public class DataTemplate<T> implements WriterTemplate {
         Sheet sheet = writer.createNewSheet("Sheet 1");
         writer.writeDataIntoSheet(sheet, this, data);
         return writer.exportToFile();
+    }
+
+    public ReaderConfig<T> getReaderConfig() {
+        ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
+        int i = 0;
+        for (ColumnMapper<T> mapper : mappers) {
+            config.column(i++, mapper.getFieldName());
+        }
+        if (reuseForImport) {
+            config.rowMetadataAt(0);
+            config.rowDataFrom(2);
+        } else {
+            config.rowDataFrom(1);
+        }
+        return config;
     }
 
     public static class Builder<T> {

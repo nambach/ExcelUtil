@@ -24,7 +24,7 @@ public class ReaderConfig<T> {
     private Class<T> tClass;
 
     private Set<Integer> sheetIndexes = new TreeSet<>();
-    private int dataFromRow = 2;
+    private int dataFromRow = 1;
 
     private int metadataRowIndex = -1;
     private int titleRowIndex = -1;
@@ -62,13 +62,6 @@ public class ReaderConfig<T> {
                 sheetIndexes.add(index);
             }
         }
-        return this;
-    }
-
-    public ReaderConfig<T> withReuse() {
-        this.metadataRowIndex = 0;
-        this.dataFromRow = 2;
-
         return this;
     }
 
