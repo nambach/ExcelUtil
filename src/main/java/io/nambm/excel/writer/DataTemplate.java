@@ -7,7 +7,9 @@ import io.nambm.excel.util.TextUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellAddress;
 
 import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
@@ -26,6 +28,9 @@ public class DataTemplate<T> implements WriterTemplate {
 
     private List<ColumnMapper<T>> mappers = new LinkedList<>();
     private Class<T> tClass;
+
+    private int rowAt;
+    private int colAt;
 
     private boolean reuseForImport;
     private boolean autoResizeColumns;
@@ -127,51 +132,71 @@ public class DataTemplate<T> implements WriterTemplate {
         clone.setReuseForImport(true);
         BaseWriter writer = new BaseWriter();
         Sheet sheet = writer.createNewSheet("Sheet 1");
-        writer.writeDataIntoSheet(sheet, clone, null, 0, 0);
+        writer.writeDataIntoSheet(sheet, clone, null);
         return writer.exportToFile();
     }
 
     public ByteArrayInputStream writeData(Collection<T> data) {
         BaseWriter writer = new BaseWriter();
         Sheet sheet = writer.createNewSheet("Sheet 1");
-        writer.writeDataIntoSheet(sheet, this, data, 0, 0);
+        writer.writeDataIntoSheet(sheet, this, data);
         return writer.exportToFile();
     }
 
     public static class Builder<T> {
-        private final DataTemplate<T> config;
+        private final DataTemplate<T> template;
 
-        public Builder(DataTemplate<T> config) {
-            this.config = config;
+        public Builder(DataTemplate<T> template) {
+            this.template = template;
+        }
+
+        @SneakyThrows
+        public Builder<T> startAtCell(int rowAt, int colAt) {
+            if (rowAt < 0 || colAt < 0) {
+                throw new Exception("Cell coordinate is negative.");
+            }
+            template.rowAt = rowAt;
+            template.colAt = colAt;
+            return this;
+        }
+
+        @SneakyThrows
+        public Builder<T> startAtCell(String address) {
+            try {
+                CellAddress cellAddress = new CellAddress(address);
+                return startAtCell(cellAddress.getRow(), cellAddress.getColumn());
+            } catch (Exception e) {
+                throw new Exception("Error while parsing cell address: ", e);
+            }
         }
 
         public Builder<T> reuseForImport(boolean b) {
-            config.reuseForImport = b;
+            template.reuseForImport = b;
             return this;
         }
 
         public Builder<T> autoResizeColumns(boolean b) {
-            config.autoResizeColumns = b;
+            template.autoResizeColumns = b;
             return this;
         }
 
         public Builder<T> noHeader(boolean b) {
-            config.noHeader = b;
+            template.noHeader = b;
             return this;
         }
 
         public Builder<T> headerStyle(Style style) {
-            config.headerStyle = style;
+            template.headerStyle = style;
             return this;
         }
 
         public Builder<T> dataStyle(Style style) {
-            config.dataStyle = style;
+            template.dataStyle = style;
             return this;
         }
 
         public Builder<T> conditionalRowStyle(Function<T, Style> function) {
-            config.conditionalRowStyle = function;
+            template.conditionalRowStyle = function;
             return this;
         }
     }

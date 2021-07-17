@@ -4,6 +4,7 @@ import io.nambm.excel.style.CacheStyle;
 import io.nambm.excel.style.DefaultStyle;
 import io.nambm.excel.style.Style;
 import io.nambm.excel.util.ReflectUtil;
+import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
@@ -15,6 +16,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -33,6 +35,14 @@ class BaseWriter {
 
     BaseWriter() {
         XSSFWorkbook workbook = new XSSFWorkbook();
+        this.workbook = workbook;
+        this.cachedStyles = new CacheStyle(workbook);
+        this.sheets = new ArrayList<>();
+    }
+
+    @SneakyThrows
+    BaseWriter(InputStream stream) {
+        XSSFWorkbook workbook = new XSSFWorkbook(stream);
         this.workbook = workbook;
         this.cachedStyles = new CacheStyle(workbook);
         this.sheets = new ArrayList<>();
@@ -77,14 +87,16 @@ class BaseWriter {
         return sheet;
     }
 
-    public <T> void writeDataIntoSheet(Sheet sheet, DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {
+    public <T> void writeDataIntoSheet(Sheet sheet, DataTemplate<T> template, Collection<T> data) {
 
         if (data == null) {
             data = Collections.emptyList();
         }
+        int rowAt = template.getRowAt();
         if (rowAt < 0) {
             rowAt = 0;
         }
+        int colAt = template.getColAt();
         if (colAt < 0) {
             colAt = 0;
         }
@@ -237,16 +249,6 @@ class BaseWriter {
         }
     }
 
-    public void writeAnywhere(Sheet sheet, String content, int rowAt, int colAt, int rowSpan, int colSpan, Style style) {
-        CellInfo cellInfo = new CellInfo()
-                .text(content)
-                .at(rowAt, colAt)
-                .rowSpan(rowSpan)
-                .colSpan(colSpan)
-                .style(style);
-        this.writeCellInfo(sheet, cellInfo);
-    }
-
     public void writeCellInfo(Sheet sheet, CellInfo cellInfo) {
         Row row = getRowAt(sheet, cellInfo.getRowAt());
         Cell cell = getCellAt(row, cellInfo.getColAt());
@@ -289,14 +291,6 @@ class BaseWriter {
                                                        colAt, colAt + colSpan - 1));
         }
 
-    }
-
-    public void skipLines(int numberOfLines) {
-        Sheet sheet = getLastSheet();
-        int rowCount = getLastRowIndex(sheet);
-        for (int i = 0; i < numberOfLines; i++) {
-            sheet.createRow(rowCount++);
-        }
     }
 
     public ByteArrayInputStream exportToFile() {

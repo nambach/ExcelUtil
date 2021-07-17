@@ -5,7 +5,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import org.apache.poi.ss.util.CellAddress;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,23 +49,12 @@ public class CellInfo {
     }
 
     @SneakyThrows
-    public CellInfo at(int rowAt, int colAt) {
+    CellInfo at(int rowAt, int colAt) {
         if (rowAt < 0 || colAt < 0) {
             throw new Exception("Cell coordinate is negative.");
         }
         this.rowAt = rowAt;
         this.colAt = colAt;
-        return this;
-    }
-
-    @SneakyThrows
-    public CellInfo at(String address) {
-        try {
-            CellAddress cellAddress = new CellAddress(address);
-            this.at(cellAddress.getRow(), cellAddress.getColumn());
-        } catch (Exception e) {
-            throw new Exception("Error while parsing cell address: ", e);
-        }
         return this;
     }
 

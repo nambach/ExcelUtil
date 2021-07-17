@@ -68,7 +68,7 @@ public class TestWriter {
 
     @SneakyThrows
     public static void main(String[] args) {
-        useCaseTakt2();
+        useCase8();
     }
 
     public static void useCase1() {
@@ -202,12 +202,12 @@ public class TestWriter {
                 .column(m -> m.field("lastName"))
                 .column(m -> m.field("mark").title("GPA")
                               .conditionalStyle(s -> s.getMark() < 5 ? red : green))
-                .config(config -> config.headerStyle(HEADER_STYLE)
-                                        .dataStyle(DATA_STYLE)
-                                        .autoResizeColumns(true)
-                                        .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
-                                                                  s.getMark() < 5 ? GRAY_BACKGROUND :
-                                                                  null));
+                .config(config -> config
+                        .headerStyle(HEADER_STYLE)
+                        .dataStyle(DATA_STYLE)
+                        .autoResizeColumns(true)
+                        .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
+                                                  s.getMark() < 5 ? GRAY_BACKGROUND : null));
 
         InputStream stream = table.writeData(students);
 
@@ -224,59 +224,19 @@ public class TestWriter {
                 .column(m -> m.field("lastName"))
                 .column(m -> m.field("mark").title("GPA")
                               .conditionalStyle(s -> s.getMark() < 5 ? red : green))
-                .config(config -> config.headerStyle(HEADER_STYLE)
-                                        .dataStyle(DATA_STYLE)
-                                        .autoResizeColumns(true)
-                                        .reuseForImport(true)
-                                        .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
-                                                                  s.getMark() < 5 ? GRAY_BACKGROUND : null));
+                .config(config -> config
+                        .headerStyle(HEADER_STYLE)
+                        .dataStyle(DATA_STYLE)
+                        .autoResizeColumns(true)
+                        .reuseForImport(true)
+                        .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
+                                                  s.getMark() < 5 ? GRAY_BACKGROUND : null));
 
         Writer writer = new WriterImpl();
         writer.createNewSheet("A");
         writer.writeData(table, students);
         writer.createNewSheet("B");
         writer.writeData(table, students);
-        InputStream stream = writer.exportToFile();
-
-        FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
-    }
-
-    public static void useCaseTakt() {
-        Style title = Style
-                .builder()
-                .backgroundColorInHex("#9bc2e6")
-                .bold(true).border(BorderSide.FULL).build();
-        Style center = Style
-                .builder(title)
-                .horizontalAlignment(HorizontalAlignment.CENTER)
-                .verticalAlignment(VerticalAlignment.CENTER)
-                .build();
-        Style fontRed = Style
-                .builder(center)
-                .fontColorInHex("#FF0000")
-                .build();
-
-        Writer writer = new WriterImpl();
-        writer.createNewSheet("Sheet 1");
-        writer.setCurrentStyle(title);
-        writer.writeAnywhere("Factory", 0, 0);
-        writer.writeAnywhere("Line", 1, 0);
-        writer.writeAnywhere("Station", 2, 0);
-        writer.writeAnywhere("From Date", 0, 3);
-        writer.writeAnywhere("To Date", 1, 3);
-        writer.setCurrentStyle(center);
-        String[] headers = new String[]{"DAY", "SHIFT", "TAKT", "Cycle Time", "Demand /Actual", "Takt attainment", "Takt time"};
-        for (int i = 0; i < headers.length; i++) {
-            writer.writeAnywhere(headers[i], 4, i, 2, 0);
-        }
-        writer.writeAnywhere("eAndon", 4, 7, 0, 3);
-        writer.writeAnywhere("Type", 5, 7);
-        writer.writeAnywhere("Detail", 5, 8);
-        writer.setCurrentStyle(fontRed);
-        writer.writeAnywhere("Alert Duration [M]", 5, 9);
-
-        writer.freeze(6, 0);
-
         InputStream stream = writer.exportToFile();
 
         FileUtil.writeToDisk("src/main/resources/basic-example.xlsx", stream, true);
@@ -297,25 +257,24 @@ public class TestWriter {
         Template template = Template
                 .builder()
                 .baseStyle(title)
-                .cell(c -> c.at("A1").text("Factory"))
-                .cell(c -> c.at("A2").text("Line"))
-                .cell(c -> c.at("A3").text("Station"))
-                .cell(c -> c.at("D1").text("From Date"))
-                .cell(c -> c.at("D2").text("To Date"));
+                .at("A1").cell(c -> c.text("Factory"))
+                .down(c -> c.text("Line"))
+                .down(c -> c.text("Station"))
+                .at("D1").cell(c -> c.text("From Date"))
+                .down(c -> c.text("To Date"))
+                .useStyle(center)
+                .at("A5").cell(c -> c.text("DAY").rowSpan(2));
 
         String[] headers = new String[]{"DAY", "SHIFT", "TAKT", "Cycle Time", "Demand /Actual", "Takt attainment", "Takt time"};
-        for (int i = 0; i < headers.length; i++) {
+        for (int i = 1; i < headers.length; i++) {
             int colAt = i;
-            template.cell(c -> c.at(4, colAt)
-                                .text(headers[colAt])
-                                .rowSpan(2)
-                                .style(center));
+            template.next(c -> c.text(headers[colAt]).rowSpan(2));
         }
 
-        template.cell(c -> c.at("H5").text("eAndon").style(center).colSpan(3))
-                .cell(c -> c.at("H6").text("Type").style(center))
-                .cell(c -> c.at("I6").text("Detail").style(center))
-                .cell(c -> c.at("J6").text("Alert Duration [M]").style(center).style(fontRed));
+        template.at("H5").cell(c -> c.text("eAndon").colSpan(3))
+                .down(c -> c.text("Type"))
+                .next(c -> c.text("Detail"))
+                .next(c -> c.text("Alert Duration [M]").style(fontRed));
 
         Writer writer = new WriterImpl();
         writer.writeTemplate(template);
