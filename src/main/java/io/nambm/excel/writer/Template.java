@@ -27,6 +27,10 @@ public class Template implements WriterTemplate, Iterable<CellInfo> {
         this.baseStyle = DefaultStyle.TIMES_NEW_ROMAN;
     }
 
+    public static Template builder() {
+        return new Template();
+    }
+
     private CellInfo createCellInfo() {
         CellInfo cell = new CellInfo();
         if (tempStyle != null) {
@@ -38,11 +42,6 @@ public class Template implements WriterTemplate, Iterable<CellInfo> {
     private void updatePosition(CellInfo cell) {
         pos[0] = cell.getRowAt();
         pos[1] = cell.getColAt();
-    }
-
-
-    public static Template builder() {
-        return new Template();
     }
 
     @SneakyThrows
