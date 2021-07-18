@@ -275,6 +275,8 @@ public class TestWriter {
         }
 
         template.at("H5").cell(c -> c.text("eAndon").colSpan(3))
+                .right(c -> c.date(new Date()))
+                .at("H5")
                 .down(c -> c.text("Type"))
                 .right(c -> c.text("Detail"))
                 .right(c -> c.text("Alert Duration [M]").style(fontRed));
@@ -282,7 +284,7 @@ public class TestWriter {
         Writer writer = new WriterImpl();
         writer.createNewSheet("Sheet 1");
         writer.writeTemplate(template);
-        writer.writeLine(0, c -> c.text(""));
+        writer.writeLine(0, c -> c.text("ABC"));
         writer.freeze(6, 0);
         InputStream stream = writer.exportToFile();
 

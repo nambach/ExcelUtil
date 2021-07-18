@@ -68,9 +68,27 @@ public class Editor {
         return this;
     }
 
+    public Editor moveRight(int steps) {
+        if (steps > 0) {
+            moveRight();
+            pointer.moveRight(steps - 1);
+            pivot.sync(pointer);
+        }
+        return this;
+    }
+
     public Editor moveDown() {
         pointer.jumpDown(pivot);
         pivot.sync(pointer);
+        return this;
+    }
+
+    public Editor moveDown(int steps) {
+        if (steps > 0) {
+            moveDown();
+            pointer.moveDown(steps - 1);
+            pivot.sync(pointer);
+        }
         return this;
     }
 
