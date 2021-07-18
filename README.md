@@ -20,7 +20,7 @@ In your Maven project, add below dependency
 
 ```xml
 <dependency>
-    <groupId>io.nambm</groupId>
+    <groupId>io.github.nambach</groupId>
     <artifactId>ExcelUtil</artifactId>
     <version>1.0</version>
 </dependency>
