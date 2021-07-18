@@ -4,14 +4,9 @@ import io.nambm.excel.style.Style;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.SneakyThrows;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
@@ -24,7 +19,13 @@ public class CellInfo {
     private int colAt;
     private int rowSpan = 1;
     private int colSpan = 1;
-    private List<Style> styles = new ArrayList<>();
+    private Style style;
+
+    CellInfo(Pointer pointer, Style style) {
+        this.rowAt = pointer.getRow();
+        this.colAt = pointer.getCol();
+        this.style = style;
+    }
 
     public CellInfo text(String s) {
         this.content = s;
@@ -48,16 +49,6 @@ public class CellInfo {
         return this;
     }
 
-    @SneakyThrows
-    CellInfo at(int rowAt, int colAt) {
-        if (rowAt < 0 || colAt < 0) {
-            throw new Exception("Cell coordinate is negative.");
-        }
-        this.rowAt = rowAt;
-        this.colAt = colAt;
-        return this;
-    }
-
     public CellInfo colSpan(int v) {
         if (v > 1) {
             this.colSpan = v;
@@ -72,9 +63,17 @@ public class CellInfo {
         return this;
     }
 
-    public CellInfo style(Style... style) {
-        if (style != null) {
-            this.styles.addAll(Arrays.stream(style).filter(Objects::nonNull).collect(Collectors.toList()));
+    public CellInfo style(Style style) {
+        this.style = style;
+        return this;
+    }
+
+    public CellInfo style(Function<Style.StyleBuilder, Style.StyleBuilder> f) {
+        if (f != null) {
+            // Create new copied style, not using the current reference
+            Style.StyleBuilder builder = Style.builder(this.style);
+            f.apply(builder);
+            this.style = builder.build();
         }
         return this;
     }

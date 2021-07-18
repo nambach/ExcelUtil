@@ -1,64 +1,61 @@
 package io.nambm.excel.writer;
 
 import io.nambm.excel.Writer;
-import org.apache.poi.ss.usermodel.Sheet;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.function.Function;
 
 public class WriterImpl implements Writer {
-    private BaseWriter writer;
+    private final Editor editor;
 
     public WriterImpl() {
-        writer = new BaseWriter();
+        editor = new Editor();
     }
 
     public WriterImpl(InputStream stream) {
-        writer = new BaseWriter(stream);
-    }
-
-    @Override
-    public void newWorkbook() {
-        writer = new BaseWriter();
-    }
-
-    @Override
-    public void loadWorkbook(InputStream stream) {
-        writer = new BaseWriter(stream);
+        editor = new Editor(stream);
     }
 
     @Override
     public void createNewSheet(String sheetName) {
-        writer.createNewSheet(sheetName);
+        editor.goToSheet(sheetName);
     }
 
     @Override
-    public <T> void writeData(DataTemplate<T> table, Collection<T> data) {
-        Sheet sheet = writer.getLastSheet();
-        writer.writeDataIntoSheet(sheet, table, data);
+    public <T> void writeData(DataTemplate<T> template, Collection<T> data) {
+        editor.writeData(template, data)
+              .enter();
     }
 
     @Override
     public void writeTemplate(Template template) {
-        Sheet sheet = writer.getLastSheet();
-        writer.writeTemplate(sheet, template);
+        editor.writeTemplate(template)
+              .enter();
+    }
+
+    @Override
+    public void writeLine(int indent, Function<CellInfo, CellInfo> detail) {
+        for (int i = 0; i < indent; i++) {
+            editor.moveRight();
+        }
+        editor.writeCell(detail)
+              .enter();
+    }
+
+    @Override
+    public void skipLines(int lines) {
+        editor.enter(lines);
     }
 
     @Override
     public void freeze(int rows, int cols) {
-        if (rows < 0) {
-            rows = 0;
-        }
-        if (cols < 0) {
-            cols = 0;
-        }
-        Sheet sheet = writer.getLastSheet();
-        sheet.createFreezePane(cols, rows);
+        editor.config(cf -> cf.freeze(rows, cols));
     }
 
     @Override
     public ByteArrayInputStream exportToFile() {
-        return writer.exportToFile();
+        return editor.exportToFile();
     }
 }

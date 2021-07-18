@@ -81,7 +81,7 @@ public class TestWriter {
 
     @SneakyThrows
     public static void main(String[] args) {
-        useCase8();
+        useCaseTakt2();
     }
 
     public static void useCase1() {
@@ -248,15 +248,18 @@ public class TestWriter {
                 .backgroundColorInHex("#9bc2e6")
                 .bold(true).border(BorderSide.FULL).build();
         Style center = Style
-                .builder()
+                .builder(title)
                 .horizontalAlignment(HorizontalAlignment.CENTER)
                 .verticalAlignment(VerticalAlignment.CENTER)
                 .build();
-        Style fontRed = Style.builder().fontColorInHex("#FF0000").build();
+        Style fontRed = Style
+                .builder(center)
+                .fontColorInHex("#FF0000")
+                .build();
 
         Template template = Template
                 .builder()
-                .baseStyle(title)
+                .useStyle(title)
                 .at("A1").cell(c -> c.text("Factory"))
                 .down(c -> c.text("Line"))
                 .down(c -> c.text("Station"))
@@ -268,16 +271,18 @@ public class TestWriter {
         String[] headers = new String[]{"DAY", "SHIFT", "TAKT", "Cycle Time", "Demand /Actual", "Takt attainment", "Takt time"};
         for (int i = 1; i < headers.length; i++) {
             int colAt = i;
-            template.next(c -> c.text(headers[colAt]).rowSpan(2));
+            template.right(c -> c.text(headers[colAt]).rowSpan(2));
         }
 
         template.at("H5").cell(c -> c.text("eAndon").colSpan(3))
                 .down(c -> c.text("Type"))
-                .next(c -> c.text("Detail"))
-                .next(c -> c.text("Alert Duration [M]").style(fontRed));
+                .right(c -> c.text("Detail"))
+                .right(c -> c.text("Alert Duration [M]").style(fontRed));
 
         Writer writer = new WriterImpl();
+        writer.createNewSheet("Sheet 1");
         writer.writeTemplate(template);
+        writer.writeLine(0, c -> c.text(""));
         writer.freeze(6, 0);
         InputStream stream = writer.exportToFile();
 

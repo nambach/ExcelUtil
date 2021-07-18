@@ -17,7 +17,6 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -30,44 +29,64 @@ class BaseWriter {
 
     final CacheStyle cachedStyles;
     final Workbook workbook;
-    final List<Sheet> sheets;
-    boolean firstRowReached;
+    Sheet currentSheet;
 
     BaseWriter() {
-        XSSFWorkbook workbook = new XSSFWorkbook();
-        this.workbook = workbook;
-        this.cachedStyles = new CacheStyle(workbook);
-        this.sheets = new ArrayList<>();
+        this(null);
     }
 
     @SneakyThrows
     BaseWriter(InputStream stream) {
-        XSSFWorkbook workbook = new XSSFWorkbook(stream);
+        XSSFWorkbook workbook = stream == null ? new XSSFWorkbook() : new XSSFWorkbook(stream);
         this.workbook = workbook;
         this.cachedStyles = new CacheStyle(workbook);
-        this.sheets = new ArrayList<>();
-    }
 
-    int getLastRowIndex(Sheet sheet) {
-        int rowCount = Math.max(sheet.getLastRowNum(), 0);
-        if (!firstRowReached) {
-            firstRowReached = true;
-            return rowCount;
+        if (stream != null) {
+            setActiveSheetAsCurrent();
         }
-        return rowCount + 1;
     }
 
-    Sheet getLastSheet() {
-        if (sheets.isEmpty()) {
-            return createNewSheet("Sheet 1");
+    int getNextRowIndex() {
+        return currentSheet.getLastRowNum() + 1;
+    }
+
+    void setActiveSheetAsCurrent() {
+        if (workbook.getNumberOfSheets() == 0) {
+            setActiveSheet("Sheet 1");
+        } else {
+            int index = workbook.getActiveSheetIndex();
+            currentSheet = workbook.getSheetAt(index);
         }
-        return sheets.get(sheets.size() - 1);
     }
 
-    Row getRowAt(Sheet sheet, int rowAt) {
-        Row row = sheet.getRow(rowAt);
+    void setSheetAt(int index) {
+        if (workbook.getNumberOfSheets() == 0) {
+            setActiveSheet("Sheet 1");
+        } else if (index < 0) {
+            currentSheet = workbook.getSheetAt(0);
+        } else if (index + 1 > workbook.getNumberOfSheets()) {
+            currentSheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
+        } else {
+            currentSheet = workbook.getSheetAt(index);
+        }
+    }
+
+    void setNextSheet() {
+        int index = workbook.getSheetIndex(currentSheet);
+        setSheetAt(index + 1);
+    }
+
+    public void setActiveSheet(String sheetName) {
+        currentSheet = workbook.getSheet(sheetName);
+        if (currentSheet == null) {
+            currentSheet = workbook.createSheet(sheetName);
+        }
+    }
+
+    Row getRowAt(int rowAt) {
+        Row row = currentSheet.getRow(rowAt);
         if (row == null) {
-            row = sheet.createRow(rowAt);
+            row = currentSheet.createRow(rowAt);
         }
         return row;
     }
@@ -80,23 +99,13 @@ class BaseWriter {
         return cell;
     }
 
-    public Sheet createNewSheet(String sheetName) {
-        firstRowReached = false;
-        Sheet sheet = workbook.createSheet(sheetName);
-        sheets.add(sheet);
-        return sheet;
-    }
-
-    public <T> void writeDataIntoSheet(Sheet sheet, DataTemplate<T> template, Collection<T> data) {
-
+    public <T> void writeData(DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {
         if (data == null) {
             data = Collections.emptyList();
         }
-        int rowAt = template.getRowAt();
         if (rowAt < 0) {
             rowAt = 0;
         }
-        int colAt = template.getColAt();
         if (colAt < 0) {
             colAt = 0;
         }
@@ -107,7 +116,7 @@ class BaseWriter {
 
         // This row to store entity's metadata
         if (template.isReuseForImport()) {
-            Row metadataRow = getRowAt(sheet, rowAt++);
+            Row metadataRow = getRowAt(rowAt++);
             int cellCount = colAt;
             for (ColumnMapper<T> mapper : mappers) {
                 Cell cell = metadataRow.createCell(cellCount++, CellType.STRING);
@@ -119,7 +128,7 @@ class BaseWriter {
 
         // This is title row
         if (!template.isNoHeader()) {
-            Row headerRow = getRowAt(sheet, rowAt++);
+            Row headerRow = getRowAt(rowAt++);
             CellStyle defaultHeaderStyle = cachedStyles.accumulate(headerStyle);
             int cellCount = colAt;
             for (ColumnMapper<T> mapper : mappers) {
@@ -137,7 +146,7 @@ class BaseWriter {
         for (T object : data) {
             objectCount++;
 
-            Row dataRow = getRowAt(sheet, rowAt++);
+            Row dataRow = getRowAt(rowAt++);
 
             // Create all columns in a row
             int i = colAt - 1;
@@ -220,11 +229,11 @@ class BaseWriter {
                             // Same value found => increase merge range
                             tracker.increaseRange();
                             if (objectCount == data.size()) {
-                                tracker.handleMerge(sheet, cell);
+                                tracker.handleMerge(currentSheet, cell);
                             }
                         } else {
                             // New value coped => finish last merge range
-                            tracker.handleMerge(sheet, cell);
+                            tracker.handleMerge(currentSheet, cell);
                             tracker.reset(currentValue, rowNum);
                         }
                     }
@@ -233,7 +242,7 @@ class BaseWriter {
                 // Resize columns when last row reached
                 if (objectCount == data.size()) {
                     if (template.isAutoResizeColumns()) {
-                        sheet.autoSizeColumn(i, mapper.needMerged());
+                        currentSheet.autoSizeColumn(i, mapper.needMerged());
                     }
                 }
 
@@ -241,21 +250,18 @@ class BaseWriter {
         } // end of (T object : data)
     }
 
-    public void writeTemplate(Sheet sheet, Template template) {
-        Style baseStyle = template.getBaseStyle();
+    public void writeTemplate(Template template) {
         for (CellInfo cellInfo : template) {
-            cellInfo.getStyles().add(0, baseStyle);
-            this.writeCellInfo(sheet, cellInfo);
+            this.writeCellInfo(cellInfo);
         }
     }
 
-    public void writeCellInfo(Sheet sheet, CellInfo cellInfo) {
-        Row row = getRowAt(sheet, cellInfo.getRowAt());
+    public void writeCellInfo(CellInfo cellInfo) {
+        Row row = getRowAt(cellInfo.getRowAt());
         Cell cell = getCellAt(row, cellInfo.getColAt());
 
         // Set styles
-        Style[] styles = cellInfo.getStyles().toArray(new Style[0]);
-        CellStyle cellStyle = cachedStyles.accumulate(styles);
+        CellStyle cellStyle = cachedStyles.accumulate(cellInfo.getStyle());
         cell.setCellStyle(cellStyle);
 
         // Set core value
@@ -281,14 +287,14 @@ class BaseWriter {
                     if (rowOffset == 0 && colOffset == 0) {
                         continue;
                     }
-                    Row currentRow = getRowAt(sheet, rowAt + rowOffset);
+                    Row currentRow = getRowAt(rowAt + rowOffset);
                     Cell currentCell = getCellAt(currentRow, colAt + colOffset);
                     currentCell.setCellStyle(cellStyle);
                 }
             }
 
-            sheet.addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
-                                                       colAt, colAt + colSpan - 1));
+            currentSheet.addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
+                                                              colAt, colAt + colSpan - 1));
         }
 
     }

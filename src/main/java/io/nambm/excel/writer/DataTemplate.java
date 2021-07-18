@@ -9,7 +9,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellAddress;
 
 import java.beans.PropertyDescriptor;
@@ -131,17 +130,28 @@ public class DataTemplate<T> implements WriterTemplate {
     public ByteArrayInputStream getFileForImport() {
         DataTemplate<T> clone = this.cloneSelf();
         clone.setReuseForImport(true);
-        BaseWriter writer = new BaseWriter();
-        Sheet sheet = writer.createNewSheet("Sheet 1");
-        writer.writeDataIntoSheet(sheet, clone, null);
-        return writer.exportToFile();
+
+        Editor editor = new Editor();
+        return editor.goToSheet(0)
+                     .goToCell(rowAt, colAt)
+                     .writeData(clone, null)
+                     .exportToFile();
     }
 
     public ByteArrayInputStream writeData(Collection<T> data) {
-        BaseWriter writer = new BaseWriter();
-        Sheet sheet = writer.createNewSheet("Sheet 1");
-        writer.writeDataIntoSheet(sheet, this, data);
-        return writer.exportToFile();
+        Editor editor = new Editor();
+        return editor.goToSheet(0)
+                     .goToCell(rowAt, colAt)
+                     .writeData(this, data)
+                     .exportToFile();
+    }
+
+    public ByteArrayInputStream writeData(Collection<T> data, String sheetName) {
+        Editor editor = new Editor();
+        return editor.goToSheet(sheetName)
+                     .goToCell(rowAt, colAt)
+                     .writeData(this, data)
+                     .exportToFile();
     }
 
     public ReaderConfig<T> getReaderConfig() {
