@@ -1,9 +1,9 @@
-package io.nambm.excel.core;
+package io.github.nambach.excelutil.core;
 
-import io.nambm.excel.style.CacheStyle;
-import io.nambm.excel.style.DefaultStyle;
-import io.nambm.excel.style.Style;
-import io.nambm.excel.util.ReflectUtil;
+import io.github.nambach.excelutil.style.CacheStyle;
+import io.github.nambach.excelutil.style.DefaultStyle;
+import io.github.nambach.excelutil.style.Style;
+import io.github.nambach.excelutil.util.ReflectUtil;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -69,6 +69,15 @@ class BaseWriter {
         } else {
             currentSheet = workbook.getSheetAt(index);
         }
+    }
+
+    boolean hasNextSheet() {
+        if (currentSheet == null) {
+            return false;
+        }
+        int index = workbook.getSheetIndex(currentSheet);
+        int total = workbook.getNumberOfSheets();
+        return index + 1 < total;
     }
 
     void setNextSheet() {

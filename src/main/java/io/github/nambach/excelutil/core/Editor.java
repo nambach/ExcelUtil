@@ -1,6 +1,6 @@
-package io.nambm.excel.core;
+package io.github.nambach.excelutil.core;
 
-import io.nambm.excel.style.Style;
+import io.github.nambach.excelutil.style.Style;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -14,7 +14,7 @@ import java.util.function.Function;
 
 public class Editor {
     private final BaseWriter writer;
-    private final Read writer;
+    private final BaseReader reader = new BaseReader();
     private final Pointer pointer = new Pointer();
     private final Pointer pivot = new Pointer();
     private Style tempStyle;
@@ -27,11 +27,7 @@ public class Editor {
         this.writer = new BaseWriter(stream);
     }
 
-    public Editor useStyle(Style style) {
-        this.tempStyle = style;
-        return this;
-    }
-
+    // For navigation
     private void resetPointer() {
         pointer.update(writer.getNextRowIndex(), 0);
         pivot.sync(pointer);
@@ -49,10 +45,20 @@ public class Editor {
         return this;
     }
 
-    public Editor nextSheet() {
-        writer.setNextSheet();
-        resetPointer();
+    public Editor goToNextSheet() {
+        if (hasNextSheet()) {
+            writer.setNextSheet();
+            resetPointer();
+        }
         return this;
+    }
+
+    public boolean hasNextSheet() {
+        return writer.hasNextSheet();
+    }
+
+    public String getSheetName() {
+        return writer.currentSheet == null ? null : writer.currentSheet.getSheetName();
     }
 
     public Editor goToCell(String address) {
@@ -109,6 +115,12 @@ public class Editor {
             pointer.moveDown(steps - 1);
             pivot.sync(pointer);
         }
+        return this;
+    }
+
+    // For writing
+    public Editor useStyle(Style style) {
+        this.tempStyle = style;
         return this;
     }
 
@@ -225,6 +237,10 @@ public class Editor {
         Double d = readDouble();
         return d == null ? null : d.intValue();
     }
+
+//    public <T> List<T> readSection(ReaderConfig<T> config) {
+//
+//    }
 
     public Editor config(Function<Config, Config> f) {
         f.apply(new Config(this));

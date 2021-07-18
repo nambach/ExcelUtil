@@ -1,6 +1,6 @@
-package io.nambm.excel.core;
+package io.github.nambach.excelutil.core;
 
-import io.nambm.excel.style.Style;
+import io.github.nambach.excelutil.style.Style;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;

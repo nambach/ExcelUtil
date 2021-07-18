@@ -1,4 +1,4 @@
-package io.nambm.excel.style;
+package io.github.nambach.excelutil.style;
 
 import lombok.Getter;
 import lombok.Setter;

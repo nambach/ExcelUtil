@@ -1,4 +1,4 @@
-package io.nambm.excel.core;
+package io.github.nambach.excelutil.core;
 
 import lombok.AccessLevel;
 import lombok.Getter;

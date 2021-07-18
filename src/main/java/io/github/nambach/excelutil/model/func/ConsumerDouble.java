@@ -1,4 +1,4 @@
-package io.nambm.excel.model.func;
+package io.github.nambach.excelutil.model.func;
 
 import java.util.function.BiConsumer;
 

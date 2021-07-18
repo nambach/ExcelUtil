@@ -1,6 +1,6 @@
-package io.nambm.excel.model.func;
+package io.github.nambach.excelutil.model.func;
 
-import io.nambm.excel.util.ReflectUtil;
+import io.github.nambach.excelutil.util.ReflectUtil;
 
 import java.util.function.BiConsumer;
 

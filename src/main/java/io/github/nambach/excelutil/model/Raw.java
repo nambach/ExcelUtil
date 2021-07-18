@@ -1,4 +1,4 @@
-package io.nambm.excel.model;
+package io.github.nambach.excelutil.model;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package io.nambm.excel.util;
+package io.github.nambach.excelutil.util;
 
 import lombok.SneakyThrows;
 

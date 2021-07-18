@@ -1,6 +1,6 @@
-package io.nambm.excel.style;
+package io.github.nambach.excelutil.style;
 
-import io.nambm.excel.util.Node;
+import io.github.nambach.excelutil.util.Node;
 import lombok.Getter;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

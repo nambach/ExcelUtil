@@ -1,6 +1,6 @@
-package io.nambm.excel.core;
+package io.github.nambach.excelutil.core;
 
-import io.nambm.excel.Writer;
+import io.github.nambach.excelutil.Writer;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

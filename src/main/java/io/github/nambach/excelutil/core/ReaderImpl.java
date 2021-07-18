@@ -1,7 +1,7 @@
-package io.nambm.excel.core;
+package io.github.nambach.excelutil.core;
 
-import io.nambm.excel.Reader;
-import io.nambm.excel.model.Raw;
+import io.github.nambach.excelutil.Reader;
+import io.github.nambach.excelutil.model.Raw;
 
 import java.io.InputStream;
 import java.util.LinkedHashMap;
