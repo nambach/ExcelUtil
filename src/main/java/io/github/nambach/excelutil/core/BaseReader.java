@@ -1,4 +1,4 @@
-package io.nambm.excel.reader;
+package io.nambm.excel.core;
 
 import io.nambm.excel.model.Raw;
 import io.nambm.excel.model.func.ConsumerBoolean;

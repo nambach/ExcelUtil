@@ -1,4 +1,4 @@
-package io.nambm.excel.reader;
+package io.nambm.excel.core;
 
 import io.nambm.excel.model.func.ConsumerBoolean;
 import io.nambm.excel.model.func.ConsumerDate;

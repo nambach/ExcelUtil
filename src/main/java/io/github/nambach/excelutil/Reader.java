@@ -1,7 +1,7 @@
-package io.nambm.excel;
+package io.github.nambach.excelutil;
 
-import io.nambm.excel.model.Raw;
-import io.nambm.excel.reader.ReaderConfig;
+import io.github.nambach.excelutil.core.ReaderConfig;
+import io.github.nambach.excelutil.model.Raw;
 
 import java.io.InputStream;
 import java.util.List;

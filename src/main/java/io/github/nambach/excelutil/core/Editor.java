@@ -1,15 +1,20 @@
-package io.nambm.excel.writer;
+package io.nambm.excel.core;
 
 import io.nambm.excel.style.Style;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Date;
 import java.util.function.Function;
 
 public class Editor {
     private final BaseWriter writer;
+    private final Read writer;
     private final Pointer pointer = new Pointer();
     private final Pointer pivot = new Pointer();
     private Style tempStyle;
@@ -150,6 +155,75 @@ public class Editor {
 
     public ByteArrayInputStream exportToFile() {
         return writer.exportToFile();
+    }
+
+    // For reading
+    private Double tryParse(String s) {
+        try {
+            return Double.parseDouble(s);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public String readString() {
+        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                return Double.toString(cell.getNumericCellValue());
+            case BOOLEAN:
+                return Boolean.toString(cell.getBooleanCellValue());
+            default:
+                return null;
+        }
+    }
+
+    public Date readDate() {
+        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
+        if (cell.getCellType() == CellType.NUMERIC) {
+            return cell.getDateCellValue();
+        }
+        return null;
+    }
+
+    public LocalDateTime readLocalDateTime() {
+        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
+        if (cell.getCellType() == CellType.NUMERIC) {
+            return cell.getLocalDateTimeCellValue();
+        }
+        return null;
+    }
+
+    public Double readDouble() {
+        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
+        switch (cell.getCellType()) {
+            case STRING:
+                return tryParse(cell.getStringCellValue());
+            case NUMERIC:
+                return cell.getNumericCellValue();
+            case BOOLEAN:
+                return (double) (cell.getBooleanCellValue() ? 1 : 0);
+            default:
+                return null;
+        }
+    }
+
+    public Float readFloat() {
+        Double d = readDouble();
+        return d == null ? null : d.floatValue();
+    }
+
+    public Long readLong() {
+        Double d = readDouble();
+        return d == null ? null : d.longValue();
+    }
+
+    public Integer readInt() {
+        Double d = readDouble();
+        return d == null ? null : d.intValue();
     }
 
     public Editor config(Function<Config, Config> f) {

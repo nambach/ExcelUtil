@@ -1,8 +1,8 @@
-package io.nambm.excel;
+package io.github.nambach.excelutil;
 
-import io.nambm.excel.writer.CellInfo;
-import io.nambm.excel.writer.DataTemplate;
-import io.nambm.excel.writer.Template;
+import io.github.nambach.excelutil.core.CellInfo;
+import io.github.nambach.excelutil.core.DataTemplate;
+import io.github.nambach.excelutil.core.Template;
 
 import java.io.ByteArrayInputStream;
 import java.util.Collection;

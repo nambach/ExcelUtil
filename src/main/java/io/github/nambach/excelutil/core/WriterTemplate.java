@@ -1,4 +1,4 @@
-package io.nambm.excel.writer;
+package io.nambm.excel.core;
 
 public interface WriterTemplate {
 }

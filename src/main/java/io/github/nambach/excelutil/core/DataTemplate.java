@@ -1,6 +1,5 @@
-package io.nambm.excel.writer;
+package io.nambm.excel.core;
 
-import io.nambm.excel.reader.ReaderConfig;
 import io.nambm.excel.style.DefaultStyle;
 import io.nambm.excel.style.Style;
 import io.nambm.excel.util.ReflectUtil;

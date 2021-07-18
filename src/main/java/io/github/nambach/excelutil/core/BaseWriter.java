@@ -1,4 +1,4 @@
-package io.nambm.excel.writer;
+package io.nambm.excel.core;
 
 import io.nambm.excel.style.CacheStyle;
 import io.nambm.excel.style.DefaultStyle;
@@ -97,6 +97,11 @@ class BaseWriter {
             cell = row.createCell(colAt);
         }
         return cell;
+    }
+
+    Cell getCellAt(int rowAt, int colAt) {
+        Row row = getRowAt(rowAt);
+        return getCellAt(row, colAt);
     }
 
     public <T> void writeData(DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {
