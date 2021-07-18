@@ -53,7 +53,6 @@
     <properties>
         <java.version>1.8</java.version>
         <org.apache.poi.version>4.1.2</org.apache.poi.version>
-        <gpg.keyname>8D72E84FBFCFB81A69DB9F0B85F1A3C19A9ECA57</gpg.keyname>
     </properties>
 
     <dependencies>
@@ -145,10 +144,6 @@
                         <goals>
                             <goal>sign</goal>
                         </goals>
-                        <configuration>
-                            <keyname>${gpg.keyname}</keyname>
-                            <passphrase>12345678</passphrase>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
