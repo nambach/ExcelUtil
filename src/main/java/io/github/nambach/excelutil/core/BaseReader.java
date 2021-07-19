@@ -1,66 +1,52 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.model.Raw;
-import io.github.nambach.excelutil.model.func.ConsumerBoolean;
-import io.github.nambach.excelutil.model.func.ConsumerChecker;
-import io.github.nambach.excelutil.model.func.ConsumerDate;
-import io.github.nambach.excelutil.model.func.ConsumerDouble;
-import io.github.nambach.excelutil.model.func.ConsumerString;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.beans.PropertyDescriptor;
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
 
-class BaseReader {
+class BaseReader extends BaseEditor {
 
     public BaseReader() {
     }
 
-    public <T> List<Raw<T>> readSheet(Sheet sheet, ReaderConfig<T> config) {
+    public <T> List<Raw<T>> readSheet(Sheet sheet, ReaderConfig<T> baseConfig, int rowAt, int colAt) {
         try {
             List<Raw<T>> result = new LinkedList<>();
 
-            // sheet.getFirstRowNum() return -1 if rows is empty
-            int firstRowNum = sheet.getFirstRowNum();
-            if (firstRowNum == -1) {
-                return new LinkedList<>();
+            if (sheet.getPhysicalNumberOfRows() == 0) {
+                return result;
             }
 
-            Map<Integer, String> fieldNames = config.getFieldNameByColIndex();
-            int metadataRowIndex = config.getMetadataRowIndex();
-            if (metadataRowIndex >= 0) {
-                Row metadataRow = sheet.getRow(metadataRowIndex);
-                for (Cell cell : metadataRow) {
-                    fieldNames.put(cell.getColumnIndex(), cell.getStringCellValue());
-                }
-            }
+            ReaderConfig<T> config = baseConfig.translate(rowAt, colAt);
+            Map<Integer, Handler<T>> handlerMap = config.getHandlerMap();
 
-            Map<Integer, String> columnTitles = new HashMap<>();
+            int hasTitle = 0;
+            Map<Integer, String> titleMap = new HashMap<>();
             int rowTitleIndex = config.getTitleRowIndex();
-            if (rowTitleIndex >= 0 && rowTitleIndex != metadataRowIndex) {
+            if (rowTitleIndex >= 0) {
+                hasTitle = 1;
                 Row titleRow = sheet.getRow(rowTitleIndex);
                 for (Cell cell : titleRow) {
-                    columnTitles.put(cell.getColumnIndex(), cell.getStringCellValue());
+                    if (cell.getColumnIndex() < colAt) {
+                        continue;
+                    }
+                    titleMap.put(cell.getColumnIndex(), cell.getStringCellValue());
                 }
             }
 
             for (Row currentRow : sheet) {
-                if (currentRow.getRowNum() < config.getDataFromRow()) {
+                if (currentRow.getRowNum() < rowAt + hasTitle) {
                     continue;
                 }
 
@@ -70,16 +56,25 @@ class BaseReader {
 
                 for (Cell cell : currentRow) {
                     int colIndex = cell.getColumnIndex();
-                    String fieldName = fieldNames.get(colIndex);
-                    String colTitle = columnTitles.get(colIndex);
+                    if (colIndex < colAt) {
+                        continue;
+                    }
 
-                    BiConsumer<T, ?> customSetter = config.getConsumer(colIndex, fieldName, colTitle);
+                    Handler<T> handler = handlerMap.get(colIndex);
+                    String colTitle = titleMap.get(colIndex);
+
+                    // Prepare ingredients
+                    String fieldName = handler.getFieldName();
                     PropertyDescriptor pd = ReflectUtil.getField(fieldName, config.getTClass());
+                    BiConsumer<T, ReaderCell> handle = handler.getHandler();
 
-                    if (customSetter != null) {
-                        handleConsumer(customSetter, object, cell);
-                    } else if (pd != null) {
-                        handleField(pd, object, cell);
+                    // Wrap cell
+                    ReaderCell readerCell = new ReaderCell(cell, colTitle);
+
+                    if (pd != null) {
+                        handleField(pd, object, readerCell);
+                    } else if (handle != null) {
+                        handle.accept(object, readerCell);
                     } else {
                         handleOther(raw, cell, fieldName, colTitle);
                     }
@@ -95,71 +90,31 @@ class BaseReader {
         }
     }
 
-    private <T> void handleConsumer(BiConsumer<T, ?> consumer, T object, Cell cell) {
-        switch (ConsumerChecker.determineSecondParamType(consumer)) {
-            case STRING:
-                if (cell.getCellType() != CellType.STRING) {
-                    cell.setCellType(CellType.STRING);
-                }
-                ReflectUtil.safeConsume((ConsumerString<T>) consumer,
-                                        object, cell.getStringCellValue());
-                break;
-            case DOUBLE:
-                if (cell.getCellType() == CellType.NUMERIC) {
-                    ReflectUtil.safeConsume((ConsumerDouble<T>) consumer,
-                                            object, cell.getNumericCellValue());
-                }
-                break;
-            case BOOLEAN:
-                if (cell.getCellType() == CellType.BOOLEAN) {
-                    ReflectUtil.safeConsume((ConsumerBoolean<T>) consumer,
-                                            object, cell.getBooleanCellValue());
-                }
-                break;
-            case DATE:
-                ReflectUtil.safeConsume((ConsumerDate<T>) consumer,
-                                        object, cell.getDateCellValue());
-        }
-    }
-
-    private <T> void handleField(PropertyDescriptor pd, T object, Cell cell) {
+    private <T> void handleField(PropertyDescriptor pd, T object, ReaderCell cell) {
         Method setter = pd.getWriteMethod();
         try {
             Object cellValue = null;
             switch (ReflectUtil.checkType(pd.getPropertyType())) {
                 case STRING:
-                    if (cell.getCellType() != CellType.STRING) {
-                        cell.setCellType(CellType.STRING);
-                    }
-                    cellValue = cell.getStringCellValue();
+                    cellValue = cell.readString();
                     break;
                 case LONG:
-                    if (cell.getCellType() == CellType.NUMERIC) {
-                        cellValue = (long) cell.getNumericCellValue();
-                    }
+                    cellValue = cell.readLong();
                     break;
                 case INTEGER:
-                    if (cell.getCellType() == CellType.NUMERIC) {
-                        cellValue = (int) cell.getNumericCellValue();
-                    }
+                    cellValue = cell.readInt();
                     break;
                 case DOUBLE:
-                    if (cell.getCellType() == CellType.NUMERIC) {
-                        cellValue = cell.getNumericCellValue();
-                    }
+                    cellValue = cell.readDouble();
                     break;
                 case FLOAT:
-                    if (cell.getCellType() == CellType.NUMERIC) {
-                        cellValue = (float) cell.getNumericCellValue();
-                    }
+                    cellValue = cell.readFloat();
                     break;
                 case BOOLEAN:
-                    if (cell.getCellType() == CellType.BOOLEAN) {
-                        cellValue = cell.getBooleanCellValue();
-                    }
+                    cellValue = cell.readBoolean();
                     break;
                 case DATE:
-                    cellValue = cell.getDateCellValue();
+                    cellValue = cell.readDate();
                     break;
                 default:
                     return;
@@ -186,54 +141,6 @@ class BaseReader {
             case BOOLEAN:
                 raw.getOtherData().put(key, cell.getBooleanCellValue());
                 break;
-        }
-    }
-
-    public <T> List<Raw<T>> readSingleSheet(InputStream inputStream, ReaderConfig<T> config) {
-        try {
-            Workbook workbook = new XSSFWorkbook(inputStream);
-            int sheetIndex = config.getSheetIndexes().stream().findFirst().orElse(0);
-            Sheet sheet = workbook.getSheetAt(sheetIndex);
-            return readSheet(sheet, config);
-        } catch (IOException e) {
-            System.out.println("Error while loading excel file: " + e.getMessage());
-            e.printStackTrace();
-            return new LinkedList<>();
-        }
-    }
-
-    public <T> Map<String, List<Raw<T>>> readMultipleSheets(InputStream inputStream, ReaderConfig<T> config) {
-        Map<String, List<Raw<T>>> result = new LinkedHashMap<>();
-        try {
-            Workbook workbook = new XSSFWorkbook(inputStream);
-            for (Integer sheetIndex : config.getSheetIndexes()) {
-                Sheet sheet = workbook.getSheetAt(sheetIndex);
-                String sheetName = sheet.getSheetName();
-                List<Raw<T>> rawList = readSheet(sheet, config);
-                result.put(sheetName, rawList);
-            }
-            return result;
-        } catch (IOException e) {
-            System.out.println("Error while loading excel file: " + e.getMessage());
-            e.printStackTrace();
-            return result;
-        }
-    }
-
-    public <T> Map<String, List<Raw<T>>> readAllSheets(InputStream inputStream, ReaderConfig<T> config) {
-        Map<String, List<Raw<T>>> result = new LinkedHashMap<>();
-        try {
-            Workbook workbook = new XSSFWorkbook(inputStream);
-            for (Sheet sheet : workbook) {
-                String sheetName = sheet.getSheetName();
-                List<Raw<T>> rawList = readSheet(sheet, config);
-                result.put(sheetName, rawList);
-            }
-            return result;
-        } catch (IOException e) {
-            System.out.println("Error while loading excel file: " + e.getMessage());
-            e.printStackTrace();
-            return result;
         }
     }
 }

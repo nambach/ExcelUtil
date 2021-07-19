@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
-public class CellInfo {
+public class WriterCell {
     private String content;
     private Double value;
     private Date date;
@@ -21,54 +21,54 @@ public class CellInfo {
     private int colSpan = 1;
     private Style style;
 
-    CellInfo(Pointer pointer, Style style) {
+    WriterCell(Pointer pointer, Style style) {
         this.rowAt = pointer.getRow();
         this.colAt = pointer.getCol();
         this.style = style;
     }
 
-    public CellInfo text(String s) {
+    public WriterCell text(String s) {
         this.content = s;
         return this;
     }
 
-    public CellInfo number(double v) {
+    public WriterCell number(double v) {
         this.value = v;
         return this;
     }
 
-    public CellInfo date(Date d) {
+    public WriterCell date(Date d) {
         this.date = d;
         this.datePattern = "MMM dd, yyyy";
         return this;
     }
 
-    public CellInfo date(Date d, String datePattern) {
+    public WriterCell date(Date d, String datePattern) {
         this.date = d;
         this.datePattern = datePattern;
         return this;
     }
 
-    public CellInfo colSpan(int v) {
+    public WriterCell colSpan(int v) {
         if (v > 1) {
             this.colSpan = v;
         }
         return this;
     }
 
-    public CellInfo rowSpan(int v) {
+    public WriterCell rowSpan(int v) {
         if (v > 1) {
             this.rowSpan = v;
         }
         return this;
     }
 
-    public CellInfo style(Style style) {
+    public WriterCell style(Style style) {
         this.style = style;
         return this;
     }
 
-    public CellInfo style(Function<Style.StyleBuilder, Style.StyleBuilder> f) {
+    public WriterCell style(Function<Style.StyleBuilder, Style.StyleBuilder> f) {
         if (f != null) {
             // Create new copied style, not using the current reference
             Style.StyleBuilder builder = Style.builder(this.style);

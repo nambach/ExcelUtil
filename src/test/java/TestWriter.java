@@ -1,10 +1,9 @@
-import io.github.nambach.excelutil.Writer;
+import io.github.nambach.excelutil.core.DataTemplate;
+import io.github.nambach.excelutil.core.SequentialWriter;
+import io.github.nambach.excelutil.core.Template;
 import io.github.nambach.excelutil.style.BorderSide;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.FileUtil;
-import io.github.nambach.excelutil.core.DataTemplate;
-import io.github.nambach.excelutil.core.Template;
-import io.github.nambach.excelutil.core.WriterImpl;
 import lombok.SneakyThrows;
 import model.Address;
 import model.Student;
@@ -60,7 +59,7 @@ public class TestWriter {
     public static final Style DATE = Style.builder().datePattern("dd/MM/yyyy").build();
 
     public static final Style FIRST_NAME_STYLE = Style.builder().border(BorderSide.TOP).build();
-    public static final Style LAST_NAME_STYLE = Style.builder().border(BorderSide.HORIZONTAL, "#fbff00").build();
+    public static final Style LAST_NAME_STYLE = Style.builder().border(BorderSide.NONE, "#fbff00").build();
     public static final Style MARK_STYLE = Style.builder()
                                                 .border(BorderSide.TOP, "#fbff00", BorderStyle.THICK)
                                                 .border(BorderSide.BOTTOM, "#00ff33", BorderStyle.DOUBLE)
@@ -81,7 +80,7 @@ public class TestWriter {
 
     @SneakyThrows
     public static void main(String[] args) {
-        useCaseTakt2();
+        useCase8();
     }
 
     public static void useCase1() {
@@ -228,11 +227,10 @@ public class TestWriter {
                         .headerStyle(HEADER_STYLE)
                         .dataStyle(DATA_STYLE)
                         .autoResizeColumns(true)
-                        .reuseForImport(true)
                         .conditionalRowStyle(s -> s.getMark() > 7 ? YELLOW_BACKGROUND :
                                                   s.getMark() < 5 ? GRAY_BACKGROUND : null));
 
-        Writer writer = new WriterImpl();
+        SequentialWriter writer = new SequentialWriter();
         writer.createNewSheet("A");
         writer.writeData(table, students);
         writer.createNewSheet("B");
@@ -281,7 +279,7 @@ public class TestWriter {
                 .right(c -> c.text("Detail"))
                 .right(c -> c.text("Alert Duration [M]").style(fontRed));
 
-        Writer writer = new WriterImpl();
+        SequentialWriter writer = new SequentialWriter();
         writer.createNewSheet("Sheet 1");
         writer.writeTemplate(template);
         writer.writeLine(0, c -> c.text("ABC"));

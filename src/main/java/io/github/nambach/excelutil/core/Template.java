@@ -12,8 +12,8 @@ import java.util.function.Function;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
-public class Template implements WriterTemplate, Iterable<CellInfo> {
-    private final LinkedList<CellInfo> cells = new LinkedList<>();
+public class Template implements Iterable<WriterCell> {
+    private final LinkedList<WriterCell> cells = new LinkedList<>();
     private final Pointer pointer = new Pointer();
     private final Pointer pivot = new Pointer();
     private Style tempStyle;
@@ -58,8 +58,8 @@ public class Template implements WriterTemplate, Iterable<CellInfo> {
         return this;
     }
 
-    public Template cell(Function<CellInfo, CellInfo> builder) {
-        CellInfo cell = new CellInfo(pointer, tempStyle);
+    public Template cell(Function<WriterCell, WriterCell> builder) {
+        WriterCell cell = new WriterCell(pointer, tempStyle);
         builder.apply(cell);
         cells.add(cell);
 
@@ -69,12 +69,12 @@ public class Template implements WriterTemplate, Iterable<CellInfo> {
         return this;
     }
 
-    public Template right(Function<CellInfo, CellInfo> builder) {
+    public Template right(Function<WriterCell, WriterCell> builder) {
         moveRight();
         return cell(builder);
     }
 
-    public Template down(Function<CellInfo, CellInfo> builder) {
+    public Template down(Function<WriterCell, WriterCell> builder) {
         moveDown();
         return cell(builder);
     }
@@ -85,13 +85,14 @@ public class Template implements WriterTemplate, Iterable<CellInfo> {
     }
 
     @Override
-    public Iterator<CellInfo> iterator() {
+    public Iterator<WriterCell> iterator() {
         return cells.iterator();
     }
 
     public ByteArrayInputStream getFile() {
-        BaseWriter writer = new BaseWriter();
-        writer.writeTemplate(this);
-        return writer.exportToFile();
+        Editor editor = new Editor();
+        editor.goToSheet(0);
+        editor.writeTemplate(this);
+        return editor.exportToFile();
     }
 }

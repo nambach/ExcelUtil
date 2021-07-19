@@ -1,7 +1,7 @@
 package io.github.nambach.excelutil.core;
 
-import io.github.nambach.excelutil.style.DefaultStyle;
 import io.github.nambach.excelutil.style.Style;
+import io.github.nambach.excelutil.style.StyleConstant;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import io.github.nambach.excelutil.util.TextUtil;
 import lombok.AccessLevel;
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
-public class DataTemplate<T> implements WriterTemplate {
+public class DataTemplate<T> {
 
     private List<ColumnMapper<T>> mappers = new LinkedList<>();
     private Class<T> tClass;
@@ -31,12 +31,11 @@ public class DataTemplate<T> implements WriterTemplate {
     private int rowAt;
     private int colAt;
 
-    private boolean reuseForImport;
     private boolean autoResizeColumns;
     private boolean noHeader;
 
-    private Style headerStyle = DefaultStyle.HEADER_STYLE;
-    private Style dataStyle = DefaultStyle.DATA_STYLE;
+    private Style headerStyle = StyleConstant.HEADER_STYLE;
+    private Style dataStyle = StyleConstant.DATA_STYLE;
     private Function<T, Style> conditionalRowStyle;
 
     DataTemplate(Class<T> tClass) {
@@ -76,7 +75,6 @@ public class DataTemplate<T> implements WriterTemplate {
         clone.headerStyle = headerStyle;
         clone.dataStyle = dataStyle;
         clone.autoResizeColumns = autoResizeColumns;
-        clone.reuseForImport = reuseForImport;
         clone.conditionalRowStyle = conditionalRowStyle;
         return clone;
     }
@@ -128,7 +126,6 @@ public class DataTemplate<T> implements WriterTemplate {
 
     public ByteArrayInputStream getFileForImport() {
         DataTemplate<T> clone = this.cloneSelf();
-        clone.setReuseForImport(true);
 
         Editor editor = new Editor();
         return editor.goToSheet(0)
@@ -159,13 +156,9 @@ public class DataTemplate<T> implements WriterTemplate {
         for (ColumnMapper<T> mapper : mappers) {
             config.column(i++, mapper.getFieldName());
         }
-        if (reuseForImport) {
-            config.rowMetadataAt(0);
-            config.rowDataFrom(2);
-        } else {
-            config.rowDataFrom(1);
-        }
-        return config;
+        config.titleAtRow(0);
+        config.dataFromRow(1);
+        return config.translate(rowAt, colAt);
     }
 
     public static class Builder<T> {
@@ -193,11 +186,6 @@ public class DataTemplate<T> implements WriterTemplate {
             } catch (Exception e) {
                 throw new Exception("Error while parsing cell address: ", e);
             }
-        }
-
-        public Builder<T> reuseForImport(boolean b) {
-            template.reuseForImport = b;
-            return this;
         }
 
         public Builder<T> autoResizeColumns(boolean b) {

@@ -2,11 +2,8 @@ package io.github.nambach.excelutil.style;
 
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
-public class DefaultStyle {
-    public static final Style DATE = Style
-            .builder()
-            .date(true)
-            .build();
+public class StyleConstant {
+
     static final String FONT_NAME = "Times New Roman";
     public static final Style TIMES_NEW_ROMAN = Style
             .builder()

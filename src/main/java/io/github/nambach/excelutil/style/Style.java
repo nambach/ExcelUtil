@@ -4,18 +4,10 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.FontUnderline;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.xssf.usermodel.IndexedColorMap;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.awt.*;
 import java.util.LinkedHashSet;
 import java.util.UUID;
 
@@ -60,141 +52,11 @@ public class Style {
         }
     }
 
-    public XSSFCellStyle process(CacheStyle cacheStyle) {
-        // fetch from cache
-        if (cacheStyle.containStyle(uuid)) {
-            return cacheStyle.get(uuid);
+    public StyleHandler toHandler(CacheStyle cache) {
+        if (cache.getWorkbook() instanceof XSSFWorkbook) {
+            return new XSSFStyleHandler(this, cache.getColorCache());
         }
-
-        // cache not found => create new style
-        XSSFCellStyle style = processWithoutCache(cacheStyle.getWorkbook());
-
-        // Save cache
-        cacheStyle.put(uuid, style);
-        return style;
-    }
-
-    public XSSFCellStyle processWithoutCache(XSSFWorkbook workbook) {
-        System.out.println("New style created");
-
-        XSSFCellStyle style = workbook.createCellStyle();
-        style.setFont(prepareFont(workbook));
-
-        if (date == Boolean.TRUE) {
-            String pattern = datePattern != null ? datePattern : "MMM dd, yyyy";
-            style.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat(pattern));
-        }
-
-        if (backgroundColorInHex != null) {
-            style.setFillForegroundColor(parseColorHex(workbook, backgroundColorInHex, DefaultStyle.WHITE));
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        }
-
-        processBorder(style);
-
-        if (horizontalAlignment != null) {
-            style.setAlignment(horizontalAlignment);
-        }
-        if (verticalAlignment != null) {
-            style.setVerticalAlignment(verticalAlignment);
-        }
-
-        return style;
-    }
-
-    private Font prepareFont(XSSFWorkbook workbook) {
-        XSSFFont font = workbook.createFont();
-        if (fontName != null) {
-            font.setFontName(fontName);
-        }
-        if (fontSize != null && fontSize != 0) {
-            font.setFontHeightInPoints(fontSize);
-        }
-        if (bold == Boolean.TRUE) {
-            font.setBold(true);
-        }
-        if (underline == Boolean.TRUE) {
-            font.setUnderline(FontUnderline.SINGLE);
-        }
-        if (fontColorInHex != null) {
-            font.setColor(parseColorHex(workbook, fontColorInHex, DefaultStyle.BLACK));
-        }
-        return font;
-    }
-
-    private void processBorder(XSSFCellStyle style) {
-        if (borders == null) {
-            return;
-        }
-        for (Border border : borders) {
-            if (border.getBorderSide() == null) {
-                return;
-            }
-            switch (border.getBorderSide()) {
-                case NONE:
-                    style.setBorderTop(BorderStyle.NONE);
-                    style.setBorderBottom(BorderStyle.NONE);
-                    style.setBorderLeft(BorderStyle.NONE);
-                    style.setBorderRight(BorderStyle.NONE);
-                    return;
-                case LEFT:
-                    style.setBorderLeft(border.getBorderStyle());
-                    style.setLeftBorderColor(border.getBorderColor());
-                    break;
-                case TOP:
-                    style.setBorderTop(border.getBorderStyle());
-                    style.setTopBorderColor(border.getBorderColor());
-                    break;
-                case RIGHT:
-                    style.setBorderRight(border.getBorderStyle());
-                    style.setRightBorderColor(border.getBorderColor());
-                    break;
-                case BOTTOM:
-                    style.setBorderBottom(border.getBorderStyle());
-                    style.setBottomBorderColor(border.getBorderColor());
-                    break;
-                case VERTICAL:
-                    style.setBorderLeft(border.getBorderStyle());
-                    style.setBorderRight(border.getBorderStyle());
-
-                    style.setLeftBorderColor(border.getBorderColor());
-                    style.setRightBorderColor(border.getBorderColor());
-                    break;
-                case HORIZONTAL:
-                    style.setBorderTop(border.getBorderStyle());
-                    style.setBorderBottom(border.getBorderStyle());
-
-                    style.setTopBorderColor(border.getBorderColor());
-                    style.setBottomBorderColor(border.getBorderColor());
-                    break;
-                case FULL:
-                    style.setBorderLeft(border.getBorderStyle());
-                    style.setBorderRight(border.getBorderStyle());
-                    style.setBorderTop(border.getBorderStyle());
-                    style.setBorderBottom(border.getBorderStyle());
-
-                    style.setLeftBorderColor(border.getBorderColor());
-                    style.setRightBorderColor(border.getBorderColor());
-                    style.setTopBorderColor(border.getBorderColor());
-                    style.setBottomBorderColor(border.getBorderColor());
-                    break;
-            }
-        }
-
-    }
-
-    private XSSFColor parseColorHex(XSSFWorkbook workbook, String hex, String fallbackHex) {
-        // https://stackoverflow.com/a/7471183
-        Color color;
-        try {
-            color = Color.decode(hex);
-        } catch (Exception e) {
-            color = Color.decode(fallbackHex);
-        }
-
-        // https://stackoverflow.com/a/23490977
-        IndexedColorMap colorMap = workbook.getStylesSource().getIndexedColors();
-        return new XSSFColor(color, colorMap);
+        return null;
     }
 
     Style cloneSelf() {

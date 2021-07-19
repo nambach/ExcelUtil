@@ -2,33 +2,39 @@ package io.github.nambach.excelutil.style;
 
 import io.github.nambach.excelutil.util.Node;
 import lombok.Getter;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Getter
 public class CacheStyle {
-    private final Node<XSSFCellStyle> root = new Node<>("root", null);
-    private final XSSFWorkbook workbook;
+    private final Node<CellStyle> root = new Node<>("root", null);
+    private final Workbook workbook;
 
-    public CacheStyle(XSSFWorkbook workbook) {
+    // For XSSF format
+    private final Map<String, XSSFColor> colorCache = new HashMap<>();
+
+    public CacheStyle(Workbook workbook) {
         this.workbook = workbook;
     }
 
     public boolean containStyle(String id) {
-        Node<XSSFCellStyle> child = root.getChild(id);
+        Node<CellStyle> child = root.getChild(id);
         return child != null && child.getData() != null;
     }
 
-    public XSSFCellStyle get(String id) {
+    public CellStyle get(String id) {
         return root.getChild(id).getData();
     }
 
-    public void put(String id, XSSFCellStyle style) {
+    public void put(String id, CellStyle style) {
         root.addChild(id, style);
     }
 
@@ -80,7 +86,7 @@ public class CacheStyle {
         return clone;
     }
 
-    public XSSFCellStyle accumulate(Style... styles) {
+    public CellStyle accumulate(Style... styles) {
         if (styles.length == 0) {
             return null;
         }
@@ -93,7 +99,7 @@ public class CacheStyle {
                 .stream(styles).filter(Objects::nonNull)
                 .map(Style::getUuid)
                 .collect(Collectors.toList());
-        Node<XSSFCellStyle> node = root.lookup(idPath);
+        Node<CellStyle> node = root.lookup(idPath);
         if (node != null && node.getData() != null) {
             return node.getData();
         }
@@ -103,7 +109,7 @@ public class CacheStyle {
         if (combinedStyle == null) {
             return null;
         }
-        XSSFCellStyle style = combinedStyle.processWithoutCache(workbook);
+        CellStyle style = combinedStyle.toHandler(this).renderCellStyle(workbook);
         root.updatePath(idPath, style);
         return style;
     }

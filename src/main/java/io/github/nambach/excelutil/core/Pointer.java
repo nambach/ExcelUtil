@@ -15,6 +15,11 @@ class Pointer {
     Pointer() {
     }
 
+    public Pointer(int row, int col) {
+        this.row = row;
+        this.col = col;
+    }
+
     public void sync(Pointer p) {
         this.row = p.row;
         this.col = p.col;

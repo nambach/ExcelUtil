@@ -1,66 +1,93 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.model.Raw;
 import io.github.nambach.excelutil.style.Style;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
+import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
-public class Editor {
+public class Editor extends BaseEditor {
+    private final Workbook workbook;
     private final BaseWriter writer;
-    private final BaseReader reader = new BaseReader();
+    private final BaseReader reader;
     private final Pointer pointer = new Pointer();
     private final Pointer pivot = new Pointer();
+    private Sheet currentSheet;
     private Style tempStyle;
 
     public Editor() {
-        this.writer = new BaseWriter();
+        this(null);
     }
 
+    @SneakyThrows
     public Editor(InputStream stream) {
-        this.writer = new BaseWriter(stream);
+        XSSFWorkbook workbook = stream == null ? new XSSFWorkbook() : new XSSFWorkbook(stream);
+        this.workbook = workbook;
+        this.writer = new BaseWriter(workbook);
+        this.reader = new BaseReader();
+
+        // set active sheet as current
+        if (stream != null && workbook.getNumberOfSheets() != 0) {
+            int index = workbook.getActiveSheetIndex();
+            currentSheet = workbook.getSheetAt(index);
+        }
     }
 
-    // For navigation
+    // Sheet navigation
     private void resetPointer() {
-        pointer.update(writer.getNextRowIndex(), 0);
+        pointer.update(getNextRowIndex(), 0);
         pivot.sync(pointer);
     }
 
+    private int getNextRowIndex() {
+        return currentSheet.getLastRowNum() + 1;
+    }
+
     public Editor goToSheet(int index) {
-        writer.setSheetAt(index);
+        if (workbook.getNumberOfSheets() == 0) {
+            goToSheet("Sheet 1");
+        } else if (index < 0) {
+            currentSheet = workbook.getSheetAt(0);
+        } else if (index + 1 > workbook.getNumberOfSheets()) {
+            currentSheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
+        } else {
+            currentSheet = workbook.getSheetAt(index);
+        }
         resetPointer();
         return this;
     }
 
     public Editor goToSheet(String sheetName) {
-        writer.setActiveSheet(sheetName);
+        if (workbook.getSheet(sheetName) != null) {
+            currentSheet = workbook.getSheet(sheetName);
+        } else {
+            currentSheet = workbook.createSheet(sheetName);
+        }
         resetPointer();
         return this;
     }
 
-    public Editor goToNextSheet() {
-        if (hasNextSheet()) {
-            writer.setNextSheet();
-            resetPointer();
-        }
-        return this;
-    }
-
-    public boolean hasNextSheet() {
-        return writer.hasNextSheet();
-    }
-
     public String getSheetName() {
-        return writer.currentSheet == null ? null : writer.currentSheet.getSheetName();
+        return currentSheet == null ? null : currentSheet.getSheetName();
     }
 
+    public int getTotalSheets() {
+        return workbook.getNumberOfSheets();
+    }
+
+    // Cell navigation
     public Editor goToCell(String address) {
         pointer.update(address);
         pivot.sync(pointer);
@@ -104,14 +131,14 @@ public class Editor {
     }
 
     public Editor enter() {
-        pointer.update(writer.getNextRowIndex(), 0);
+        pointer.update(getNextRowIndex(), 0);
         pivot.sync(pointer);
         return this;
     }
 
     public Editor enter(int steps) {
         if (steps > 0) {
-            this.enter();
+            enter();
             pointer.moveDown(steps - 1);
             pivot.sync(pointer);
         }
@@ -124,10 +151,10 @@ public class Editor {
         return this;
     }
 
-    public Editor writeCell(Function<CellInfo, CellInfo> f) {
-        CellInfo cell = new CellInfo(pointer, tempStyle);
+    public Editor writeCell(Function<WriterCell, WriterCell> f) {
+        WriterCell cell = new WriterCell(pointer, tempStyle);
         f.apply(cell);
-        writer.writeCellInfo(cell);
+        writer.writeCellInfo(currentSheet, cell);
 
         // update pivot
         pivot.moveRight(cell.getColSpan() - 1);
@@ -136,12 +163,12 @@ public class Editor {
     }
 
     public Editor writeTemplate(Template template) {
-        writer.writeTemplate(template);
+        writer.writeTemplate(currentSheet, template);
 
         // update pointer
-        int minRow = template.getCells().stream().map(CellInfo::getRowAt)
+        int minRow = template.getCells().stream().map(WriterCell::getRowAt)
                              .reduce(Math::min).orElse(0);
-        int minCol = template.getCells().stream().map(CellInfo::getColAt)
+        int minCol = template.getCells().stream().map(WriterCell::getColAt)
                              .reduce(Math::min).orElse(0);
         pointer.update(minRow, minCol);
 
@@ -155,94 +182,78 @@ public class Editor {
     }
 
     public <T> Editor writeData(DataTemplate<T> template, Collection<T> data) {
-        writer.writeData(template, data, pointer.getRow(), pointer.getCol());
+        if (data == null) {
+            data = Collections.emptyList();
+        }
+        writer.writeData(currentSheet, template, data, pointer.getRow(), pointer.getCol());
 
         // update pivot
         pivot.moveRight(template.getMappers().size() - 1);
-        int headerRows = (template.isNoHeader() ? 0 : 1) + (template.isReuseForImport() ? 1 : 0);
+        int headerRows = template.isNoHeader() ? 0 : 1;
         pivot.moveDown(data.size() - 1 + headerRows);
 
         return this;
     }
 
     public ByteArrayInputStream exportToFile() {
-        return writer.exportToFile();
-    }
-
-    // For reading
-    private Double tryParse(String s) {
         try {
-            return Double.parseDouble(s);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            workbook.write(out);
+            ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
+            out.close();
+            System.out.println("Excel file was successfully saved.");
+            return in;
         } catch (Exception e) {
+            System.out.println("There some error writing excel file:");
             e.printStackTrace();
             return null;
         }
     }
 
+    // For reading
+
     public String readString() {
-        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
-        switch (cell.getCellType()) {
-            case STRING:
-                return cell.getStringCellValue();
-            case NUMERIC:
-                return Double.toString(cell.getNumericCellValue());
-            case BOOLEAN:
-                return Boolean.toString(cell.getBooleanCellValue());
-            default:
-                return null;
-        }
+        return getCellAt(currentSheet, pointer).readString();
     }
 
     public Date readDate() {
-        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return cell.getDateCellValue();
-        }
-        return null;
+        return getCellAt(currentSheet, pointer).readDate();
     }
 
     public LocalDateTime readLocalDateTime() {
-        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
-        if (cell.getCellType() == CellType.NUMERIC) {
-            return cell.getLocalDateTimeCellValue();
-        }
-        return null;
+        return getCellAt(currentSheet, pointer).readLocalDateTime();
     }
 
     public Double readDouble() {
-        Cell cell = writer.getCellAt(pointer.getRow(), pointer.getCol());
-        switch (cell.getCellType()) {
-            case STRING:
-                return tryParse(cell.getStringCellValue());
-            case NUMERIC:
-                return cell.getNumericCellValue();
-            case BOOLEAN:
-                return (double) (cell.getBooleanCellValue() ? 1 : 0);
-            default:
-                return null;
-        }
+        return getCellAt(currentSheet, pointer).readDouble();
     }
 
     public Float readFloat() {
-        Double d = readDouble();
-        return d == null ? null : d.floatValue();
+        return getCellAt(currentSheet, pointer).readFloat();
     }
 
     public Long readLong() {
-        Double d = readDouble();
-        return d == null ? null : d.longValue();
+        return getCellAt(currentSheet, pointer).readLong();
     }
 
     public Integer readInt() {
-        Double d = readDouble();
-        return d == null ? null : d.intValue();
+        return getCellAt(currentSheet, pointer).readInt();
     }
 
-//    public <T> List<T> readSection(ReaderConfig<T> config) {
-//
-//    }
+    public Boolean readBoolean() {
+        return getCellAt(currentSheet, pointer).readBoolean();
+    }
 
-    public Editor config(Function<Config, Config> f) {
+    public <T> List<T> readSection(ReaderConfig<T> config) {
+        List<Raw<T>> rawList = reader.readSheet(currentSheet, config, pointer.getRow(), pointer.getCol());
+        return rawList.stream().map(Raw::getData).collect(Collectors.toList());
+    }
+
+    public <T> List<Raw<T>> readSectionRaw(ReaderConfig<T> config) {
+        return reader.readSheet(currentSheet, config, pointer.getRow(), pointer.getCol());
+    }
+
+    public Editor configSheet(Function<Config, Config> f) {
         f.apply(new Config(this));
         return this;
     }
@@ -261,7 +272,7 @@ public class Editor {
             if (cols < 0) {
                 cols = 0;
             }
-            Sheet sheet = editor.writer.currentSheet;
+            Sheet sheet = editor.currentSheet;
             sheet.createFreezePane(cols, rows);
             return this;
         }

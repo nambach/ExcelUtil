@@ -5,8 +5,6 @@ public enum BorderSide {
     TOP,
     RIGHT,
     BOTTOM,
-    VERTICAL,
-    HORIZONTAL,
     FULL,
     NONE
 }
