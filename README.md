@@ -1,29 +1,19 @@
 # Data Excel Exporter
 
+![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.0)
+
 A wrapper utility using [Spreadsheet Apache POI](http://poi.apache.org/components/spreadsheet/quick-guide.html) library to export your **data list** Excel file with zero effort.
 
 ## Installation
-
-Download the release jar file and run below command in current folder
-
-```cmd
-mvn install:install-file ^
-   -Dfile=ExcelUtil-1.0.jar ^
-   -DgroupId=io.nambm ^
-   -DartifactId=ExcelUtil ^
-   -Dversion=1.0 ^
-   -Dpackaging=jar ^
-   -DgeneratePom=true
-```
-
-In your Maven project, add below dependency
 
 ```xml
 <dependency>
     <groupId>io.github.nambach</groupId>
     <artifactId>ExcelUtil</artifactId>
-    <version>1.0</version>
+    <version>2.0</version>
 </dependency>
+    
+<!-- Apache POI dependencies -->
 <dependency>
     <groupId>org.apache.poi</groupId>
     <artifactId>poi</artifactId>
