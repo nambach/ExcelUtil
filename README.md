@@ -1,6 +1,6 @@
 # Data Excel Exporter
 
-![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.0)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.0)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
 
 A wrapper utility using [Spreadsheet Apache POI](http://poi.apache.org/components/spreadsheet/quick-guide.html) library to export your **data list** Excel file with zero effort.
 
