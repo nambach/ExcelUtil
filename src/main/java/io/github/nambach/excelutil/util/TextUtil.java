@@ -2,7 +2,7 @@ package io.github.nambach.excelutil.util;
 
 public class TextUtil {
 
-    public static synchronized boolean isNullOrEmpty(String s) {
+    public static boolean isNullOrEmpty(String s) {
         return s == null || s.trim().isEmpty();
     }
 

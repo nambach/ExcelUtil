@@ -2,6 +2,7 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.style.StyleConstant;
+import io.github.nambach.excelutil.util.ListUtil;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import io.github.nambach.excelutil.util.TextUtil;
 import lombok.AccessLevel;
@@ -12,6 +13,7 @@ import org.apache.poi.ss.util.CellAddress;
 
 import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -83,13 +85,31 @@ public class DataTemplate<T> {
         return ReflectUtil.safeApply(conditionalRowStyle, object);
     }
 
-    public DataTemplate<T> cols(String... fieldNames) {
+    public DataTemplate<T> includeAllFields() {
+        Field[] fields = tClass.getDeclaredFields();
+        for (Field field : fields) {
+            ColumnMapper<T> mapper = new ColumnMapper<T>()
+                    .field(field.getName())
+                    .title(TextUtil.splitCamelCase(field.getName()));
+            mappers.add(mapper);
+        }
+        return this;
+    }
+
+    public DataTemplate<T> includeFields(String... fieldNames) {
         List<ColumnMapper<T>> list = Arrays
                 .stream(fieldNames)
                 .map(s -> new ColumnMapper<T>().field(s))
                 .filter(this::validateMapper)
+                .filter(mapper -> mappers.stream().noneMatch(current -> Objects.equals(current.getFieldName(), mapper.getFieldName())))
                 .collect(Collectors.toList());
         mappers.addAll(list);
+        return this;
+    }
+
+    public DataTemplate<T> excludeFields(String... fieldNames) {
+        List<String> fields = ListUtil.fromArray(fieldNames);
+        mappers = mappers.stream().filter(m -> !fields.contains(m.getField())).collect(Collectors.toList());
         return this;
     }
 
@@ -209,6 +229,7 @@ public class DataTemplate<T> {
         }
 
         public Builder<T> conditionalRowStyle(Function<T, Style> function) {
+            Objects.requireNonNull(function);
             template.conditionalRowStyle = function;
             return this;
         }

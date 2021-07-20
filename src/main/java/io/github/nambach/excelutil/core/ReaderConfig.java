@@ -23,10 +23,11 @@ import java.util.stream.Collectors;
 public class ReaderConfig<T> {
 
     private Class<T> tClass;
-
     private int dataFromIndex = 1;
     private int titleRowIndex = -1;
-    private Map<Integer, Handler<T>> handlerMap = new HashMap<>();
+
+    // Store value as list to stack up multiple handlers on a same column
+    private Map<Integer, Handlers<T>> handlerMap = new HashMap<>();
 
     ReaderConfig(Class<T> tClass) {
         this.tClass = tClass;
@@ -79,7 +80,10 @@ public class ReaderConfig<T> {
         if (index >= 0 && ReflectUtil.getField(fieldName, tClass) != null) {
             Handler<T> handler = new Handler<>();
             handler.atColumn(index).field(fieldName);
-            this.handlerMap.put(index, handler);
+
+            Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
+            list.add(handler);
+            handlerMap.put(index, list);
         }
         return this;
     }
@@ -94,7 +98,10 @@ public class ReaderConfig<T> {
             throw new Exception("Handler must be provided a column index with atColumn() or fromColumn()");
         }
         if (handler.getIndex() != null) {
-            handlerMap.put(handler.getIndex(), handler);
+            int index = handler.getIndex();
+            Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
+            list.add(handler);
+            handlerMap.put(index, list);
         }
 
         return this;

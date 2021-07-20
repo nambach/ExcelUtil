@@ -6,7 +6,6 @@ import model.Student;
 
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.Objects;
 
 public class TestReader {
     public static void main(String[] args) throws FileNotFoundException {
@@ -21,7 +20,14 @@ public class TestReader {
 
     private static void useCase1() throws FileNotFoundException {
         ReaderConfig<Student> config = TestWriter.TEMPLATE_8
-                .getReaderConfig();
+                .getReaderConfig()
+                .handler(h -> h.atColumn(0).handle((student, cell) -> {
+                    String v = cell.readString();
+                    if ("Nicola".equals(v)) {
+                        Address a = new Address(cell.getAddress(), null, null);
+                        student.setAddress(a);
+                    }
+                }));
 
         List<Student> students = config.readSheet(FileUtil.readFromDisk("src/main/resources/basic-example.xlsx"), 0);
         int i = 1;

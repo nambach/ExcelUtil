@@ -4,6 +4,7 @@ import io.github.nambach.excelutil.core.Template;
 import io.github.nambach.excelutil.style.BorderSide;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.FileUtil;
+import io.github.nambach.excelutil.util.ListUtil;
 import lombok.SneakyThrows;
 import model.Address;
 import model.Student;
@@ -36,18 +37,18 @@ public class TestWriter {
             .build();
 
     public static List<Student> students = Arrays.asList(
-            new Student("Olivia", "Anderson", new Address("12", "Wall", "New York"), 8, new Date()),
-            new Student("Alison", "Vance", new Address("8A", "Catherine Drive", "Moorhead"), 6.5, new Date()),
-            new Student("Olivia", "Anderson", new Address("12", "Wall", "New York"), 8, new Date()),
-            new Student("Nicola", "Hart", new Address("2966", "Chestnut Street", "LODI"), 4.5, new Date()),
-            new Student("Olivia", "Anderson", new Address("12", "Wall", "New York"), 8, new Date()),
-            new Student("Alison", "Vance", new Address("8A", "Catherine Drive", "Moorhead"), 6.5, new Date()),
-            new Student("Nicola", "Hart", new Address("2966", "Chestnut Street", "LODI"), 4.5, new Date()),
-            new Student("Olivia", "Anderson", new Address("12", "Wall", "New York"), 8, new Date()),
-            new Student("Alison", "Vance", new Address("8A", "Catherine Drive", "Moorhead"), 6.5, new Date()),
-            new Student("Nicola", "Hart", new Address("2966", "Chestnut Street", "LODI"), 4.5, new Date()),
-            new Student("Alison", "Vance", new Address("8A", "Catherine Drive", "Moorhead"), 6.5, new Date()),
-            new Student("Nicola", "Hart", new Address("2966", "Chestnut Street", "LODI"), 4.5, new Date())
+            new Student("Olivia", "Anderson", new Address("122", "Wall", "New York"), 8, new Date()),
+            new Student("Alison", "Vance", new Address("8A5", "Catherine Drive", "Moorhead"), 6.5, new Date()),
+            new Student("Olivia", "Anderson", new Address("102", "Wall", "New York"), 8, new Date()),
+            new Student("Nicola", "Hart", new Address("296", "Chestnut Street", "LODI"), 4.5, new Date()),
+            new Student("Olivia", "Anderson", new Address("192", "Wall", "New York"), 8, new Date()),
+            new Student("Alison", "Vance", new Address("8A1", "Catherine Drive", "Moorhead"), 6.5, new Date()),
+            new Student("Nicola", "Hart", new Address("266", "Chestnut Street", "LODI"), 4.5, new Date()),
+            new Student("Olivia", "Anderson", new Address("132", "Wall", "New York"), 8, new Date()),
+            new Student("Alison", "Vance", new Address("8A3", "Catherine Drive", "Moorhead"), 6.5, new Date()),
+            new Student("Nicola", "Hart", new Address("966", "Chestnut Street", "LODI"), 4.5, new Date()),
+            new Student("Alison", "Vance", new Address("8A2", "Catherine Drive", "Moorhead"), 6.5, new Date()),
+            new Student("Nicola", "Hart", new Address("266", "Chestnut Street", "LODI"), 4.5, new Date())
     );
 
     public static final Style red = Style.builder().fontColorInHex("#FF0000").build();
@@ -80,13 +81,14 @@ public class TestWriter {
 
     @SneakyThrows
     public static void main(String[] args) {
-        useCase8();
+        ListUtil.sort(students, null);
+        students.forEach(System.out::println);
     }
 
     public static void useCase1() {
         DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .cols("firstName", "mark", "date");
+                .includeFields("firstName", "mark", "date");
 
         InputStream stream = table.writeData(students);
 
@@ -96,7 +98,7 @@ public class TestWriter {
     public static void useCase1_1() {
         DataTemplate<Student> table = DataTemplate
                 .fromClass(Student.class)
-                .cols("firstName", "mark", "date");
+                .includeFields("firstName", "mark", "date");
 
         InputStream stream = table.getFileForImport();
 

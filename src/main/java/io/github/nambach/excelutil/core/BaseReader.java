@@ -29,7 +29,7 @@ class BaseReader extends BaseEditor {
             }
 
             ReaderConfig<T> config = baseConfig.translate(rowAt, colAt);
-            Map<Integer, Handler<T>> handlerMap = config.getHandlerMap();
+            Map<Integer, Handlers<T>> handlerMap = config.getHandlerMap();
 
             int hasTitle = 0;
             Map<Integer, String> titleMap = new HashMap<>();
@@ -60,23 +60,30 @@ class BaseReader extends BaseEditor {
                         continue;
                     }
 
-                    Handler<T> handler = handlerMap.get(colIndex);
+                    Handlers<T> handlers = handlerMap.get(colIndex);
                     String colTitle = titleMap.get(colIndex);
-
-                    // Prepare ingredients
-                    String fieldName = handler.getFieldName();
-                    PropertyDescriptor pd = ReflectUtil.getField(fieldName, config.getTClass());
-                    BiConsumer<T, ReaderCell> handle = handler.getHandler();
 
                     // Wrap cell
                     ReaderCell readerCell = new ReaderCell(cell, colTitle);
 
-                    if (pd != null) {
-                        handleField(pd, object, readerCell);
-                    } else if (handle != null) {
-                        handle.accept(object, readerCell);
-                    } else {
-                        handleOther(raw, cell, fieldName, colTitle);
+                    // process raw only one time
+                    boolean rawReached = false;
+
+                    // iterate all handlers registered by user
+                    for (Handler<T> handler : handlers) {
+                        // Prepare ingredients
+                        String fieldName = handler.getFieldName();
+                        PropertyDescriptor pd = ReflectUtil.getField(fieldName, config.getTClass());
+                        BiConsumer<T, ReaderCell> handle = handler.getHandler();
+
+                        if (pd != null) {
+                            handleField(pd, object, readerCell);
+                        } else if (handle != null) {
+                            handle.accept(object, readerCell);
+                        } else if (!rawReached) {
+                            rawReached = true;
+                            handleOther(raw, cell, fieldName, colTitle);
+                        }
                     }
                 }
 
@@ -126,10 +133,10 @@ class BaseReader extends BaseEditor {
         }
     }
 
-    private <T> void handleOther(Raw<T> raw, Cell cell, String colId, String colTitle) {
-        String key = colId != null ? colId
-                                   : colTitle != null ? colTitle
-                                                      : cell.getColumnIndex() + "";
+    private <T> void handleOther(Raw<T> raw, Cell cell, String fieldName, String colTitle) {
+        String key = fieldName != null ? fieldName :
+                     colTitle != null ? colTitle :
+                     cell.getColumnIndex() + "";
         switch (cell.getCellType()) {
             case STRING:
             case FORMULA:

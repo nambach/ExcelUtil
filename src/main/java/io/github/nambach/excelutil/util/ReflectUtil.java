@@ -16,7 +16,16 @@ public class ReflectUtil {
 
     private static final Map<String, Map<String, PropertyDescriptor>> CACHED_SCHEME = new HashMap<>();
 
+    /**
+     * Double-checked locking (DLC)
+     * https://refactoring.guru/design-patterns/singleton/java/example#example-2
+     */
     public static <T> PropertyDescriptor getField(String fieldName, Class<T> tClass) {
+        String className = tClass.getCanonicalName();
+
+        if (CACHED_SCHEME.containsKey(className)) {
+            return CACHED_SCHEME.get(className).get(fieldName);
+        }
         Map<String, PropertyDescriptor> map = prepareScheme(tClass);
         return map.get(fieldName);
     }
@@ -89,16 +98,27 @@ public class ReflectUtil {
         }
     }
 
-    public static <T, I> void safeConsume(BiConsumer<T, I> consumer, T object, I input) {
-        if (consumer == null || object == null) {
-            return;
-        }
-        try {
-            consumer.accept(object, input);
-        } catch (Exception e) {
-            System.out.println("Error when consuming bi-consumer: " + e.getMessage());
-            e.printStackTrace();
-        }
+    public static <T, R> Function<T, R> safeWrap(Function<T, R> function) {
+        return t -> {
+            try {
+                return function.apply(t);
+            } catch (Exception e) {
+                System.out.println("Error while applying Function: " + e.getMessage());
+                e.printStackTrace();
+                return null;
+            }
+        };
+    }
+
+    public static <T, U> BiConsumer<T, U> safeWrap(BiConsumer<T, U> consumer) {
+        return (t, u) -> {
+            try {
+                consumer.accept(t, u);
+            } catch (Exception e) {
+                System.out.println("Error while applying BiConsumer: " + e.getMessage());
+                e.printStackTrace();
+            }
+        };
     }
 
     public static ReflectUtil.Type checkType(Class<?> type) {
