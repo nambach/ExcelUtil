@@ -1,5 +1,6 @@
 @echo off
 set /P confirm=Are you sure? :
-if "%1"=="y" (
+if "%confirm%"=="y" (
+    echo.Processing...
     call mvn clean deploy -P release
 )
