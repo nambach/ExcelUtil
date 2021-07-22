@@ -170,7 +170,7 @@ class BaseWriter extends BaseEditor {
 
                 // Resize columns when last row reached
                 if (objectCount == data.size()) {
-                    if (template.isAutoResizeColumns()) {
+                    if (template.isAutoSizeColumns()) {
                         sheet.autoSizeColumn(i, mapper.needMerged());
                     }
                 }

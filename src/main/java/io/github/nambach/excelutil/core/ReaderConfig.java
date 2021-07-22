@@ -116,6 +116,10 @@ public class ReaderConfig<T> {
                 .readSectionRaw(this);
     }
 
+    public List<T> readSheet(InputStream stream) {
+        return convert(readSheetRaw(stream, 0));
+    }
+
     public List<T> readSheet(InputStream stream, int sheetIndex) {
         return convert(readSheetRaw(stream, sheetIndex));
     }

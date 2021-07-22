@@ -2,9 +2,14 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.model.Raw;
 import io.github.nambach.excelutil.style.Style;
+import io.github.nambach.excelutil.util.PixelUtil;
 import lombok.SneakyThrows;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
@@ -14,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,6 +49,14 @@ public class Editor extends BaseEditor {
             int index = workbook.getActiveSheetIndex();
             currentSheet = workbook.getSheetAt(index);
         }
+    }
+
+    public Workbook getPoiWorkbook() {
+        return workbook;
+    }
+
+    public Sheet getCurrentPoiSheet() {
+        return currentSheet;
     }
 
     // Sheet navigation
@@ -85,6 +99,10 @@ public class Editor extends BaseEditor {
 
     public int getTotalSheets() {
         return workbook.getNumberOfSheets();
+    }
+
+    public Iterator<Sheet> getSheetIterator() {
+        return workbook.sheetIterator();
     }
 
     // Cell navigation
@@ -149,6 +167,47 @@ public class Editor extends BaseEditor {
     public Editor useStyle(Style style) {
         this.tempStyle = style;
         return this;
+    }
+
+    public Editor applyStyle() {
+        if (tempStyle == null) return this;
+        CellAddress address = new CellAddress(pointer.getRow(), pointer.getCol());
+        return applyStyle(tempStyle, address.formatAsString());
+    }
+
+    public Editor applyStyle(Style style) {
+        CellAddress address = new CellAddress(pointer.getRow(), pointer.getCol());
+        return applyStyle(style, address.formatAsString());
+    }
+
+    public Editor applyStyle(Style style, String address) {
+        return applyStyle(style, address, address);
+    }
+
+    public Editor applyStyle(Style style, String fromAddress, String toAddress) {
+        CellAddress from = new CellAddress(fromAddress);
+        CellAddress to = new CellAddress(toAddress);
+        CellStyle cellStyle = writer.cachedStyles.accumulate(style);
+        for (int rNo = from.getRow(); rNo <= to.getRow(); rNo++) {
+            Row row = getRowAt(currentSheet, rNo);
+            for (int cNo = from.getColumn(); cNo <= to.getColumn(); cNo++) {
+                Cell cell = getCellAt(row, cNo);
+                cell.setCellStyle(cellStyle);
+            }
+        }
+        return this;
+    }
+
+    public Editor date(Date date) {
+        return writeCell(c -> c.date(date));
+    }
+
+    public Editor number(double number) {
+        return writeCell(c -> c.number(number));
+    }
+
+    public Editor text(String text) {
+        return writeCell(c -> c.text(text));
     }
 
     public Editor writeCell(Function<WriterCell, WriterCell> f) {
@@ -274,6 +333,69 @@ public class Editor extends BaseEditor {
             }
             Sheet sheet = editor.currentSheet;
             sheet.createFreezePane(cols, rows);
+            return this;
+        }
+
+        public Config setColumnWidth(int pixels, int... colIndexes) {
+            if (colIndexes != null && editor.currentSheet != null) {
+                for (int colIndex : colIndexes) {
+                    if (colIndex >= 0) {
+                        PixelUtil.setColumnWidth(editor.currentSheet, colIndex, pixels);
+                    }
+                }
+            }
+            return this;
+        }
+
+        public Config autoSizeColumn(int... colIndexes) {
+            if (colIndexes != null && editor.currentSheet != null) {
+                for (int colIndex : colIndexes) {
+                    if (colIndex >= 0) {
+                        editor.currentSheet.autoSizeColumn(colIndex);
+                    }
+                }
+            }
+            return this;
+        }
+
+        public Config setRowHeightInPoints(int height, int... rowIndexes) {
+            if (rowIndexes != null && editor.currentSheet != null) {
+                for (int rowIndex : rowIndexes) {
+                    if (rowIndex >= 0) {
+                        if (editor.workbook instanceof XSSFWorkbook) {
+                            Row row = editor.getRowAt(editor.currentSheet, rowIndex);
+                            row.setHeightInPoints(height);
+                        }
+                    }
+                }
+            }
+            return this;
+        }
+
+        /**
+         * Solution from https://stackoverflow.com/a/29131284/11869677
+         *
+         * @param rowIndexes list of rows' index
+         * @return editor configuration
+         */
+        public Config autoSizeRow(int... rowIndexes) {
+            if (rowIndexes != null && editor.currentSheet != null) {
+                for (int rowIndex : rowIndexes) {
+                    if (rowIndex >= 0) {
+                        if (editor.workbook instanceof XSSFWorkbook) {
+                            Row row = editor.getRowAt(editor.currentSheet, rowIndex);
+                            row.setHeight((short) -1);
+                        }
+                    }
+                }
+            }
+            return this;
+        }
+
+        public Config hideGrid(boolean b) {
+            if (editor.currentSheet != null) {
+                editor.currentSheet.setDisplayGridlines(!b);
+            }
             return this;
         }
     }

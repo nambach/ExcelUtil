@@ -33,7 +33,7 @@ public class DataTemplate<T> {
     private int rowAt;
     private int colAt;
 
-    private boolean autoResizeColumns;
+    private boolean autoSizeColumns;
     private boolean noHeader;
 
     private Style headerStyle = StyleConstant.HEADER_STYLE;
@@ -76,7 +76,7 @@ public class DataTemplate<T> {
         clone.mappers.addAll(this.mappers);
         clone.headerStyle = headerStyle;
         clone.dataStyle = dataStyle;
-        clone.autoResizeColumns = autoResizeColumns;
+        clone.autoSizeColumns = autoSizeColumns;
         clone.conditionalRowStyle = conditionalRowStyle;
         return clone;
     }
@@ -208,8 +208,8 @@ public class DataTemplate<T> {
             }
         }
 
-        public Builder<T> autoResizeColumns(boolean b) {
-            template.autoResizeColumns = b;
+        public Builder<T> autoSizeColumns(boolean b) {
+            template.autoSizeColumns = b;
             return this;
         }
 

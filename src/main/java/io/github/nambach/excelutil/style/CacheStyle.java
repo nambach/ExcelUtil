@@ -62,6 +62,9 @@ public class CacheStyle {
         if (extra.underline != null) {
             clone.underline = extra.underline;
         }
+        if (extra.indentation != null) {
+            clone.indentation = extra.indentation;
+        }
         if (extra.date != null) {
             clone.date = extra.date;
         }

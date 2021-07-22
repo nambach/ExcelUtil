@@ -21,6 +21,7 @@ public class Style {
     Short fontSize;
     Boolean bold;
     Boolean underline;
+    Short indentation;
 
     // Date
     Boolean date;
@@ -63,6 +64,7 @@ public class Style {
         return Style.builder()
                     .fontName(fontName).fontSize(fontSize)
                     .bold(bold).underline(underline)
+                    .indentation(indentation)
                     .date(date).datePattern(datePattern)
                     .fontColorInHex(fontColorInHex)
                     .backgroundColorInHex(backgroundColorInHex)
@@ -100,6 +102,11 @@ public class Style {
 
         public StyleBuilder underline(Boolean b) {
             style.underline = b;
+            return this;
+        }
+
+        public StyleBuilder indentation(Short i) {
+            style.indentation = i;
             return this;
         }
 

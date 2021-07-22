@@ -16,6 +16,10 @@ public class ReaderCell {
         this.columnTitle = columnTitle;
     }
 
+    public Cell getPoiCell() {
+        return cell;
+    }
+
     public String getColumnTitle() {
         return this.columnTitle;
     }

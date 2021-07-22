@@ -1,8 +1,5 @@
 package io.github.nambach.excelutil.util;
 
-import io.github.nambach.excelutil.util.sort.Compare;
-import io.github.nambach.excelutil.util.sort.Criterion;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -31,15 +28,12 @@ public class ListUtil {
         return list == null || list.isEmpty();
     }
 
-    public static <T> void sort(List<T> list, Function<Compare<T>, Compare<T>> compare) {
+    public static <T> void sort(List<T> list, Comparing<T> comparing) {
         Objects.requireNonNull(list);
-        Objects.requireNonNull(compare);
+        Objects.requireNonNull(comparing);
 
-        Compare<T> builder = new Compare<>();
-        compare.apply(builder);
-        List<Criterion<T>> criteria = builder.build();
         Comparator<T> comparator = (o1, o2) -> {
-            for (Criterion<T> criterion : criteria) {
+            for (Criterion<T> criterion : comparing.criteria) {
                 int compared = criterion.compare(o1, o2);
                 if (compared != 0) {
                     return compared;

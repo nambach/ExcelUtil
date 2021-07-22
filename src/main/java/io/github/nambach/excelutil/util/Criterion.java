@@ -1,9 +1,10 @@
-package io.github.nambach.excelutil.util.sort;
+package io.github.nambach.excelutil.util;
 
-import io.github.nambach.excelutil.util.ReflectUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.InvocationTargetException;
 import java.text.Collator;
 import java.util.Date;
 import java.util.Locale;
@@ -14,6 +15,7 @@ import java.util.function.Function;
 public class Criterion<T> {
     private Function<T, ?> valueExtractor;
     private Direction direction = Direction.ASC;
+    private String fieldName;
 
     Criterion() {
     }
@@ -21,6 +23,18 @@ public class Criterion<T> {
     public Criterion<T> value(Function<T, ?> valueExtractor) {
         Objects.requireNonNull(valueExtractor);
         this.valueExtractor = valueExtractor;
+        return this;
+    }
+
+    public Criterion<T> field(String fieldName) {
+        this.fieldName = fieldName;
+        return this;
+    }
+
+    public Criterion<T> direction(String direction) {
+        if ("desc".equalsIgnoreCase(direction)) {
+            this.direction = Direction.DESC;
+        }
         return this;
     }
 
@@ -34,10 +48,27 @@ public class Criterion<T> {
         return this;
     }
 
-    public int compare(T o1, T o2) {
+    private Object extractValue(T object) {
+        if (valueExtractor != null) {
+            return valueExtractor.apply(object);
+        }
+        Class<T> tClass = (Class<T>) object.getClass();
+        PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);
+        if (pd != null) {
+            try {
+                return pd.getReadMethod().invoke(object);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        return null;
+    }
+
+    int compare(T o1, T o2) {
         int compared;
-        Object val1 = valueExtractor.apply(o1);
-        Object val2 = valueExtractor.apply(o2);
+        Object val1 = extractValue(o1);
+        Object val2 = extractValue(o2);
         if (val1 == null && val2 == null) {
             return 0;
         } else if (val1 == null) {
