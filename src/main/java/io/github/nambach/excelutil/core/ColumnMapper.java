@@ -36,16 +36,22 @@ public class ColumnMapper<T> {
     ColumnMapper() {
     }
 
+    /**
+     * @return the property name of the DTO is being configured through {@link ColumnMapper#field(String)}.
+     */
     public String getField() {
         return fieldName;
     }
 
+    /**
+     * @return the column title is being configured through {@link ColumnMapper#title(String)}.
+     */
     public String getTitle() {
         return displayName;
     }
 
     /**
-     * Map DTO based on field name
+     * Specify the property of DTO to extract data.
      *
      * @param fieldName field name of DTO
      * @return current mapper
@@ -56,7 +62,7 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Set title for the column
+     * Set title for the column.
      *
      * @param displayName column title
      * @return current mapper
@@ -67,9 +73,9 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Map DTO based on a custom function
+     * Set a {@link Function} to extract data from the DTO.
      *
-     * @param mapper function to extract value from DTO
+     * @param mapper function to extract data from DTO
      * @return current mapper
      */
     public ColumnMapper<T> transform(Function<T, ?> mapper) {
@@ -78,7 +84,7 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Merge consecutively cells on current column by comparing cell value
+     * Merge consecutively cells on current column by comparing cell value.
      *
      * @param b
      * @return current mapper
@@ -89,7 +95,7 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Merge consecutively cells on current column by comparing a specific value of DTO
+     * Merge consecutively cells on current column by comparing a specific value of DTO.
      *
      * @param idExtractor function to specify compared value of DTO
      * @return current mapper
@@ -100,7 +106,7 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Set style for current column (accumulates to data style if specified)
+     * Set style for current column (accumulates to data style if specified).
      *
      * @param style {@link Style}
      * @return current mapper
@@ -111,7 +117,7 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Set style for cell based on specific condition of DTO
+     * Set style for cell based on specific condition of DTO.
      *
      * @param style a function that return a {@link Style}
      * @return current mapper
@@ -122,7 +128,7 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Set width to the current column
+     * Set width to the current column.
      *
      * @param pixels width in pixel value
      * @return current mapper
@@ -133,7 +139,7 @@ public class ColumnMapper<T> {
     }
 
     /**
-     * Auto resizing current column
+     * Auto resizing current column.
      *
      * @param b boolean
      * @return current mapper

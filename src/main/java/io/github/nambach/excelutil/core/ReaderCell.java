@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
- * Contains information of the current read cell
+ * Contains information of the current read cell.
  */
 public class ReaderCell {
     /**
@@ -23,7 +23,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return the Apache POI {@link Cell}
+     * @return the Apache POI {@link Cell}.
      */
     public Cell getPoiCell() {
         return cell;
@@ -31,28 +31,28 @@ public class ReaderCell {
 
     /**
      * @return the current column title based on the title row you specify
-     * through the method {@link ReaderConfig#titleAtRow(int)}
+     * through the method {@link ReaderConfig#titleAtRow(int)}.
      */
     public String getColumnTitle() {
         return this.columnTitle;
     }
 
     /**
-     * @return the current column index
+     * @return the current column index.
      */
     public int getColumnIndex() {
         return cell.getColumnIndex();
     }
 
     /**
-     * @return the current row index
+     * @return the current row index.
      */
     public int getRowIndex() {
         return cell.getRowIndex();
     }
 
     /**
-     * @return the cell address in string (for example: A1, B2...)
+     * @return the cell address in string (for example: A1, B2...).
      */
     public String getAddress() {
         return cell.getAddress().formatAsString();
@@ -77,7 +77,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return string value of the cell
+     * @return string value of the cell.
      */
     public String readString() {
         switch (cell.getCellType()) {
@@ -93,7 +93,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return date value of the cell as {@link Date} (if the actually data is stored as date)
+     * @return date value of the cell as {@link Date} (if the actually data is stored as date).
      */
     public Date readDate() {
         if (cell.getCellType() == CellType.NUMERIC) {
@@ -103,7 +103,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return date value of the cell as {@link LocalDateTime} (if the actually data is stored as date)
+     * @return date value of the cell as {@link LocalDateTime} (if the actually data is stored as date).
      */
     public LocalDateTime readLocalDateTime() {
         if (cell.getCellType() == CellType.NUMERIC) {
@@ -113,7 +113,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return the double value of cell (if cell is numeric)
+     * @return the double value of cell (if cell is numeric).
      */
     public Double readDouble() {
         switch (cell.getCellType()) {
@@ -129,7 +129,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return the float value of cell (if cell is numeric)
+     * @return the float value of cell (if cell is numeric).
      */
     public Float readFloat() {
         Double d = readDouble();
@@ -137,7 +137,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return the long value of cell (if cell is numeric)
+     * @return the long value of cell (if cell is numeric).
      */
     public Long readLong() {
         Double d = readDouble();
@@ -145,7 +145,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return the int value of cell (if cell is numeric)
+     * @return the int value of cell (if cell is numeric).
      */
     public Integer readInt() {
         Double d = readDouble();
@@ -153,7 +153,7 @@ public class ReaderCell {
     }
 
     /**
-     * @return the boolean value of cell (if cell is boolean type)
+     * @return the boolean value of cell (if cell is boolean type).
      */
     public Boolean readBoolean() {
         switch (cell.getCellType()) {

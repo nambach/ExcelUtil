@@ -35,7 +35,7 @@ public class Handler<T> {
     }
 
     /**
-     * Specify the column to handle
+     * Specify the column to handle.
      *
      * @param i column index (from 0)
      * @return current handler
@@ -46,7 +46,7 @@ public class Handler<T> {
     }
 
     /**
-     * Specify the beginning column to start handle
+     * Specify the beginning column to start handle.
      *
      * @param i start index (from 0)
      * @return current handler
@@ -57,7 +57,7 @@ public class Handler<T> {
     }
 
     /**
-     * Specify the property of DTO to store the cell value into
+     * Specify the property of DTO to store the cell value into.
      *
      * @param s DTO field name
      * @return current handler
@@ -68,7 +68,7 @@ public class Handler<T> {
     }
 
     /**
-     * Set a custom {@link BiConsumer} to handle storing cell value into DTO
+     * Set a custom {@link BiConsumer} to handle storing cell value into DTO.
      *
      * @param handler a {@link BiConsumer} that has 2 parameter, the DTO and the {@link ReaderCell}
      * @return current handler

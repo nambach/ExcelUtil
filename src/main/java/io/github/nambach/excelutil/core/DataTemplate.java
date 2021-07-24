@@ -24,7 +24,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
- * A template that hold mapping rules to extract DTO properties and write as Excel table
+ * A template that contains mapping rules to extract
+ * DTO properties and write as Excel table.
  *
  * @param <T>
  */
@@ -50,7 +51,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Specify DTO type
+     * Specify the DTO type.
      *
      * @param tClass DTO type
      * @param <T>    DTO
@@ -61,7 +62,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Provide a function to configure data template
+     * Provide a function to configure data template.
      *
      * @param configBuilder a function that builds configuration
      * @return current template
@@ -74,7 +75,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Split the mapping rules to a new template
+     * Split the mapping rules to a new template.
      *
      * @param condition a {@link Predicate} that filters out mapping rules that need to keep
      * @return a copied template (which is not modified the original)
@@ -116,7 +117,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Configure to map all fields of DTO
+     * Configure to map all fields of DTO.
      *
      * @return current template
      */
@@ -132,7 +133,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Configure to map some fields of DTO
+     * Configure to map some fields of DTO.
      *
      * @param fieldNames an array of field names
      * @return current template
@@ -149,7 +150,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Filter out some fields of DTO that don't need to export
+     * Filter out some fields of DTO that don't need to export.
      *
      * @param fieldNames an array of field names
      * @return current template
@@ -161,7 +162,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Configure a {@link ColumnMapper} that define mapping rule to extract DTO data into Excel column
+     * Configure a {@link ColumnMapper} that define mapping rule to extract DTO data into Excel column.
      *
      * @param builder a function that builds {@link ColumnMapper}
      * @return current template
@@ -198,7 +199,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Get empty Excel file for import purpose
+     * Get empty Excel file for import purpose.
      *
      * @return an {@link java.io.InputStream} to write as file
      */
@@ -213,7 +214,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Write data list into Excel table with the current template
+     * Write data list into Excel table with the current template.
      *
      * @param data data list
      * @return an {@link java.io.InputStream} to write as file
@@ -227,7 +228,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Write data list into Excel table with the current template
+     * Write data list into Excel table with the current template.
      *
      * @param sheetName name of the sheet
      * @param data      data list
@@ -242,7 +243,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Get the {@link ReaderConfig} for reading Excel file that was exported by this template
+     * Get the {@link ReaderConfig} for reading Excel file that was exported by this template.
      *
      * @return a {@link ReaderConfig}
      */
@@ -258,7 +259,7 @@ public class DataTemplate<T> {
     }
 
     /**
-     * Configuration builder for {@link DataTemplate}
+     * Configuration builder for {@link DataTemplate}.
      *
      * @param <T>
      */
@@ -270,7 +271,7 @@ public class DataTemplate<T> {
         }
 
         /**
-         * Specify the beginning cell to write data (includes title row)
+         * Specify the beginning cell to write data (includes title row).
          *
          * @param rowAt row index (from 0)
          * @param colAt column index (from 0)
@@ -287,7 +288,7 @@ public class DataTemplate<T> {
         }
 
         /**
-         * Specify the beginning cell to write data (includes title row)
+         * Specify the beginning cell to write data (includes title row).
          *
          * @param address Excel address (A1, A2...)
          * @return current builder
@@ -303,7 +304,7 @@ public class DataTemplate<T> {
         }
 
         /**
-         * Auto resizing all column width
+         * Auto resizing width of all columns.
          *
          * @param b boolean
          * @return current builder
@@ -314,7 +315,7 @@ public class DataTemplate<T> {
         }
 
         /**
-         * Hide the title row when write data
+         * Prevent the title row from being written.
          *
          * @param b boolean
          * @return current builder
@@ -325,7 +326,7 @@ public class DataTemplate<T> {
         }
 
         /**
-         * Set custom style for title row
+         * Set custom style for title row.
          *
          * @param style {@link Style}
          * @return current builder
@@ -336,7 +337,7 @@ public class DataTemplate<T> {
         }
 
         /**
-         * Set custom style for data section (all data rows)
+         * Set custom style for data section (all data rows).
          *
          * @param style {@link Style}
          * @return current builder
@@ -347,7 +348,7 @@ public class DataTemplate<T> {
         }
 
         /**
-         * Set style for a specific data row
+         * Set style for a specific data row.
          *
          * @param function a function that checks every row data and conditionally return a {@link Style}
          * @return current builder

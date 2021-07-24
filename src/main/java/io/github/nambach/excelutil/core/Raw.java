@@ -18,7 +18,7 @@ import java.util.Map;
 @ToString
 public class Raw<T> {
     /**
-     * DTO resulted from the reading process
+     * DTO resulted from the reading process.
      */
     private T data;
 

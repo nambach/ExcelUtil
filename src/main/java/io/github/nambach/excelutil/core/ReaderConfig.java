@@ -18,7 +18,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * A configuration object containing rules for reading data from Excel table and map to DTO class
+ * A configuration object containing rules for reading
+ * data from Excel table and map to DTO class.
  *
  * @param <T>
  */
@@ -38,7 +39,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Specify DTO type
+     * Specify the DTO type.
      *
      * @param tClass DTO type
      * @param <T>    DTO
@@ -101,7 +102,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Map the cell value at a column into target field of DTO
+     * Map the cell value at a column into target field of DTO.
      *
      * @param index     index of the column (from 0)
      * @param fieldName field name of DTO to map
@@ -120,7 +121,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Specify a handler function to process data cell at a column
+     * Specify a handler function to process data cell at a column.
      *
      * @param func a function that builds {@link Handler}
      * @return current config
@@ -145,7 +146,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from Excel and convert to list of {@link Raw} data
+     * Read data from Excel and convert to list of {@link Raw} data.
      *
      * @param stream     byte stream
      * @param sheetIndex index of sheet to read
@@ -161,7 +162,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from Excel and convert to list of data
+     * Read data from Excel and convert to list of data.
      *
      * @param stream byte stream
      * @return list of DTO
@@ -171,7 +172,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from Excel and convert to list of data
+     * Read data from Excel and convert to list of data.
      *
      * @param stream     byte stream
      * @param sheetIndex index of sheet to read
@@ -182,7 +183,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from multiple sheets and convert to a map of list of {@link Raw} data
+     * Read data from multiple sheets and convert to a map of list of {@link Raw} data.
      *
      * @param stream       byte stream
      * @param sheetIndexes indexes of sheet to read
@@ -212,7 +213,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from multiple sheets and convert to a map of list of data
+     * Read data from multiple sheets and convert to a map of list of data.
      *
      * @param stream       byte stream
      * @param sheetIndexes indexes of sheet to read
@@ -225,7 +226,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from all sheets and convert to a map of list of {@link Raw} data
+     * Read data from all sheets and convert to a map of list of {@link Raw} data.
      *
      * @param stream byte stream
      * @return map of list of {@link Raw} DTO, having key map is the sheet name
@@ -245,7 +246,7 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from all sheets and convert to a map of list of data
+     * Read data from all sheets and convert to a map of list of data.
      *
      * @param stream byte stream
      * @return map of list of DTO, having key map is the sheet name
