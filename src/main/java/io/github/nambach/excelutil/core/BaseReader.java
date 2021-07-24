@@ -8,8 +8,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -22,7 +22,7 @@ class BaseReader extends BaseEditor {
 
     public <T> List<Raw<T>> readSheet(Sheet sheet, ReaderConfig<T> baseConfig, int rowAt, int colAt) {
         try {
-            List<Raw<T>> result = new LinkedList<>();
+            List<Raw<T>> result = new ArrayList<>();
 
             if (sheet.getPhysicalNumberOfRows() == 0) {
                 return result;
@@ -93,7 +93,7 @@ class BaseReader extends BaseEditor {
             return result;
         } catch (Exception e) {
             e.printStackTrace();
-            return new LinkedList<>();
+            return new ArrayList<>();
         }
     }
 

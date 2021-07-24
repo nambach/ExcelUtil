@@ -6,7 +6,6 @@ import lombok.Getter;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.text.Collator;
-import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
@@ -15,6 +14,7 @@ import java.util.function.Function;
 public class Criterion<T> {
     private Function<T, ?> valueExtractor;
     private Direction direction = Direction.ASC;
+    private NullPolicy nullPolicy = NullPolicy.EVALUATE_LESS;
     private String fieldName;
 
     Criterion() {
@@ -34,6 +34,13 @@ public class Criterion<T> {
     public Criterion<T> direction(String direction) {
         if ("desc".equalsIgnoreCase(direction)) {
             this.direction = Direction.DESC;
+        }
+        return this;
+    }
+
+    public Criterion<T> evaluateNull(NullPolicy nullPolicy) {
+        if (nullPolicy != null) {
+            this.nullPolicy = nullPolicy;
         }
         return this;
     }
@@ -66,48 +73,26 @@ public class Criterion<T> {
     }
 
     int compare(T o1, T o2) {
+        int nullWeight = nullPolicy.equals(NullPolicy.EVALUATE_LESS) ? 1 : -1;
         int compared;
         Object val1 = extractValue(o1);
         Object val2 = extractValue(o2);
         if (val1 == null && val2 == null) {
             return 0;
         } else if (val1 == null) {
-            compared = -1;
+            compared = -1 * nullWeight;
         } else if (val2 == null) {
-            compared = 1;
+            compared = nullWeight;
+        } else if (val1 instanceof String) {  // special comparing based on Locale
+            compared = Collator.getInstance(Locale.getDefault()).compare((String) val1, (String) val2);
+        } else if (val1 instanceof Comparable) {
+            compared = ((Comparable) val1).compareTo(val2);
         } else {
-            compared = internalCompare(val1, val2);
+            compared = 0;
         }
         int direction = this.direction == Direction.ASC ? 1 :
                         this.direction == Direction.DESC ? -1 :
                         0;
         return compared * direction;
     }
-
-    private int internalCompare(Object val1, Object val2) {
-        switch (ReflectUtil.determineType(val1)) {
-            case STRING:
-                return Collator.getInstance(Locale.getDefault()).compare((String) val1, (String) val2);
-            case DOUBLE:
-                return Double.compare((double) val1, (double) val2);
-            case FLOAT:
-                return Float.compare((float) val1, (float) val2);
-            case LONG:
-                return Long.compare((long) val1, (long) val2);
-            case INTEGER:
-                return Integer.compare((int) val1, (int) val2);
-            case BOOLEAN:
-                return Boolean.compare((boolean) val1, (boolean) val2);
-            case DATE:
-                return ((Date) val1).compareTo((Date) val2);
-            case OBJECT:
-                if (val1 instanceof Comparable) {
-                    return ((Comparable) val1).compareTo(val2);
-                }
-            default:
-                return 0;
-        }
-    }
-
-
 }

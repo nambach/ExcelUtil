@@ -6,14 +6,14 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.function.Function;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
 public class Template implements Iterable<WriterCell> {
-    private final LinkedList<WriterCell> cells = new LinkedList<>();
+    private final ArrayList<WriterCell> cells = new ArrayList<>();
     private final Pointer pointer = new Pointer();
     private final Pointer pivot = new Pointer();
     private Style tempStyle;

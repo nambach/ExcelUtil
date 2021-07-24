@@ -14,9 +14,9 @@ import org.apache.poi.ss.util.CellAddress;
 import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Setter(AccessLevel.PACKAGE)
 public class DataTemplate<T> {
 
-    private List<ColumnMapper<T>> mappers = new LinkedList<>();
+    private List<ColumnMapper<T>> mappers = new ArrayList<>();
     private Class<T> tClass;
 
     private int rowAt;
