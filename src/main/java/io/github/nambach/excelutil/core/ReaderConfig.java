@@ -1,6 +1,5 @@
 package io.github.nambach.excelutil.core;
 
-import io.github.nambach.excelutil.model.Raw;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -18,13 +17,18 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+/**
+ * A configuration object containing rules for reading data from Excel table and map to DTO class
+ *
+ * @param <T>
+ */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
 public class ReaderConfig<T> {
 
     private Class<T> tClass;
     private int dataFromIndex = 1;
-    private int titleRowIndex = -1;
+    private int titleRowIndex = 0;
 
     // Store value as list to stack up multiple handlers on a same column
     private Map<Integer, Handlers<T>> handlerMap = new HashMap<>();
@@ -33,6 +37,13 @@ public class ReaderConfig<T> {
         this.tClass = tClass;
     }
 
+    /**
+     * Specify DTO type
+     *
+     * @param tClass DTO type
+     * @param <T>    DTO
+     * @return current config
+     */
     public static <T> ReaderConfig<T> fromClass(Class<T> tClass) {
         return new ReaderConfig<>(tClass);
     }
@@ -66,16 +77,36 @@ public class ReaderConfig<T> {
         return copy;
     }
 
+    /**
+     * Specify where the title row is at (default is 0).
+     * Set this value to -1 if there is no title row.
+     *
+     * @param index title row index
+     * @return current config
+     */
     public ReaderConfig<T> titleAtRow(int index) {
         this.titleRowIndex = index;
         return this;
     }
 
+    /**
+     * Specify where the data row starts from (default is 1).
+     *
+     * @param index first data row index
+     * @return current config
+     */
     public ReaderConfig<T> dataFromRow(int index) {
         this.dataFromIndex = index;
         return this;
     }
 
+    /**
+     * Map the cell value at a column into target field of DTO
+     *
+     * @param index     index of the column (from 0)
+     * @param fieldName field name of DTO to map
+     * @return current config
+     */
     public ReaderConfig<T> column(int index, String fieldName) {
         if (index >= 0 && ReflectUtil.getField(fieldName, tClass) != null) {
             Handler<T> handler = new Handler<>();
@@ -88,6 +119,12 @@ public class ReaderConfig<T> {
         return this;
     }
 
+    /**
+     * Specify a handler function to process data cell at a column
+     *
+     * @param func a function that builds {@link Handler}
+     * @return current config
+     */
     @SneakyThrows
     public ReaderConfig<T> handler(Function<Handler<T>, Handler<T>> func) {
         Objects.requireNonNull(func);
@@ -107,6 +144,13 @@ public class ReaderConfig<T> {
         return this;
     }
 
+    /**
+     * Read data from Excel and convert to list of {@link Raw} data
+     *
+     * @param stream     byte stream
+     * @param sheetIndex index of sheet to read
+     * @return list of {@link Raw} DTO
+     */
     public List<Raw<T>> readSheetRaw(InputStream stream, int sheetIndex) {
         Pointer base = getBaseCoordinate();
         Editor editor = new Editor(stream);
@@ -116,14 +160,34 @@ public class ReaderConfig<T> {
                 .readSectionRaw(this);
     }
 
+    /**
+     * Read data from Excel and convert to list of data
+     *
+     * @param stream byte stream
+     * @return list of DTO
+     */
     public List<T> readSheet(InputStream stream) {
         return convert(readSheetRaw(stream, 0));
     }
 
+    /**
+     * Read data from Excel and convert to list of data
+     *
+     * @param stream     byte stream
+     * @param sheetIndex index of sheet to read
+     * @return list of DTO
+     */
     public List<T> readSheet(InputStream stream, int sheetIndex) {
         return convert(readSheetRaw(stream, sheetIndex));
     }
 
+    /**
+     * Read data from multiple sheets and convert to a map of list of {@link Raw} data
+     *
+     * @param stream       byte stream
+     * @param sheetIndexes indexes of sheet to read
+     * @return map of list of {@link Raw} DTO, having key map is the sheet name
+     */
     public Map<String, List<Raw<T>>> readSheetsRaw(InputStream stream, int... sheetIndexes) {
         Objects.requireNonNull(sheetIndexes);
         Set<Integer> allowed = new HashSet<>();
@@ -147,13 +211,25 @@ public class ReaderConfig<T> {
         return result;
     }
 
-
+    /**
+     * Read data from multiple sheets and convert to a map of list of data
+     *
+     * @param stream       byte stream
+     * @param sheetIndexes indexes of sheet to read
+     * @return map of list of DTO, having key map is the sheet name
+     */
     public Map<String, List<T>> readSheets(InputStream stream, int... sheetIndexes) {
         Map<String, List<Raw<T>>> result = readSheetsRaw(stream, sheetIndexes);
         return result.entrySet().stream()
                      .collect(Collectors.toMap(Map.Entry::getKey, e -> convert(e.getValue())));
     }
 
+    /**
+     * Read data from all sheets and convert to a map of list of {@link Raw} data
+     *
+     * @param stream byte stream
+     * @return map of list of {@link Raw} DTO, having key map is the sheet name
+     */
     public Map<String, List<Raw<T>>> readAllSheetsRaw(InputStream stream) {
         Pointer base = getBaseCoordinate();
         Editor editor = new Editor(stream);
@@ -168,6 +244,12 @@ public class ReaderConfig<T> {
         return result;
     }
 
+    /**
+     * Read data from all sheets and convert to a map of list of data
+     *
+     * @param stream byte stream
+     * @return map of list of DTO, having key map is the sheet name
+     */
     public Map<String, List<T>> readAllSheets(InputStream stream) {
         Map<String, List<Raw<T>>> result = readAllSheetsRaw(stream);
         return result.entrySet().stream()

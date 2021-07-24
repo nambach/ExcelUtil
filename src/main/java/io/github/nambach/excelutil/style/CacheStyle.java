@@ -1,6 +1,5 @@
 package io.github.nambach.excelutil.style;
 
-import io.github.nambach.excelutil.util.Node;
 import lombok.Getter;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Workbook;

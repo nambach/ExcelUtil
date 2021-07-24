@@ -23,6 +23,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * A template that hold mapping rules to extract DTO properties and write as Excel table
+ *
+ * @param <T>
+ */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
 public class DataTemplate<T> {
@@ -44,10 +49,23 @@ public class DataTemplate<T> {
         this.tClass = tClass;
     }
 
+    /**
+     * Specify DTO type
+     *
+     * @param tClass DTO type
+     * @param <T>    DTO
+     * @return current template
+     */
     public static <T> DataTemplate<T> fromClass(Class<T> tClass) {
         return new DataTemplate<>(tClass);
     }
 
+    /**
+     * Provide a function to configure data template
+     *
+     * @param configBuilder a function that builds configuration
+     * @return current template
+     */
     public DataTemplate<T> config(Function<Builder<T>, Builder<T>> configBuilder) {
         Objects.requireNonNull(configBuilder);
         Builder<T> cf = new Builder<>(this);
@@ -55,6 +73,12 @@ public class DataTemplate<T> {
         return this;
     }
 
+    /**
+     * Split the mapping rules to a new template
+     *
+     * @param condition a {@link Predicate} that filters out mapping rules that need to keep
+     * @return a copied template (which is not modified the original)
+     */
     public DataTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
         Objects.requireNonNull(condition);
         DataTemplate<T> clone = this.cloneSelf();
@@ -62,6 +86,12 @@ public class DataTemplate<T> {
         return clone;
     }
 
+    /**
+     * Combining with other to create a new template that includes all mapping rules of both templates.
+     *
+     * @param other other {@link DataTemplate}
+     * @return a copied template (which is not modified the original)
+     */
     public DataTemplate<T> concat(DataTemplate<T> other) {
         if (other == null || other == this) {
             return this;
@@ -85,6 +115,11 @@ public class DataTemplate<T> {
         return ReflectUtil.safeApply(conditionalRowStyle, object);
     }
 
+    /**
+     * Configure to map all fields of DTO
+     *
+     * @return current template
+     */
     public DataTemplate<T> includeAllFields() {
         Field[] fields = tClass.getDeclaredFields();
         for (Field field : fields) {
@@ -96,6 +131,12 @@ public class DataTemplate<T> {
         return this;
     }
 
+    /**
+     * Configure to map some fields of DTO
+     *
+     * @param fieldNames an array of field names
+     * @return current template
+     */
     public DataTemplate<T> includeFields(String... fieldNames) {
         List<ColumnMapper<T>> list = Arrays
                 .stream(fieldNames)
@@ -107,12 +148,24 @@ public class DataTemplate<T> {
         return this;
     }
 
+    /**
+     * Filter out some fields of DTO that don't need to export
+     *
+     * @param fieldNames an array of field names
+     * @return current template
+     */
     public DataTemplate<T> excludeFields(String... fieldNames) {
         List<String> fields = ListUtil.fromArray(fieldNames);
         mappers = mappers.stream().filter(m -> !fields.contains(m.getField())).collect(Collectors.toList());
         return this;
     }
 
+    /**
+     * Configure a {@link ColumnMapper} that define mapping rule to extract DTO data into Excel column
+     *
+     * @param builder a function that builds {@link ColumnMapper}
+     * @return current template
+     */
     public DataTemplate<T> column(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
         ColumnMapper<T> mapper = builder.apply(new ColumnMapper<>());
         if (validateMapper(mapper)) {
@@ -144,6 +197,11 @@ public class DataTemplate<T> {
         return true;
     }
 
+    /**
+     * Get empty Excel file for import purpose
+     *
+     * @return an {@link java.io.InputStream} to write as file
+     */
     public ByteArrayInputStream getFileForImport() {
         DataTemplate<T> clone = this.cloneSelf();
 
@@ -154,6 +212,12 @@ public class DataTemplate<T> {
                      .exportToFile();
     }
 
+    /**
+     * Write data list into Excel table with the current template
+     *
+     * @param data data list
+     * @return an {@link java.io.InputStream} to write as file
+     */
     public ByteArrayInputStream writeData(Collection<T> data) {
         Editor editor = new Editor();
         return editor.goToSheet(0)
@@ -162,6 +226,13 @@ public class DataTemplate<T> {
                      .exportToFile();
     }
 
+    /**
+     * Write data list into Excel table with the current template
+     *
+     * @param sheetName name of the sheet
+     * @param data      data list
+     * @return an {@link java.io.InputStream} to write as file
+     */
     public ByteArrayInputStream writeData(Collection<T> data, String sheetName) {
         Editor editor = new Editor();
         return editor.goToSheet(sheetName)
@@ -170,6 +241,11 @@ public class DataTemplate<T> {
                      .exportToFile();
     }
 
+    /**
+     * Get the {@link ReaderConfig} for reading Excel file that was exported by this template
+     *
+     * @return a {@link ReaderConfig}
+     */
     public ReaderConfig<T> getReaderConfig() {
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
         int i = 0;
@@ -181,6 +257,11 @@ public class DataTemplate<T> {
         return config.translate(rowAt, colAt);
     }
 
+    /**
+     * Configuration builder for {@link DataTemplate}
+     *
+     * @param <T>
+     */
     public static class Builder<T> {
         private final DataTemplate<T> template;
 
@@ -188,6 +269,13 @@ public class DataTemplate<T> {
             this.template = template;
         }
 
+        /**
+         * Specify the beginning cell to write data (includes title row)
+         *
+         * @param rowAt row index (from 0)
+         * @param colAt column index (from 0)
+         * @return current builder
+         */
         @SneakyThrows
         public Builder<T> startAtCell(int rowAt, int colAt) {
             if (rowAt < 0 || colAt < 0) {
@@ -198,6 +286,12 @@ public class DataTemplate<T> {
             return this;
         }
 
+        /**
+         * Specify the beginning cell to write data (includes title row)
+         *
+         * @param address Excel address (A1, A2...)
+         * @return current builder
+         */
         @SneakyThrows
         public Builder<T> startAtCell(String address) {
             try {
@@ -208,26 +302,56 @@ public class DataTemplate<T> {
             }
         }
 
+        /**
+         * Auto resizing all column width
+         *
+         * @param b boolean
+         * @return current builder
+         */
         public Builder<T> autoSizeColumns(boolean b) {
             template.autoSizeColumns = b;
             return this;
         }
 
+        /**
+         * Hide the title row when write data
+         *
+         * @param b boolean
+         * @return current builder
+         */
         public Builder<T> noHeader(boolean b) {
             template.noHeader = b;
             return this;
         }
 
+        /**
+         * Set custom style for title row
+         *
+         * @param style {@link Style}
+         * @return current builder
+         */
         public Builder<T> headerStyle(Style style) {
             template.headerStyle = style;
             return this;
         }
 
+        /**
+         * Set custom style for data section (all data rows)
+         *
+         * @param style {@link Style}
+         * @return current builder
+         */
         public Builder<T> dataStyle(Style style) {
             template.dataStyle = style;
             return this;
         }
 
+        /**
+         * Set style for a specific data row
+         *
+         * @param function a function that checks every row data and conditionally return a {@link Style}
+         * @return current builder
+         */
         public Builder<T> conditionalRowStyle(Function<T, Style> function) {
             Objects.requireNonNull(function);
             template.conditionalRowStyle = function;

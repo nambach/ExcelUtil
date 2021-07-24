@@ -1,6 +1,5 @@
 package io.github.nambach.excelutil.core;
 
-import io.github.nambach.excelutil.model.Raw;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;

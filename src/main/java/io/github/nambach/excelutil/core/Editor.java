@@ -1,6 +1,5 @@
 package io.github.nambach.excelutil.core;
 
-import io.github.nambach.excelutil.model.Raw;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
 import lombok.SneakyThrows;

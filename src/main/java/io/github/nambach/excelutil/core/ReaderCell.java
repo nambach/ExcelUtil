@@ -7,31 +7,53 @@ import org.apache.poi.ss.usermodel.CellType;
 import java.time.LocalDateTime;
 import java.util.Date;
 
+/**
+ * Contains information of the current read cell
+ */
 public class ReaderCell {
+    /**
+     * Original Apache POI {@link Cell}
+     */
     private final Cell cell;
     private final String columnTitle;
 
-    public ReaderCell(Cell cell, String columnTitle) {
+    ReaderCell(Cell cell, String columnTitle) {
         this.cell = cell;
         this.columnTitle = columnTitle;
     }
 
+    /**
+     * @return the Apache POI {@link Cell}
+     */
     public Cell getPoiCell() {
         return cell;
     }
 
+    /**
+     * @return the current column title based on the title row you specify
+     * through the method {@link ReaderConfig#titleAtRow(int)}
+     */
     public String getColumnTitle() {
         return this.columnTitle;
     }
 
+    /**
+     * @return the current column index
+     */
     public int getColumnIndex() {
         return cell.getColumnIndex();
     }
 
+    /**
+     * @return the current row index
+     */
     public int getRowIndex() {
         return cell.getRowIndex();
     }
 
+    /**
+     * @return the cell address in string (for example: A1, B2...)
+     */
     public String getAddress() {
         return cell.getAddress().formatAsString();
     }
@@ -54,6 +76,9 @@ public class ReaderCell {
         }
     }
 
+    /**
+     * @return string value of the cell
+     */
     public String readString() {
         switch (cell.getCellType()) {
             case STRING:
@@ -67,6 +92,9 @@ public class ReaderCell {
         }
     }
 
+    /**
+     * @return date value of the cell as {@link Date} (if the actually data is stored as date)
+     */
     public Date readDate() {
         if (cell.getCellType() == CellType.NUMERIC) {
             return cell.getDateCellValue();
@@ -74,6 +102,9 @@ public class ReaderCell {
         return null;
     }
 
+    /**
+     * @return date value of the cell as {@link LocalDateTime} (if the actually data is stored as date)
+     */
     public LocalDateTime readLocalDateTime() {
         if (cell.getCellType() == CellType.NUMERIC) {
             return cell.getLocalDateTimeCellValue();
@@ -81,6 +112,9 @@ public class ReaderCell {
         return null;
     }
 
+    /**
+     * @return the double value of cell (if cell is numeric)
+     */
     public Double readDouble() {
         switch (cell.getCellType()) {
             case STRING:
@@ -94,21 +128,33 @@ public class ReaderCell {
         }
     }
 
+    /**
+     * @return the float value of cell (if cell is numeric)
+     */
     public Float readFloat() {
         Double d = readDouble();
         return d == null ? null : d.floatValue();
     }
 
+    /**
+     * @return the long value of cell (if cell is numeric)
+     */
     public Long readLong() {
         Double d = readDouble();
         return d == null ? null : d.longValue();
     }
 
+    /**
+     * @return the int value of cell (if cell is numeric)
+     */
     public Integer readInt() {
         Double d = readDouble();
         return d == null ? null : d.intValue();
     }
 
+    /**
+     * @return the boolean value of cell (if cell is boolean type)
+     */
     public Boolean readBoolean() {
         switch (cell.getCellType()) {
             case STRING:

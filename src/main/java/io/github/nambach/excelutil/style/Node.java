@@ -1,4 +1,4 @@
-package io.github.nambach.excelutil.util;
+package io.github.nambach.excelutil.style;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class Node<T> {
+class Node<T> {
     private final String id;
     private final Map<String, Node<T>> children;
     @Setter
