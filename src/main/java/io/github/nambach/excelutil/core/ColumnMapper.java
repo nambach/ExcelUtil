@@ -24,6 +24,10 @@ public class ColumnMapper<T> {
     @Getter(AccessLevel.NONE)
     private Function<T, Style> conditionalStyle;
 
+    // Column setting
+    private Integer pxWidth;
+    private boolean autoSize;
+
     ColumnMapper() {
     }
 
@@ -67,6 +71,16 @@ public class ColumnMapper<T> {
 
     public ColumnMapper<T> conditionalStyle(Function<T, Style> style) {
         this.conditionalStyle = style;
+        return this;
+    }
+
+    public ColumnMapper<T> width(Integer pixels) {
+        this.pxWidth = pixels;
+        return this;
+    }
+
+    public ColumnMapper<T> autoSize(boolean b) {
+        this.autoSize = b;
         return this;
     }
 

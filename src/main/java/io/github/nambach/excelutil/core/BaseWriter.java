@@ -2,6 +2,7 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.style.CacheStyle;
 import io.github.nambach.excelutil.style.Style;
+import io.github.nambach.excelutil.util.PixelUtil;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -170,7 +171,10 @@ class BaseWriter extends BaseEditor {
 
                 // Resize columns when last row reached
                 if (objectCount == data.size()) {
-                    if (template.isAutoSizeColumns()) {
+                    Integer pxWidth = mapper.getPxWidth();
+                    if (pxWidth != null && pxWidth > 0) {
+                        PixelUtil.setColumnWidth(sheet, cell.getColumnIndex(), pxWidth);
+                    } else if (template.isAutoSizeColumns() || mapper.isAutoSize()) {
                         sheet.autoSizeColumn(i, mapper.needMerged());
                     }
                 }
