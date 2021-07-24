@@ -1,6 +1,6 @@
 # Data Excel Exporter
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.0)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.1)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
 
 A Java wrapper using [Apache POI](http://poi.apache.org/components/spreadsheet/quick-guide.html) to read and write Excel file in declarative fashion.
 
@@ -10,7 +10,7 @@ A Java wrapper using [Apache POI](http://poi.apache.org/components/spreadsheet/q
 <dependency>
     <groupId>io.github.nambach</groupId>
     <artifactId>ExcelUtil</artifactId>
-    <version>2.0</version>
+    <version>2.1</version>
 </dependency>
 
 <!-- Apache POI dependencies -->
@@ -131,12 +131,12 @@ static final DataTemplate<Book> BOOK_TEMPLATE = DataTemplate
         .fromClass(Book.class)
         .includeFields("title")
         .column(c -> c.field("subCategory")
-                        .style(VCENTER)
-                        .mergeOnValue(true))  // merge cells with the same value consecutively
+                      .style(VCENTER)
+                      .mergeOnValue(true))  // merge cells with the same value consecutively
         .column(c -> c.title("Category")
-                        .style(VCENTER)
-                        .transform(book -> book.getCategory().getName())
-                        .mergeOnId(book -> book.getCategory().getId()))  // merge on derived value
+                      .style(VCENTER)
+                      .transform(book -> book.getCategory().getName())
+                      .mergeOnId(book -> book.getCategory().getId()))  // merge on derived value
         .config(cf -> cf.startAtCell("A2")
                         .autoSizeColumns(true));
 ```
@@ -196,7 +196,7 @@ ReaderConfig<Book> READER_CONFIG = ReaderConfig
 
 # Documentation
 
-[Document](https://www.javadoc.io/doc/io.github.nambach/ExcelUtil/latest/index.html) is currently unfinished.
+Documentation can be found [here](https://www.javadoc.io/doc/io.github.nambach/ExcelUtil/latest/index.html).
 
 # Notes
 
