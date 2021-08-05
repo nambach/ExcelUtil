@@ -2,26 +2,18 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.style.StyleConstant;
-import io.github.nambach.excelutil.util.ListUtil;
 import io.github.nambach.excelutil.util.ReflectUtil;
-import io.github.nambach.excelutil.util.TextUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.util.CellAddress;
 
-import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * A template that contains mapping rules to extract
@@ -31,10 +23,7 @@ import java.util.stream.Collectors;
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
-public class DataTemplate<T> {
-
-    private List<ColumnMapper<T>> mappers = new ArrayList<>();
-    private Class<T> tClass;
+public class DataTemplate<T> extends ColumnTemplate<T> {
 
     private int rowAt;
     private int colAt;
@@ -47,7 +36,7 @@ public class DataTemplate<T> {
     private Function<T, Style> conditionalRowStyle;
 
     DataTemplate(Class<T> tClass) {
-        this.tClass = tClass;
+        super(tClass);
     }
 
     /**
@@ -81,9 +70,8 @@ public class DataTemplate<T> {
      * @return a copied template (which is not modified the original)
      */
     public DataTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
-        Objects.requireNonNull(condition);
         DataTemplate<T> clone = this.cloneSelf();
-        clone.mappers = this.mappers.stream().filter(condition).collect(Collectors.toList());
+        this.internalSplit(clone, condition);
         return clone;
     }
 
@@ -98,38 +86,8 @@ public class DataTemplate<T> {
             return this;
         }
         DataTemplate<T> clone = this.cloneSelf();
-        clone.mappers.addAll(other.mappers);
+        this.internalConcat(clone, other);
         return clone;
-    }
-
-    private DataTemplate<T> cloneSelf() {
-        DataTemplate<T> clone = new DataTemplate<>(tClass);
-        clone.mappers.addAll(this.mappers);
-        clone.headerStyle = headerStyle;
-        clone.dataStyle = dataStyle;
-        clone.autoSizeColumns = autoSizeColumns;
-        clone.conditionalRowStyle = conditionalRowStyle;
-        return clone;
-    }
-
-    Style applyConditionalRowStyle(T object) {
-        return ReflectUtil.safeApply(conditionalRowStyle, object);
-    }
-
-    /**
-     * Configure to map all fields of DTO.
-     *
-     * @return current template
-     */
-    public DataTemplate<T> includeAllFields() {
-        Field[] fields = tClass.getDeclaredFields();
-        for (Field field : fields) {
-            ColumnMapper<T> mapper = new ColumnMapper<T>()
-                    .field(field.getName())
-                    .title(TextUtil.splitCamelCase(field.getName()));
-            mappers.add(mapper);
-        }
-        return this;
     }
 
     /**
@@ -139,13 +97,17 @@ public class DataTemplate<T> {
      * @return current template
      */
     public DataTemplate<T> includeFields(String... fieldNames) {
-        List<ColumnMapper<T>> list = Arrays
-                .stream(fieldNames)
-                .map(s -> new ColumnMapper<T>().field(s))
-                .filter(this::validateMapper)
-                .filter(mapper -> mappers.stream().noneMatch(current -> Objects.equals(current.getFieldName(), mapper.getFieldName())))
-                .collect(Collectors.toList());
-        mappers.addAll(list);
+        super.includeFields(fieldNames);
+        return this;
+    }
+
+    /**
+     * Configure to map all fields of DTO.
+     *
+     * @return current template
+     */
+    public DataTemplate<T> includeAllFields() {
+        super.includeAllFields();
         return this;
     }
 
@@ -156,8 +118,7 @@ public class DataTemplate<T> {
      * @return current template
      */
     public DataTemplate<T> excludeFields(String... fieldNames) {
-        List<String> fields = ListUtil.fromArray(fieldNames);
-        mappers = mappers.stream().filter(m -> !fields.contains(m.getField())).collect(Collectors.toList());
+        super.excludeFields(fieldNames);
         return this;
     }
 
@@ -168,34 +129,29 @@ public class DataTemplate<T> {
      * @return current template
      */
     public DataTemplate<T> column(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
-        ColumnMapper<T> mapper = builder.apply(new ColumnMapper<>());
-        if (validateMapper(mapper)) {
-            mappers.add(mapper);
-        }
+        super.column(builder);
         return this;
     }
 
-    private boolean validateMapper(ColumnMapper<T> mapper) {
-        String fieldName = mapper.getFieldName();
-        Function<T, ?> func = mapper.getMapper();
-        String title = mapper.getDisplayName();
+    private DataTemplate<T> cloneSelf() {
+        DataTemplate<T> clone = new DataTemplate<>(tClass);
+        clone.mappers.addAll(this.mappers);
 
-        if (func != null) {
-            if (title == null) {
-                mapper.setDisplayName(String.format("Column %d", mappers.size() + 1));
-            }
-        } else if (fieldName != null) {
-            PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);
-            if (pd == null) {
-                return false;
-            }
-            if (title == null) {
-                mapper.setDisplayName(TextUtil.splitCamelCase(fieldName));
-            }
-        } else {
-            return false;
-        }
-        return true;
+        clone.rowAt = rowAt;
+        clone.colAt = colAt;
+
+        clone.autoSizeColumns = autoSizeColumns;
+        clone.noHeader = noHeader;
+
+        clone.headerStyle = headerStyle;
+        clone.dataStyle = dataStyle;
+        clone.conditionalRowStyle = conditionalRowStyle;
+
+        return clone;
+    }
+
+    Style applyConditionalRowStyle(T object) {
+        return ReflectUtil.safeApply(conditionalRowStyle, object);
     }
 
     /**

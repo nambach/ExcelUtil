@@ -6,7 +6,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.beans.PropertyDescriptor;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 /**
@@ -21,6 +22,9 @@ public class ColumnMapper<T> {
     private String fieldName;
     private String displayName;
     private Function<T, ?> mapper;
+
+    // mappers of field
+    List<ColumnMapper<?>> fieldMappers;
 
     private boolean mergeOnValue;
     private Function<T, ?> mergeOnId;
@@ -86,7 +90,7 @@ public class ColumnMapper<T> {
     /**
      * Merge consecutively cells on current column by comparing cell value.
      *
-     * @param b
+     * @param b boolean
      * @return current mapper
      */
     public ColumnMapper<T> mergeOnValue(boolean b) {
@@ -149,26 +153,31 @@ public class ColumnMapper<T> {
         return this;
     }
 
-    Object retrieveValue(T object, Class<T> tClass) {
-        if (mapper == null) {
-            // use entity's getter
-            PropertyDescriptor field = ReflectUtil.getField(fieldName, tClass);
-            if (field == null) {
-                return null;
-            }
-            try {
-                return field.getReadMethod().invoke(object);
-            } catch (Exception e) {
-                return null;
-            }
+    public <F> ColumnMapper<T> asList(Class<F> fClass, String... fields) {
+        ColumnTemplate<F> columnTemplate = new ColumnTemplate<>(fClass);
+        columnTemplate.includeFields(fields);
+        consumeSubField(columnTemplate);
+        return this;
+    }
 
-        } else {
-            // use mapper to get value
-            try {
-                return mapper.apply(object);
-            } catch (Exception e) {
-                return null;
-            }
+    public <F> ColumnMapper<T> asList(Class<F> fClass, Function<ColumnTemplate<F>, ColumnTemplate<F>> builder) {
+        ColumnTemplate<F> columnTemplate = new ColumnTemplate<>(fClass);
+        builder.apply(columnTemplate);
+        consumeSubField(columnTemplate);
+        return this;
+    }
+
+    private void consumeSubField(ColumnTemplate<?> subFieldBuilder) {
+        fieldMappers = new ArrayList<>();
+        fieldMappers.addAll(subFieldBuilder.mappers);
+    }
+
+    Object retrieveValue(T object) {
+        // use mapper to get value
+        try {
+            return mapper.apply(object);
+        } catch (Exception e) {
+            return null;
         }
     }
 

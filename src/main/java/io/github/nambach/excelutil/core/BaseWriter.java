@@ -40,7 +40,7 @@ class BaseWriter extends BaseEditor {
             colAt = 0;
         }
 
-        List<ColumnMapper<T>> mappers = template.getMappers();
+        List<ColumnMapper<T>> mappers = template.mappers;
         Style headerStyle = template.getHeaderStyle();
         Style dataStyle = template.getDataStyle();
 
@@ -83,7 +83,7 @@ class BaseWriter extends BaseEditor {
             for (ColumnMapper<T> mapper : mappers) {
                 i++;
 
-                Object cellValue = mapper.retrieveValue(object, template.getTClass());
+                Object cellValue = mapper.retrieveValue(object);
 
                 Cell cell = null;
                 ReflectUtil.Type type = ReflectUtil.determineType(cellValue);

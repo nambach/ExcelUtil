@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.Date;
+import java.util.List;
 
 @Getter
 @Setter
@@ -20,9 +21,15 @@ public class Book {
 
     @Getter
     @Setter
-    @AllArgsConstructor
     public static class Category {
         private long id;
         private String name;
+
+        public Category(long id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        private List<Book> books;
     }
 }
