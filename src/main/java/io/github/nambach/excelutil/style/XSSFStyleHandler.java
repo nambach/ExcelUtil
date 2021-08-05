@@ -39,6 +39,10 @@ public class XSSFStyleHandler extends StyleHandler {
             style.setIndention(s.indentation);
         }
 
+        if (s.wrapText == Boolean.TRUE) {
+            style.setWrapText(true);
+        }
+
         if (s.date == Boolean.TRUE) {
             String pattern = s.datePattern != null ? s.datePattern : "MMM dd, yyyy";
             style.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat(pattern));
