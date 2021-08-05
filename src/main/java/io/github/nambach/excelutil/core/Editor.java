@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Editor extends BaseEditor {
+public class Editor extends BaseEditor implements AutoCloseable {
     private final Workbook workbook;
     private final BaseWriter writer;
     private final BaseReader reader;
@@ -48,6 +48,12 @@ public class Editor extends BaseEditor {
             int index = workbook.getActiveSheetIndex();
             currentSheet = workbook.getSheetAt(index);
         }
+    }
+
+    @Override
+    @SneakyThrows
+    public void close() {
+        this.workbook.close();
     }
 
     public Workbook getPoiWorkbook() {

@@ -160,13 +160,13 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @return an {@link java.io.InputStream} to write as file
      */
     public ByteArrayInputStream getFileForImport() {
-        DataTemplate<T> clone = this.cloneSelf();
-
-        Editor editor = new Editor();
-        return editor.goToSheet(0)
-                     .goToCell(rowAt, colAt)
-                     .writeData(clone, null)
-                     .exportToFile();
+        try (Editor editor = new Editor()) {
+            DataTemplate<T> clone = this.cloneSelf();
+            return editor.goToSheet(0)
+                         .goToCell(rowAt, colAt)
+                         .writeData(clone, null)
+                         .exportToFile();
+        }
     }
 
     /**
@@ -176,11 +176,12 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @return an {@link java.io.InputStream} to write as file
      */
     public ByteArrayInputStream writeData(Collection<T> data) {
-        Editor editor = new Editor();
-        return editor.goToSheet(0)
-                     .goToCell(rowAt, colAt)
-                     .writeData(this, data)
-                     .exportToFile();
+        try (Editor editor = new Editor()) {
+            return editor.goToSheet(0)
+                         .goToCell(rowAt, colAt)
+                         .writeData(this, data)
+                         .exportToFile();
+        }
     }
 
     /**
@@ -191,11 +192,12 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @return an {@link java.io.InputStream} to write as file
      */
     public ByteArrayInputStream writeData(Collection<T> data, String sheetName) {
-        Editor editor = new Editor();
-        return editor.goToSheet(sheetName)
-                     .goToCell(rowAt, colAt)
-                     .writeData(this, data)
-                     .exportToFile();
+        try (Editor editor = new Editor()) {
+            return editor.goToSheet(sheetName)
+                         .goToCell(rowAt, colAt)
+                         .writeData(this, data)
+                         .exportToFile();
+        }
     }
 
     /**
