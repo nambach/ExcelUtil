@@ -252,7 +252,7 @@ public class Editor extends BaseEditor implements AutoCloseable {
         writer.writeData(currentSheet, template, data, pointer.getRow(), pointer.getCol());
 
         // update pivot
-        pivot.moveRight(template.mappers.size() - 1);
+        pivot.moveRight(template.size() - 1);
         int headerRows = template.isNoHeader() ? 0 : 1;
         pivot.moveDown(data.size() - 1 + headerRows);
 

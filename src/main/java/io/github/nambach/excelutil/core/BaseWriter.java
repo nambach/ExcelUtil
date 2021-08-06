@@ -16,7 +16,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,6 +29,16 @@ class BaseWriter extends BaseEditor {
     }
 
     public <T> void writeData(Sheet sheet, DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {
+        if (template.hasDeepLevel()) {
+            DataTemplate<FlatData> flatTemplate = template.getFlatTemplate();
+            Collection<FlatData> flatData = template.flattenData(data);
+            internalWriteData(sheet, flatTemplate, flatData, rowAt, colAt);
+        } else {
+            internalWriteData(sheet, template, data, rowAt, colAt);
+        }
+    }
+
+    private <T> void internalWriteData(Sheet sheet, DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {
         if (data == null) {
             data = Collections.emptyList();
         }
@@ -40,7 +49,6 @@ class BaseWriter extends BaseEditor {
             colAt = 0;
         }
 
-        List<ColumnMapper<T>> mappers = template.mappers;
         Style headerStyle = template.getHeaderStyle();
         Style dataStyle = template.getDataStyle();
 
@@ -61,7 +69,7 @@ class BaseWriter extends BaseEditor {
             Row headerRow = getRowAt(sheet, rowAt++);
             CellStyle defaultHeaderStyle = cachedStyles.accumulate(headerStyle);
             int cellCount = colAt;
-            for (ColumnMapper<T> mapper : mappers) {
+            for (ColumnMapper<T> mapper : template) {
                 Cell cell = headerRow.createCell(cellCount++, CellType.STRING);
                 cell.setCellValue(mapper.getDisplayName());
                 cell.setCellStyle(defaultHeaderStyle);
@@ -80,7 +88,7 @@ class BaseWriter extends BaseEditor {
 
             // Create all columns in a row
             int i = colAt - 1;
-            for (ColumnMapper<T> mapper : mappers) {
+            for (ColumnMapper<T> mapper : template) {
                 i++;
 
                 Object cellValue = mapper.retrieveValue(object);

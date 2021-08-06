@@ -2,13 +2,15 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.util.TextUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
+
+import static io.github.nambach.excelutil.util.ListUtil.hasMember;
 
 /**
  * Mapper that contains rule to map property of DTO into column value
@@ -24,7 +26,7 @@ public class ColumnMapper<T> {
     private Function<T, ?> mapper;
 
     // mappers of field
-    List<ColumnMapper<?>> fieldMappers;
+    ColumnTemplate<?> fieldTemplate;
 
     private boolean mergeOnValue;
     private Function<T, ?> mergeOnId;
@@ -153,23 +155,29 @@ public class ColumnMapper<T> {
         return this;
     }
 
+    public ColumnMapper<T> asList() {
+        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        ColumnTemplate<Object> template = new ColumnTemplate<>(Object.class);
+        template.column(c -> c.title(TextUtil.splitCamelCase(fieldName))
+                              .transform(o -> o));
+        fieldTemplate = template;
+        return this;
+    }
+
     public <F> ColumnMapper<T> asList(Class<F> fClass, String... fields) {
-        ColumnTemplate<F> columnTemplate = new ColumnTemplate<>(fClass);
-        columnTemplate.includeFields(fields);
-        consumeSubField(columnTemplate);
+        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
+        template.includeFields(fields);
+        fieldTemplate = template;
         return this;
     }
 
     public <F> ColumnMapper<T> asList(Class<F> fClass, Function<ColumnTemplate<F>, ColumnTemplate<F>> builder) {
-        ColumnTemplate<F> columnTemplate = new ColumnTemplate<>(fClass);
-        builder.apply(columnTemplate);
-        consumeSubField(columnTemplate);
+        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
+        builder.apply(template);
+        fieldTemplate = template;
         return this;
-    }
-
-    private void consumeSubField(ColumnTemplate<?> subFieldBuilder) {
-        fieldMappers = new ArrayList<>();
-        fieldMappers.addAll(subFieldBuilder.mappers);
     }
 
     Object retrieveValue(T object) {
@@ -195,5 +203,38 @@ public class ColumnMapper<T> {
 
     boolean needMerged() {
         return mergeOnValue || mergeOnId != null;
+    }
+
+    boolean isListField() {
+        return hasMember(fieldTemplate);
+    }
+
+    <R> ColumnMapper<R> compose(Function<R, T> selector) {
+        ColumnMapper<R> result = new ColumnMapper<>();
+        result.copyConfig(this);
+        result.mapper = mapper.compose(selector);
+
+        if (mergeOnId != null) {
+            result.mergeOnId = mergeOnId.compose(selector);
+        } else {
+            result.mergeOnId = selector;
+        }
+
+        if (conditionalStyle != null) {
+            result.conditionalStyle = conditionalStyle.compose(selector);
+        }
+        return result;
+    }
+
+    private void copyConfig(ColumnMapper<?> other) {
+        fieldName = other.fieldName;
+        displayName = other.displayName;
+
+        mergeOnValue = other.mergeOnValue;
+
+        style = other.style;
+
+        pxWidth = other.pxWidth;
+        autoSize = other.autoSize;
     }
 }

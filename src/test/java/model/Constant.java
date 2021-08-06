@@ -6,14 +6,15 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Constant {
-    private static final SimpleDateFormat sdf = new SimpleDateFormat("d/M/yyyy");
     public static final Map<Integer, Book.Category> CAT = new HashMap<Integer, Book.Category>() {{
         put(0, new Book.Category(0, "Fiction"));
         put(1, new Book.Category(1, "Non-fiction"));
         put(2, new Book.Category(2, "Science"));
     }};
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("d/M/yyyy");
     public static List<Book> BOOKS;
 
     static {
@@ -42,6 +43,10 @@ public class Constant {
                     new Book("0062316095", "Sapiens: A Brief History of Humankind", 4.40,
                              sdf.parse("17/4/2012"), "Yuval Noah Harari", "History", CAT.get(2))
             );
+
+            for (Book.Category category : CAT.values()) {
+                category.setBooks(BOOKS.stream().filter(b -> b.getCategory() == category).collect(Collectors.toList()));
+            }
         } catch (ParseException e) {
             e.printStackTrace();
         }

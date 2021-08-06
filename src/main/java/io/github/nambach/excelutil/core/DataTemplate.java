@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import org.apache.poi.ss.util.CellAddress;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
@@ -33,6 +34,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
 
     private Style headerStyle = StyleConstant.HEADER_STYLE;
     private Style dataStyle = StyleConstant.DATA_STYLE;
+
     private Function<T, Style> conditionalRowStyle;
 
     DataTemplate(Class<T> tClass) {
@@ -135,19 +137,21 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
 
     private DataTemplate<T> cloneSelf() {
         DataTemplate<T> clone = new DataTemplate<>(tClass);
-        clone.mappers.addAll(this.mappers);
-
-        clone.rowAt = rowAt;
-        clone.colAt = colAt;
-
-        clone.autoSizeColumns = autoSizeColumns;
-        clone.noHeader = noHeader;
-
-        clone.headerStyle = headerStyle;
-        clone.dataStyle = dataStyle;
+        clone.addAll(this);
+        clone.copyConfig(this);
         clone.conditionalRowStyle = conditionalRowStyle;
-
         return clone;
+    }
+
+    private void copyConfig(DataTemplate<?> other) {
+        rowAt = other.rowAt;
+        colAt = other.colAt;
+
+        autoSizeColumns = other.autoSizeColumns;
+        noHeader = other.noHeader;
+
+        headerStyle = other.headerStyle;
+        dataStyle = other.dataStyle;
     }
 
     Style applyConditionalRowStyle(T object) {
@@ -208,12 +212,82 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
     public ReaderConfig<T> getReaderConfig() {
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
         int i = 0;
-        for (ColumnMapper<T> mapper : mappers) {
+        for (ColumnMapper<T> mapper : this) {
             config.column(i++, mapper.getFieldName());
         }
         config.titleAtRow(0);
         config.dataFromRow(1);
         return config.translate(rowAt, colAt);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    DataTemplate<FlatData> getFlatTemplate() {
+        DataTemplate<FlatData> result = new DataTemplate<>(FlatData.class);
+        result.copyConfig(this);
+
+        for (ColumnMapper<T> mapper : this) {
+            if (mapper.isListField()) {
+                collectDeepMapper(mapper, 1, result);
+            } else {
+                Function<FlatData, T> selector = datum -> (T) datum.get(0);
+                ColumnMapper<FlatData> newMapper = mapper.compose(selector);
+                result.add(newMapper);
+            }
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void collectDeepMapper(ColumnMapper<?> fieldList, int deepLevel, DataTemplate<FlatData> result) {
+        if (fieldList.isListField()) {
+            for (ColumnMapper<?> mapper : fieldList.fieldTemplate) {
+                if (mapper.isListField()) {
+                    collectDeepMapper(mapper, deepLevel + 1, result);
+                } else {
+                    Function selector = (Function<FlatData, ?>) datum -> datum.get(deepLevel);
+                    ColumnMapper<FlatData> newMapper = mapper.<FlatData>compose(selector);
+                    result.add(newMapper);
+                }
+            }
+        }
+    }
+
+    Collection<FlatData> flattenData(Collection<?> data) {
+        Collection<FlatData> result = new ArrayList<>();
+
+        ColumnMapper<?> deepField = this.getDeepField();
+
+        for (Object datum : data) {
+            FlatData seed = new FlatData();
+            seed.add(datum);
+            result.addAll(flattenData(seed, deepField));
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Collection<FlatData> flattenData(FlatData seed, ColumnMapper<?> field) {
+        ArrayList<FlatData> result = new ArrayList<>();
+
+        Object datum = seed.getLast();
+        Function mapper = field.getMapper();
+        Object collection = mapper.apply(datum);
+
+        if (collection instanceof Collection) {
+            ColumnMapper<?> deepField = field.fieldTemplate.getDeepField();
+
+            for (Object element : ((Collection) collection)) {
+                FlatData item = seed.cloneSelf();
+                item.add(element);
+                if (deepField != null) {
+                    result.addAll(flattenData(item, deepField));
+                } else {
+                    result.add(item);
+                }
+            }
+        }
+        return result;
     }
 
     /**

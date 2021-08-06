@@ -14,9 +14,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class ColumnTemplate<T> {
+public class ColumnTemplate<T> extends ArrayList<ColumnMapper<T>> {
     protected Class<T> tClass;
-    protected List<ColumnMapper<T>> mappers = new ArrayList<>();
 
     protected ColumnTemplate(Class<T> tClass) {
         this.tClass = tClass;
@@ -34,7 +33,7 @@ public class ColumnTemplate<T> {
 
     protected ColumnTemplate<T> internalSplit(ColumnTemplate<T> clone, Predicate<ColumnMapper<T>> condition) {
         Objects.requireNonNull(condition);
-        clone.mappers = this.mappers.stream().filter(condition).collect(Collectors.toList());
+        clone.removeIf(condition);
         return clone;
     }
 
@@ -52,7 +51,7 @@ public class ColumnTemplate<T> {
     }
 
     protected ColumnTemplate<T> internalConcat(ColumnTemplate<T> clone, ColumnTemplate<T> other) {
-        clone.mappers.addAll(other.mappers);
+        clone.addAll(other);
         return clone;
     }
 
@@ -67,9 +66,9 @@ public class ColumnTemplate<T> {
                 .stream(fieldNames)
                 .map(s -> new ColumnMapper<T>().field(s))
                 .filter(this::validateMapper)
-                .filter(mapper -> mappers.stream().noneMatch(current -> Objects.equals(current.getFieldName(), mapper.getFieldName())))
+                .filter(mapper -> this.stream().noneMatch(current -> Objects.equals(current.getFieldName(), mapper.getFieldName())))
                 .collect(Collectors.toList());
-        mappers.addAll(list);
+        this.addAll(list);
         return this;
     }
 
@@ -92,7 +91,7 @@ public class ColumnTemplate<T> {
      */
     public ColumnTemplate<T> excludeFields(String... fieldNames) {
         List<String> fields = ListUtil.fromArray(fieldNames);
-        mappers = mappers.stream().filter(m -> !fields.contains(m.getField())).collect(Collectors.toList());
+        this.removeIf(m -> !fields.contains(m.getField()));
         return this;
     }
 
@@ -105,7 +104,7 @@ public class ColumnTemplate<T> {
     public ColumnTemplate<T> column(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
         ColumnMapper<T> mapper = builder.apply(new ColumnMapper<>());
         if (validateMapper(mapper)) {
-            mappers.add(mapper);
+            this.add(mapper);
         }
         return this;
     }
@@ -116,7 +115,7 @@ public class ColumnTemplate<T> {
 
         if (mapper.getMapper() != null) {
             if (title == null) {
-                mapper.setDisplayName(String.format("Column %d", mappers.size() + 1));
+                mapper.setDisplayName(String.format("Column %d", this.size() + 1));
             }
         } else if (fieldName != null) {
             PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);
@@ -141,5 +140,13 @@ public class ColumnTemplate<T> {
             return false;
         }
         return true;
+    }
+
+    protected boolean hasDeepLevel() {
+        return this.stream().anyMatch(ColumnMapper::isListField);
+    }
+
+    protected ColumnMapper<T> getDeepField() {
+        return this.stream().filter(ColumnMapper::isListField).findFirst().orElse(null);
     }
 }

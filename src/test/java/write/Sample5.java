@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class Sample5 {
-}
-
 interface Pipe<I, O> {
     O transform(I input);
+}
+
+public class Sample5 {
 }
 
 class Chain<S, T> {
@@ -23,24 +23,6 @@ class Chain<S, T> {
         chain.pipes = Collections.singletonList(pipe);
         ;
         return chain;
-    }
-
-    public <V> Chain<S, V> append(Pipe<T, V> pipe) {
-        Chain<S, V> chain = new Chain<S, V>();
-        chain.pipes = new ArrayList<>(pipes);
-        chain.pipes.add(pipe);
-        return chain;
-    }
-
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public T run(S s) {
-        Object source = s;
-        Object target = null;
-        for (Pipe p : pipes) {
-            target = p.transform(source);
-            source = target;
-        }
-        return (T) target;
     }
 
     public static void main(String[] args) {
@@ -65,5 +47,23 @@ class Chain<S, T> {
         Chain<String, BigInteger> chain = Chain.start(pipe1).append(pipe2).append(pipe3);
         BigInteger result = chain.run("12");
         System.out.println(result);
+    }
+
+    public <V> Chain<S, V> append(Pipe<T, V> pipe) {
+        Chain<S, V> chain = new Chain<S, V>();
+        chain.pipes = new ArrayList<>(pipes);
+        chain.pipes.add(pipe);
+        return chain;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public T run(S s) {
+        Object source = s;
+        Object target = null;
+        for (Pipe p : pipes) {
+            target = p.transform(source);
+            source = target;
+        }
+        return (T) target;
     }
 }
