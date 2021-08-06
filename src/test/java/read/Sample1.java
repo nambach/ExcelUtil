@@ -1,12 +1,12 @@
 package read;
 
 import io.github.nambach.excelutil.core.ReaderConfig;
+import io.github.nambach.excelutil.core.Result;
 import io.github.nambach.excelutil.util.FileUtil;
 import lombok.SneakyThrows;
 import model.Book;
 
 import java.io.InputStream;
-import java.util.List;
 
 public class Sample1 {
     static final ReaderConfig<Book> READER_CONFIG = ReaderConfig
@@ -25,6 +25,6 @@ public class Sample1 {
     @SneakyThrows
     public static void main(String[] args) {
         InputStream stream = FileUtil.readFromDisk(".../book.xlsx");
-        List<Book> books = READER_CONFIG.readSheet(stream);
+        Result<Book> books = READER_CONFIG.readSheet(stream);
     }
 }

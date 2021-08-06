@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.util.ReflectUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -75,7 +76,7 @@ public class Handler<T> {
      */
     public Handler<T> handle(BiConsumer<T, ReaderCell> handler) {
         Objects.requireNonNull(handler);
-        this.handler = handler;
+        this.handler = ReflectUtil.safeWrap(handler);
         return this;
     }
 }

@@ -7,6 +7,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -15,7 +16,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * A configuration object containing rules for reading
@@ -146,19 +146,20 @@ public class ReaderConfig<T> {
     }
 
     /**
-     * Read data from Excel and convert to list of {@link Raw} data.
+     * Read data from Excel and convert to list of data.
      *
      * @param stream     byte stream
      * @param sheetIndex index of sheet to read
-     * @return list of {@link Raw} DTO
+     * @return list of DTO
      */
-    public List<Raw<T>> readSheetRaw(InputStream stream, int sheetIndex) {
+    public Result<T> readSheet(InputStream stream, int sheetIndex) {
         Pointer base = getBaseCoordinate();
-        Editor editor = new Editor(stream);
-        return editor
-                .goToSheet(sheetIndex)
-                .goToCell(base.getRow(), base.getCol())
-                .readSectionRaw(this);
+        try (Editor editor = new Editor(stream)) {
+            return editor
+                    .goToSheet(sheetIndex)
+                    .goToCell(base.getRow(), base.getCol())
+                    .readSection(this);
+        }
     }
 
     /**
@@ -167,49 +168,26 @@ public class ReaderConfig<T> {
      * @param stream byte stream
      * @return list of DTO
      */
-    public List<T> readSheet(InputStream stream) {
-        return convert(readSheetRaw(stream, 0));
+    public Result<T> readSheet(InputStream stream) {
+        return readSheet(stream, 0);
     }
 
     /**
      * Read data from Excel and convert to list of data.
      *
-     * @param stream     byte stream
-     * @param sheetIndex index of sheet to read
+     * @param stream    byte stream
+     * @param sheetName name of sheet to read
      * @return list of DTO
      */
-    public List<T> readSheet(InputStream stream, int sheetIndex) {
-        return convert(readSheetRaw(stream, sheetIndex));
-    }
-
-    /**
-     * Read data from multiple sheets and convert to a map of list of {@link Raw} data.
-     *
-     * @param stream       byte stream
-     * @param sheetIndexes indexes of sheet to read
-     * @return map of list of {@link Raw} DTO, having key map is the sheet name
-     */
-    public Map<String, List<Raw<T>>> readSheetsRaw(InputStream stream, int... sheetIndexes) {
-        Objects.requireNonNull(sheetIndexes);
-        Set<Integer> allowed = new HashSet<>();
-        for (int sheetIndex : sheetIndexes) {
-            allowed.add(sheetIndex);
-        }
-
+    public List<T> readSheet(InputStream stream, String sheetName) {
         Pointer base = getBaseCoordinate();
-        Editor editor = new Editor(stream);
-        Map<String, List<Raw<T>>> result = new LinkedHashMap<>();
-        for (int i = 0; i < editor.getTotalSheets(); i++) {
-            if (!allowed.contains(i)) {
-                continue;
-            }
-            List<Raw<T>> rawList = editor
-                    .goToSheet(i)
+        try (Editor editor = new Editor(stream)) {
+            int index = editor.getPoiWorkbook().getSheetIndex(sheetName);
+            return editor
+                    .goToSheet(index)
                     .goToCell(base.getRow(), base.getCol())
-                    .readSectionRaw(this);
-            result.put(editor.getSheetName(), rawList);
+                    .readSection(this);
         }
-        return result;
     }
 
     /**
@@ -219,30 +197,58 @@ public class ReaderConfig<T> {
      * @param sheetIndexes indexes of sheet to read
      * @return map of list of DTO, having key map is the sheet name
      */
-    public Map<String, List<T>> readSheets(InputStream stream, int... sheetIndexes) {
-        Map<String, List<Raw<T>>> result = readSheetsRaw(stream, sheetIndexes);
-        return result.entrySet().stream()
-                     .collect(Collectors.toMap(Map.Entry::getKey, e -> convert(e.getValue())));
+    public Map<String, Result<T>> readSheets(InputStream stream, int... sheetIndexes) {
+        Objects.requireNonNull(sheetIndexes);
+
+        Set<Integer> indexes = new HashSet<>();
+        for (int sheetIndex : sheetIndexes) {
+            indexes.add(sheetIndex);
+        }
+
+        Pointer base = getBaseCoordinate();
+        try (Editor editor = new Editor(stream)) {
+            Map<String, Result<T>> result = new LinkedHashMap<>();
+            for (int i = 0; i < editor.getTotalSheets(); i++) {
+                if (!indexes.contains(i)) {
+                    continue;
+                }
+                Result<T> list = editor
+                        .goToSheet(i)
+                        .goToCell(base.getRow(), base.getCol())
+                        .readSection(this);
+                result.put(editor.getSheetName(), list);
+            }
+            return result;
+        }
     }
 
     /**
-     * Read data from all sheets and convert to a map of list of {@link Raw} data.
+     * Read data from multiple sheets and convert to a map of list of data.
      *
-     * @param stream byte stream
-     * @return map of list of {@link Raw} DTO, having key map is the sheet name
+     * @param stream     byte stream
+     * @param sheetNames indexes of sheet to read
+     * @return map of list of DTO, having key map is the sheet name
      */
-    public Map<String, List<Raw<T>>> readAllSheetsRaw(InputStream stream) {
+    public Map<String, Result<T>> readSheets(InputStream stream, String... sheetNames) {
+        Objects.requireNonNull(sheetNames);
+        Set<String> names = new HashSet<>(Arrays.asList(sheetNames));
+
         Pointer base = getBaseCoordinate();
-        Editor editor = new Editor(stream);
-        Map<String, List<Raw<T>>> result = new LinkedHashMap<>();
-        for (int i = 0; i < editor.getTotalSheets(); i++) {
-            List<Raw<T>> rawList = editor
-                    .goToSheet(i)
-                    .goToCell(base.getRow(), base.getCol())
-                    .readSectionRaw(this);
-            result.put(editor.getSheetName(), rawList);
+        try (Editor editor = new Editor(stream)) {
+            Map<String, Result<T>> result = new LinkedHashMap<>();
+            for (String name : names) {
+                int i = editor.getPoiWorkbook().getSheetIndex(name);
+                if (i < 0) {
+                    continue;
+                }
+                Result<T> list = editor
+                        .goToSheet(i)
+                        .goToCell(base.getRow(), base.getCol())
+                        .readSection(this);
+                result.put(editor.getSheetName(), list);
+            }
+            return result;
         }
-        return result;
     }
 
     /**
@@ -251,13 +257,18 @@ public class ReaderConfig<T> {
      * @param stream byte stream
      * @return map of list of DTO, having key map is the sheet name
      */
-    public Map<String, List<T>> readAllSheets(InputStream stream) {
-        Map<String, List<Raw<T>>> result = readAllSheetsRaw(stream);
-        return result.entrySet().stream()
-                     .collect(Collectors.toMap(Map.Entry::getKey, e -> convert(e.getValue())));
-    }
-
-    private List<T> convert(List<Raw<T>> rawList) {
-        return rawList.stream().map(Raw::getData).collect(Collectors.toList());
+    public Map<String, Result<T>> readAllSheets(InputStream stream) {
+        Pointer base = getBaseCoordinate();
+        try (Editor editor = new Editor(stream)) {
+            Map<String, Result<T>> result = new LinkedHashMap<>();
+            for (int i = 0; i < editor.getTotalSheets(); i++) {
+                Result<T> list = editor
+                        .goToSheet(i)
+                        .goToCell(base.getRow(), base.getCol())
+                        .readSection(this);
+                result.put(editor.getSheetName(), list);
+            }
+            return result;
+        }
     }
 }

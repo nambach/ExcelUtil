@@ -19,9 +19,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet> {
     private final Workbook workbook;
@@ -320,12 +318,7 @@ public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet>
         return getCellAt(currentSheet, pointer).readBoolean();
     }
 
-    public <T> List<T> readSection(ReaderConfig<T> config) {
-        List<Raw<T>> rawList = reader.readSheet(currentSheet, config, pointer.getRow(), pointer.getCol());
-        return rawList.stream().map(Raw::getData).collect(Collectors.toList());
-    }
-
-    public <T> List<Raw<T>> readSectionRaw(ReaderConfig<T> config) {
+    public <T> Result<T> readSection(ReaderConfig<T> config) {
         return reader.readSheet(currentSheet, config, pointer.getRow(), pointer.getCol());
     }
 

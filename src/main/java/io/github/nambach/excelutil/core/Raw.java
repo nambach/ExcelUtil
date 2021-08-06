@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,7 +15,7 @@ import java.util.Map;
  * @param <T>
  */
 @Getter
-@Setter
+@Setter(AccessLevel.PACKAGE)
 @ToString
 public class Raw<T> {
     /**
@@ -30,7 +31,7 @@ public class Raw<T> {
      * Map Key: column title or column index
      * Map Value: cell value of DTO row
      */
-    private Map<String, Object> otherData;
+    private final Map<String, Object> otherData;
 
     Raw() {
         otherData = new LinkedHashMap<>();
