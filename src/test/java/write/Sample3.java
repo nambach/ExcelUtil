@@ -70,5 +70,6 @@ public class Sample3 {
 
         InputStream stream = editor.exportToFile();
         FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\invoice.xlsx", stream, true);
+        editor.close();
     }
 }

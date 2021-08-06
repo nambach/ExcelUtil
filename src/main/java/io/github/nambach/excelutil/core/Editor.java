@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Editor extends BaseEditor {
+public class Editor extends BaseEditor implements AutoCloseable {
     private final Workbook workbook;
     private final BaseWriter writer;
     private final BaseReader reader;
@@ -48,6 +48,12 @@ public class Editor extends BaseEditor {
             int index = workbook.getActiveSheetIndex();
             currentSheet = workbook.getSheetAt(index);
         }
+    }
+
+    @Override
+    @SneakyThrows
+    public void close() {
+        this.workbook.close();
     }
 
     public Workbook getPoiWorkbook() {
@@ -246,7 +252,7 @@ public class Editor extends BaseEditor {
         writer.writeData(currentSheet, template, data, pointer.getRow(), pointer.getCol());
 
         // update pivot
-        pivot.moveRight(template.getMappers().size() - 1);
+        pivot.moveRight(template.size() - 1);
         int headerRows = template.isNoHeader() ? 0 : 1;
         pivot.moveDown(data.size() - 1 + headerRows);
 

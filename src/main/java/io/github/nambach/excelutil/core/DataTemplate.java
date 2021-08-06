@@ -2,26 +2,19 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.style.StyleConstant;
-import io.github.nambach.excelutil.util.ListUtil;
 import io.github.nambach.excelutil.util.ReflectUtil;
-import io.github.nambach.excelutil.util.TextUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.util.CellAddress;
 
-import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * A template that contains mapping rules to extract
@@ -31,10 +24,7 @@ import java.util.stream.Collectors;
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
-public class DataTemplate<T> {
-
-    private List<ColumnMapper<T>> mappers = new ArrayList<>();
-    private Class<T> tClass;
+public class DataTemplate<T> extends ColumnTemplate<T> {
 
     private int rowAt;
     private int colAt;
@@ -44,10 +34,11 @@ public class DataTemplate<T> {
 
     private Style headerStyle = StyleConstant.HEADER_STYLE;
     private Style dataStyle = StyleConstant.DATA_STYLE;
+
     private Function<T, Style> conditionalRowStyle;
 
     DataTemplate(Class<T> tClass) {
-        this.tClass = tClass;
+        super(tClass);
     }
 
     /**
@@ -81,9 +72,8 @@ public class DataTemplate<T> {
      * @return a copied template (which is not modified the original)
      */
     public DataTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
-        Objects.requireNonNull(condition);
         DataTemplate<T> clone = this.cloneSelf();
-        clone.mappers = this.mappers.stream().filter(condition).collect(Collectors.toList());
+        this.internalSplit(clone, condition);
         return clone;
     }
 
@@ -98,38 +88,8 @@ public class DataTemplate<T> {
             return this;
         }
         DataTemplate<T> clone = this.cloneSelf();
-        clone.mappers.addAll(other.mappers);
+        this.internalConcat(clone, other);
         return clone;
-    }
-
-    private DataTemplate<T> cloneSelf() {
-        DataTemplate<T> clone = new DataTemplate<>(tClass);
-        clone.mappers.addAll(this.mappers);
-        clone.headerStyle = headerStyle;
-        clone.dataStyle = dataStyle;
-        clone.autoSizeColumns = autoSizeColumns;
-        clone.conditionalRowStyle = conditionalRowStyle;
-        return clone;
-    }
-
-    Style applyConditionalRowStyle(T object) {
-        return ReflectUtil.safeApply(conditionalRowStyle, object);
-    }
-
-    /**
-     * Configure to map all fields of DTO.
-     *
-     * @return current template
-     */
-    public DataTemplate<T> includeAllFields() {
-        Field[] fields = tClass.getDeclaredFields();
-        for (Field field : fields) {
-            ColumnMapper<T> mapper = new ColumnMapper<T>()
-                    .field(field.getName())
-                    .title(TextUtil.splitCamelCase(field.getName()));
-            mappers.add(mapper);
-        }
-        return this;
     }
 
     /**
@@ -139,13 +99,17 @@ public class DataTemplate<T> {
      * @return current template
      */
     public DataTemplate<T> includeFields(String... fieldNames) {
-        List<ColumnMapper<T>> list = Arrays
-                .stream(fieldNames)
-                .map(s -> new ColumnMapper<T>().field(s))
-                .filter(this::validateMapper)
-                .filter(mapper -> mappers.stream().noneMatch(current -> Objects.equals(current.getFieldName(), mapper.getFieldName())))
-                .collect(Collectors.toList());
-        mappers.addAll(list);
+        super.includeFields(fieldNames);
+        return this;
+    }
+
+    /**
+     * Configure to map all fields of DTO.
+     *
+     * @return current template
+     */
+    public DataTemplate<T> includeAllFields() {
+        super.includeAllFields();
         return this;
     }
 
@@ -156,8 +120,7 @@ public class DataTemplate<T> {
      * @return current template
      */
     public DataTemplate<T> excludeFields(String... fieldNames) {
-        List<String> fields = ListUtil.fromArray(fieldNames);
-        mappers = mappers.stream().filter(m -> !fields.contains(m.getField())).collect(Collectors.toList());
+        super.excludeFields(fieldNames);
         return this;
     }
 
@@ -168,34 +131,31 @@ public class DataTemplate<T> {
      * @return current template
      */
     public DataTemplate<T> column(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
-        ColumnMapper<T> mapper = builder.apply(new ColumnMapper<>());
-        if (validateMapper(mapper)) {
-            mappers.add(mapper);
-        }
+        super.column(builder);
         return this;
     }
 
-    private boolean validateMapper(ColumnMapper<T> mapper) {
-        String fieldName = mapper.getFieldName();
-        Function<T, ?> func = mapper.getMapper();
-        String title = mapper.getDisplayName();
+    private DataTemplate<T> cloneSelf() {
+        DataTemplate<T> clone = new DataTemplate<>(tClass);
+        clone.addAll(this);
+        clone.copyConfig(this);
+        clone.conditionalRowStyle = conditionalRowStyle;
+        return clone;
+    }
 
-        if (func != null) {
-            if (title == null) {
-                mapper.setDisplayName(String.format("Column %d", mappers.size() + 1));
-            }
-        } else if (fieldName != null) {
-            PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);
-            if (pd == null) {
-                return false;
-            }
-            if (title == null) {
-                mapper.setDisplayName(TextUtil.splitCamelCase(fieldName));
-            }
-        } else {
-            return false;
-        }
-        return true;
+    private void copyConfig(DataTemplate<?> other) {
+        rowAt = other.rowAt;
+        colAt = other.colAt;
+
+        autoSizeColumns = other.autoSizeColumns;
+        noHeader = other.noHeader;
+
+        headerStyle = other.headerStyle;
+        dataStyle = other.dataStyle;
+    }
+
+    Style applyConditionalRowStyle(T object) {
+        return ReflectUtil.safeApply(conditionalRowStyle, object);
     }
 
     /**
@@ -204,13 +164,13 @@ public class DataTemplate<T> {
      * @return an {@link java.io.InputStream} to write as file
      */
     public ByteArrayInputStream getFileForImport() {
-        DataTemplate<T> clone = this.cloneSelf();
-
-        Editor editor = new Editor();
-        return editor.goToSheet(0)
-                     .goToCell(rowAt, colAt)
-                     .writeData(clone, null)
-                     .exportToFile();
+        try (Editor editor = new Editor()) {
+            DataTemplate<T> clone = this.cloneSelf();
+            return editor.goToSheet(0)
+                         .goToCell(rowAt, colAt)
+                         .writeData(clone, null)
+                         .exportToFile();
+        }
     }
 
     /**
@@ -220,11 +180,12 @@ public class DataTemplate<T> {
      * @return an {@link java.io.InputStream} to write as file
      */
     public ByteArrayInputStream writeData(Collection<T> data) {
-        Editor editor = new Editor();
-        return editor.goToSheet(0)
-                     .goToCell(rowAt, colAt)
-                     .writeData(this, data)
-                     .exportToFile();
+        try (Editor editor = new Editor()) {
+            return editor.goToSheet(0)
+                         .goToCell(rowAt, colAt)
+                         .writeData(this, data)
+                         .exportToFile();
+        }
     }
 
     /**
@@ -235,11 +196,12 @@ public class DataTemplate<T> {
      * @return an {@link java.io.InputStream} to write as file
      */
     public ByteArrayInputStream writeData(Collection<T> data, String sheetName) {
-        Editor editor = new Editor();
-        return editor.goToSheet(sheetName)
-                     .goToCell(rowAt, colAt)
-                     .writeData(this, data)
-                     .exportToFile();
+        try (Editor editor = new Editor()) {
+            return editor.goToSheet(sheetName)
+                         .goToCell(rowAt, colAt)
+                         .writeData(this, data)
+                         .exportToFile();
+        }
     }
 
     /**
@@ -250,12 +212,82 @@ public class DataTemplate<T> {
     public ReaderConfig<T> getReaderConfig() {
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
         int i = 0;
-        for (ColumnMapper<T> mapper : mappers) {
+        for (ColumnMapper<T> mapper : this) {
             config.column(i++, mapper.getFieldName());
         }
         config.titleAtRow(0);
         config.dataFromRow(1);
         return config.translate(rowAt, colAt);
+    }
+
+    @SuppressWarnings({"unchecked"})
+    DataTemplate<FlatData> getFlatTemplate() {
+        DataTemplate<FlatData> result = new DataTemplate<>(FlatData.class);
+        result.copyConfig(this);
+
+        for (ColumnMapper<T> mapper : this) {
+            if (mapper.isListField()) {
+                collectDeepMapper(mapper, 1, result);
+            } else {
+                Function<FlatData, T> selector = datum -> (T) datum.get(0);
+                ColumnMapper<FlatData> newMapper = mapper.compose(selector);
+                result.add(newMapper);
+            }
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private void collectDeepMapper(ColumnMapper<?> fieldList, int deepLevel, DataTemplate<FlatData> result) {
+        if (fieldList.isListField()) {
+            for (ColumnMapper<?> mapper : fieldList.fieldTemplate) {
+                if (mapper.isListField()) {
+                    collectDeepMapper(mapper, deepLevel + 1, result);
+                } else {
+                    Function selector = (Function<FlatData, ?>) datum -> datum.get(deepLevel);
+                    ColumnMapper<FlatData> newMapper = mapper.<FlatData>compose(selector);
+                    result.add(newMapper);
+                }
+            }
+        }
+    }
+
+    Collection<FlatData> flattenData(Collection<?> data) {
+        Collection<FlatData> result = new ArrayList<>();
+
+        ColumnMapper<?> deepField = this.getDeepField();
+
+        for (Object datum : data) {
+            FlatData seed = new FlatData();
+            seed.add(datum);
+            result.addAll(flattenData(seed, deepField));
+        }
+
+        return result;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Collection<FlatData> flattenData(FlatData seed, ColumnMapper<?> field) {
+        ArrayList<FlatData> result = new ArrayList<>();
+
+        Object datum = seed.getLast();
+        Function mapper = field.getMapper();
+        Object collection = mapper.apply(datum);
+
+        if (collection instanceof Collection) {
+            ColumnMapper<?> deepField = field.fieldTemplate.getDeepField();
+
+            for (Object element : ((Collection) collection)) {
+                FlatData item = seed.cloneSelf();
+                item.add(element);
+                if (deepField != null) {
+                    result.addAll(flattenData(item, deepField));
+                } else {
+                    result.add(item);
+                }
+            }
+        }
+        return result;
     }
 
     /**

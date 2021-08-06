@@ -28,6 +28,10 @@ public class ListUtil {
         return list == null || list.isEmpty();
     }
 
+    public static <T> boolean hasMember(Collection<T> list) {
+        return list != null && !list.isEmpty();
+    }
+
     public static <T> void sort(List<T> list, Comparing<T> comparing) {
         Objects.requireNonNull(list);
         Objects.requireNonNull(comparing);

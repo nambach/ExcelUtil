@@ -5,7 +5,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.function.Function;
 
-public class SequentialWriter {
+public class SequentialWriter implements AutoCloseable {
     private final Editor editor;
 
     public SequentialWriter() {
@@ -46,5 +46,10 @@ public class SequentialWriter {
 
     public ByteArrayInputStream exportToFile() {
         return editor.exportToFile();
+    }
+
+    @Override
+    public void close() {
+        this.editor.close();
     }
 }

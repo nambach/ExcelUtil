@@ -2,12 +2,15 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.util.TextUtil;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.beans.PropertyDescriptor;
+import java.util.Objects;
 import java.util.function.Function;
+
+import static io.github.nambach.excelutil.util.ListUtil.hasMember;
 
 /**
  * Mapper that contains rule to map property of DTO into column value
@@ -21,6 +24,9 @@ public class ColumnMapper<T> {
     private String fieldName;
     private String displayName;
     private Function<T, ?> mapper;
+
+    // mappers of field
+    ColumnTemplate<?> fieldTemplate;
 
     private boolean mergeOnValue;
     private Function<T, ?> mergeOnId;
@@ -86,7 +92,7 @@ public class ColumnMapper<T> {
     /**
      * Merge consecutively cells on current column by comparing cell value.
      *
-     * @param b
+     * @param b boolean
      * @return current mapper
      */
     public ColumnMapper<T> mergeOnValue(boolean b) {
@@ -149,26 +155,37 @@ public class ColumnMapper<T> {
         return this;
     }
 
-    Object retrieveValue(T object, Class<T> tClass) {
-        if (mapper == null) {
-            // use entity's getter
-            PropertyDescriptor field = ReflectUtil.getField(fieldName, tClass);
-            if (field == null) {
-                return null;
-            }
-            try {
-                return field.getReadMethod().invoke(object);
-            } catch (Exception e) {
-                return null;
-            }
+    public ColumnMapper<T> asList() {
+        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        ColumnTemplate<Object> template = new ColumnTemplate<>(Object.class);
+        template.column(c -> c.title(TextUtil.splitCamelCase(fieldName))
+                              .transform(o -> o));
+        fieldTemplate = template;
+        return this;
+    }
 
-        } else {
-            // use mapper to get value
-            try {
-                return mapper.apply(object);
-            } catch (Exception e) {
-                return null;
-            }
+    public <F> ColumnMapper<T> asList(Class<F> fClass, String... fields) {
+        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
+        template.includeFields(fields);
+        fieldTemplate = template;
+        return this;
+    }
+
+    public <F> ColumnMapper<T> asList(Class<F> fClass, Function<ColumnTemplate<F>, ColumnTemplate<F>> builder) {
+        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
+        builder.apply(template);
+        fieldTemplate = template;
+        return this;
+    }
+
+    Object retrieveValue(T object) {
+        // use mapper to get value
+        try {
+            return mapper.apply(object);
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -186,5 +203,38 @@ public class ColumnMapper<T> {
 
     boolean needMerged() {
         return mergeOnValue || mergeOnId != null;
+    }
+
+    boolean isListField() {
+        return hasMember(fieldTemplate);
+    }
+
+    <R> ColumnMapper<R> compose(Function<R, T> selector) {
+        ColumnMapper<R> result = new ColumnMapper<>();
+        result.copyConfig(this);
+        result.mapper = mapper.compose(selector);
+
+        if (mergeOnId != null) {
+            result.mergeOnId = mergeOnId.compose(selector);
+        } else {
+            result.mergeOnId = selector;
+        }
+
+        if (conditionalStyle != null) {
+            result.conditionalStyle = conditionalStyle.compose(selector);
+        }
+        return result;
+    }
+
+    private void copyConfig(ColumnMapper<?> other) {
+        fieldName = other.fieldName;
+        displayName = other.displayName;
+
+        mergeOnValue = other.mergeOnValue;
+
+        style = other.style;
+
+        pxWidth = other.pxWidth;
+        autoSize = other.autoSize;
     }
 }

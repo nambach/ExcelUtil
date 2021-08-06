@@ -90,9 +90,10 @@ public class Template implements Iterable<WriterCell> {
     }
 
     public ByteArrayInputStream getFile() {
-        Editor editor = new Editor();
-        editor.goToSheet(0);
-        editor.writeTemplate(this);
-        return editor.exportToFile();
+        try (Editor editor = new Editor()) {
+            editor.goToSheet(0);
+            editor.writeTemplate(this);
+            return editor.exportToFile();
+        }
     }
 }
