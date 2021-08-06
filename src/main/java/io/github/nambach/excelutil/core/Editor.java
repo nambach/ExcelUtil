@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class Editor extends BaseEditor implements AutoCloseable {
+public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet> {
     private final Workbook workbook;
     private final BaseWriter writer;
     private final BaseReader reader;
@@ -106,8 +106,20 @@ public class Editor extends BaseEditor implements AutoCloseable {
         return workbook.getNumberOfSheets();
     }
 
-    public Iterator<Sheet> getSheetIterator() {
-        return workbook.sheetIterator();
+    @Override
+    public Iterator<Sheet> iterator() {
+        return new Iterator<Sheet>() {
+            @Override
+            public boolean hasNext() {
+                return workbook.iterator().hasNext();
+            }
+
+            @Override
+            public Sheet next() {
+                currentSheet = workbook.iterator().next();
+                return currentSheet;
+            }
+        };
     }
 
     // Cell navigation
