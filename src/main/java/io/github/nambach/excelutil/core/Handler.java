@@ -71,7 +71,7 @@ public class Handler<T> {
         return this;
     }
 
-    Handler<T> validate(TypeValidator typeValidator) {
+    Handler<T> withValidator(TypeValidator typeValidator) {
         this.typeValidator = typeValidator;
         return this;
     }
@@ -92,11 +92,7 @@ public class Handler<T> {
         return typeValidator != null;
     }
 
-    String quickValidate(Object value) {
-        return typeValidator.quickTest(value);
-    }
-
-    List<String> fullValidate(Object value) {
+    List<String> validate(Object value) {
         return typeValidator.test(value);
     }
 }

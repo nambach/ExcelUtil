@@ -131,7 +131,7 @@ public class ReaderConfig<T> {
             Handler<T> handler = new Handler<T>()
                     .atColumn(index)
                     .field(fieldName)
-                    .validate(typeValidator);
+                    .withValidator(typeValidator);
 
             Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
             list.add(handler);
@@ -170,7 +170,7 @@ public class ReaderConfig<T> {
         return this;
     }
 
-    boolean handleBeforeAdd() {
+    boolean needHandleBeforeAdd() {
         return this.beforeAddItemHandle != null;
     }
 

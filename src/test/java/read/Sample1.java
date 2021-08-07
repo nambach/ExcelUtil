@@ -22,10 +22,9 @@ public class Sample1 {
                                    String value = cell.readString();
                                    book.setAuthor(value);
                                }))
-            .beforeAddingItem((book, controller) -> {
+            .beforeAddingItem((book, row) -> {
                 if (book.getTitle().contains("Harry")) {
-                    controller.skipThisObject();
-                    controller.setError("Potter head detected");
+                    row.skipThisObject();
                 }
             });
 

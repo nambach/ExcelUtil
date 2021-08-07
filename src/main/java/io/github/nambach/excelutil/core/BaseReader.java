@@ -90,7 +90,7 @@ class BaseReader extends BaseEditor {
 
                             // handle validation
                             if (handler.needValidation()) {
-                                List<String> errorMessage = handler.fullValidate(cellValue);
+                                List<String> errorMessage = handler.validate(cellValue);
                                 if (ListUtil.hasMember(errorMessage)) {
                                     result.addError(rowIndex, fieldName, errorMessage);
                                     if (baseConfig.isEarlyExist()) {
@@ -118,7 +118,7 @@ class BaseReader extends BaseEditor {
 
                 // handle before adding new item
                 ReaderRow readerRow = new ReaderRow();
-                if (config.handleBeforeAdd()) {
+                if (config.needHandleBeforeAdd()) {
                     config.getBeforeAddItemHandle().accept(object, readerRow);
                 }
 
