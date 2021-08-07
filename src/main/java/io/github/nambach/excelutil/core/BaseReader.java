@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.util.ListUtil;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -7,7 +8,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +19,9 @@ class BaseReader extends BaseEditor {
     public BaseReader() {
     }
 
-    public <T> List<Raw<T>> readSheet(Sheet sheet, ReaderConfig<T> baseConfig, int rowAt, int colAt) {
+    public <T> Result<T> readSheet(Sheet sheet, ReaderConfig<T> baseConfig, int rowAt, int colAt) {
+        Result<T> result = new Result<>(baseConfig.getTClass());
         try {
-            List<Raw<T>> result = new ArrayList<>();
-
             if (sheet.getPhysicalNumberOfRows() == 0) {
                 return result;
             }
@@ -45,11 +44,18 @@ class BaseReader extends BaseEditor {
             }
 
             for (Row currentRow : sheet) {
-                if (currentRow.getRowNum() < rowAt + hasTitle) {
+                int rowIndex = currentRow.getRowNum();
+                if (rowIndex < rowAt + hasTitle) {
                     continue;
                 }
 
-                T object = config.getTClass().newInstance();
+                T object;
+                try {
+                    object = config.getTClass().newInstance();
+                } catch (InstantiationException | IllegalAccessException e) {
+                    throw new Exception("Please provide a no argument constructor for class " + config.getTClass().getName());
+                }
+
                 Raw<T> raw = new Raw<>();
                 raw.setData(object);
 
@@ -60,6 +66,10 @@ class BaseReader extends BaseEditor {
                     }
 
                     Handlers<T> handlers = handlerMap.get(colIndex);
+                    if (handlers == null) {
+                        continue;
+                    }
+
                     String colTitle = titleMap.get(colIndex);
 
                     // Wrap cell
@@ -76,9 +86,29 @@ class BaseReader extends BaseEditor {
                         BiConsumer<T, ReaderCell> handle = handler.getHandler();
 
                         if (pd != null) {
-                            handleField(pd, object, readerCell);
+                            Object cellValue = handleField(pd, object, readerCell);
+
+                            // handle validation
+                            if (handler.needValidation()) {
+                                List<String> errorMessage = handler.validate(cellValue);
+                                if (ListUtil.hasMember(errorMessage)) {
+                                    result.addError(rowIndex, fieldName, errorMessage);
+                                    if (baseConfig.isEarlyExist()) {
+                                        return result;
+                                    }
+                                }
+                            }
                         } else if (handle != null) {
                             handle.accept(object, readerCell);
+
+                            // write error
+                            if (readerCell.hasError()) {
+                                result.addError(rowIndex, null, readerCell.getError());
+                                readerCell.clearError();
+                                if (readerCell.earlyExist) {
+                                    return result;
+                                }
+                            }
                         } else if (!rawReached) {
                             rawReached = true;
                             handleOther(raw, cell, fieldName, colTitle);
@@ -86,17 +116,35 @@ class BaseReader extends BaseEditor {
                     }
                 }
 
-                result.add(raw);
+                // handle before adding new item
+                ReaderRow readerRow = new ReaderRow();
+                if (config.needHandleBeforeAdd()) {
+                    config.getBeforeAddItemHandle().accept(object, readerRow);
+                }
+
+                // write error
+                if (readerRow.hasError()) {
+                    result.addError(rowIndex, null, readerRow.error);
+                    readerRow.clearError();
+                    if (readerRow.earlyExist) {
+                        return result;
+                    }
+                }
+
+                // add item
+                if (!readerRow.skipThisObject) {
+                    result.addRaw(raw);
+                }
             }
 
             return result;
         } catch (Exception e) {
             e.printStackTrace();
-            return new ArrayList<>();
+            return result;
         }
     }
 
-    private <T> void handleField(PropertyDescriptor pd, T object, ReaderCell cell) {
+    private <T> Object handleField(PropertyDescriptor pd, T object, ReaderCell cell) {
         Method setter = pd.getWriteMethod();
         try {
             Object cellValue = null;
@@ -123,12 +171,14 @@ class BaseReader extends BaseEditor {
                     cellValue = cell.readDate();
                     break;
                 default:
-                    return;
+                    return null;
             }
             setter.invoke(object, cellValue);
+            return cellValue;
         } catch (Exception e) {
             System.out.println("Error while invoking setter: " + e.getMessage());
             e.printStackTrace();
+            return null;
         }
     }
 

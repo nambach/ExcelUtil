@@ -10,7 +10,7 @@ import java.util.Date;
 /**
  * Contains information of the current read cell.
  */
-public class ReaderCell {
+public class ReaderCell extends ReaderController {
     /**
      * Original Apache POI {@link Cell}
      */
@@ -166,5 +166,9 @@ public class ReaderCell {
             default:
                 return null;
         }
+    }
+
+    String getError() {
+        return super.getError(getAddress());
     }
 }
