@@ -2,6 +2,7 @@ package model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -9,6 +10,7 @@ import java.util.List;
 
 @Getter
 @Setter
+@ToString
 public class Book {
     private String isbn;
     private String title;
@@ -18,6 +20,9 @@ public class Book {
     private String subCategory;
     private Category category;
     private List<String> chars;
+
+    public Book() {
+    }
 
     public Book(String isbn, String title, double rating, Date firstPublished, String author, String subCategory, Category category) {
         this.isbn = isbn;

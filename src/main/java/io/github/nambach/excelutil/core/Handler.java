@@ -1,10 +1,12 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.validator.builtin.Validator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
@@ -21,6 +23,7 @@ public class Handler<T> {
     private Integer colFrom;
     private String fieldName;
     private BiConsumer<T, ReaderCell> handler;
+    private Validator validator;
 
     Handler() {
     }
@@ -68,6 +71,11 @@ public class Handler<T> {
         return this;
     }
 
+    Handler<T> validate(Validator validator) {
+        this.validator = validator;
+        return this;
+    }
+
     /**
      * Set a custom {@link BiConsumer} to handle storing cell value into DTO.
      *
@@ -78,5 +86,17 @@ public class Handler<T> {
         Objects.requireNonNull(handler);
         this.handler = ReflectUtil.safeWrap(handler);
         return this;
+    }
+
+    boolean needValidation() {
+        return validator != null;
+    }
+
+    String quickValidate(Object value) {
+        return validator.validate(value);
+    }
+
+    List<String> fullValidate(Object value) {
+        return validator.validateAllConstraints(value);
     }
 }

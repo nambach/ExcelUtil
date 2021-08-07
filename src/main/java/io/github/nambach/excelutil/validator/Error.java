@@ -2,13 +2,12 @@ package io.github.nambach.excelutil.validator;
 
 import lombok.Getter;
 
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class Error extends HashMap<String, List<String>> implements Iterable<Error.Entry> {
+public class Error extends ArrayList<Error.Entry> {
 
     private final Class<?> clazz;
     private final String className;
@@ -22,11 +21,13 @@ public class Error extends HashMap<String, List<String>> implements Iterable<Err
         return this.isEmpty();
     }
 
+    public boolean add(String fieldName, List<String> messages) {
+        return super.add(new Entry(fieldName, messages));
+    }
+
     @Override
-    public Iterator<Entry> iterator() {
-        return this.entrySet()
-                   .stream().map(entry -> new Entry(entry.getKey(), entry.getValue()))
-                   .iterator();
+    public String toString() {
+        return this.stream().map(Entry::toString).collect(Collectors.joining("\n"));
     }
 
     @Getter
@@ -39,11 +40,19 @@ public class Error extends HashMap<String, List<String>> implements Iterable<Err
             this.messages = messages;
         }
 
+        private String getPrefix(boolean newLine) {
+            return fieldName != null ? String.format("field '%s':", fieldName) + (newLine ? "\n" : " ") : "";
+        }
+
         @Override
         public String toString() {
-            return String.format("field '%s':", fieldName) + "\n"
-                   + messages.stream().map(s -> String.format("- %s", s))
-                             .collect(Collectors.joining("\n"));
+            String suffix = messages.stream().map(s -> String.format("- %s", s))
+                                    .collect(Collectors.joining("\n"));
+            return getPrefix(true) + suffix;
+        }
+
+        public String inlineMessage() {
+            return getPrefix(false) + String.join("; ", messages);
         }
     }
 

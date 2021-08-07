@@ -1,6 +1,7 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.validator.builtin.Validator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,7 @@ public class ReaderConfig<T> {
     private Class<T> tClass;
     private int dataFromIndex = 1;
     private int titleRowIndex = 0;
+    private boolean earlyExist;
 
     // Store value as list to stack up multiple handlers on a same column
     private Map<Integer, Handlers<T>> handlerMap = new HashMap<>();
@@ -101,6 +103,11 @@ public class ReaderConfig<T> {
         return this;
     }
 
+    public ReaderConfig<T> existWhenValidationFailed(boolean b) {
+        this.earlyExist = b;
+        return this;
+    }
+
     /**
      * Map the cell value at a column into target field of DTO.
      *
@@ -109,9 +116,15 @@ public class ReaderConfig<T> {
      * @return current config
      */
     public ReaderConfig<T> column(int index, String fieldName) {
+        return column(index, fieldName, null);
+    }
+
+    public ReaderConfig<T> column(int index, String fieldName, Validator validator) {
         if (index >= 0 && ReflectUtil.getField(fieldName, tClass) != null) {
-            Handler<T> handler = new Handler<>();
-            handler.atColumn(index).field(fieldName);
+            Handler<T> handler = new Handler<T>()
+                    .atColumn(index)
+                    .field(fieldName)
+                    .validate(validator);
 
             Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
             list.add(handler);
@@ -133,7 +146,7 @@ public class ReaderConfig<T> {
         Handler<T> handler = new Handler<>();
         func.apply(handler);
         if (handler.getColAt() == null && handler.getColFrom() == null) {
-            throw new Exception("Handler must be provided a column index with atColumn() or fromColumn()");
+            throw new Exception("Handler must be provided a column index with .atColumn() or .fromColumn()");
         }
         if (handler.getIndex() != null) {
             int index = handler.getIndex();

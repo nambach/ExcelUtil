@@ -24,7 +24,7 @@ public class Validation<T> {
             Object value = extractor.extract(object);
             List<String> messages = extractor.getValidator().validateAllConstraints(value);
             if (ListUtil.hasMember(messages)) {
-                error.put(extractor.getFieldName(), messages);
+                error.add(extractor.getFieldName(), messages);
             }
         }
         return error;

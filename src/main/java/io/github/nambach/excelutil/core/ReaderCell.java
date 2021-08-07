@@ -17,6 +17,9 @@ public class ReaderCell {
     private final Cell cell;
     private final String columnTitle;
 
+    String error;
+    boolean earlyExist;
+
     ReaderCell(Cell cell, String columnTitle) {
         this.cell = cell;
         this.columnTitle = columnTitle;
@@ -166,5 +169,22 @@ public class ReaderCell {
             default:
                 return null;
         }
+    }
+
+    public void setError(String message) {
+        this.error = message;
+    }
+
+    public void throwError(String message) {
+        this.error = message;
+        this.earlyExist = true;
+    }
+
+    boolean hasError() {
+        return error != null;
+    }
+
+    void clearError() {
+        this.error = null;
     }
 }
