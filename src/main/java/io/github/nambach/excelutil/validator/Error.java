@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Getter
-public class Error extends ArrayList<Error.Entry> {
+public class Error extends ArrayList<Error.TypeError> {
 
     private final Class<?> clazz;
     private final String className;
@@ -22,20 +22,20 @@ public class Error extends ArrayList<Error.Entry> {
     }
 
     public boolean add(String fieldName, List<String> messages) {
-        return super.add(new Entry(fieldName, messages));
+        return super.add(new TypeError(fieldName, messages));
     }
 
     @Override
     public String toString() {
-        return this.stream().map(Entry::toString).collect(Collectors.joining("\n"));
+        return this.stream().map(TypeError::toString).collect(Collectors.joining("\n"));
     }
 
-    @Getter
-    public static class Entry {
+    public static class TypeError {
+        @Getter
         private final String fieldName;
         private final List<String> messages;
 
-        Entry(String fieldName, List<String> messages) {
+        TypeError(String fieldName, List<String> messages) {
             this.fieldName = fieldName;
             this.messages = messages;
         }
@@ -44,15 +44,19 @@ public class Error extends ArrayList<Error.Entry> {
             return fieldName != null ? String.format("field '%s':", fieldName) + (newLine ? "\n" : " ") : "";
         }
 
-        @Override
-        public String toString() {
+        public String getMessage() {
             String suffix = messages.stream().map(s -> String.format("- %s", s))
                                     .collect(Collectors.joining("\n"));
             return getPrefix(true) + suffix;
         }
 
-        public String inlineMessage() {
+        public String getInlineMessage() {
             return getPrefix(false) + String.join("; ", messages);
+        }
+
+        @Override
+        public String toString() {
+            return getMessage();
         }
     }
 

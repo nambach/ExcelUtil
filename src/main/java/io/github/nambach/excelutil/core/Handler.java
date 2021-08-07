@@ -1,7 +1,7 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
-import io.github.nambach.excelutil.validator.builtin.Validator;
+import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,7 +23,7 @@ public class Handler<T> {
     private Integer colFrom;
     private String fieldName;
     private BiConsumer<T, ReaderCell> handler;
-    private Validator validator;
+    private TypeValidator typeValidator;
 
     Handler() {
     }
@@ -71,8 +71,8 @@ public class Handler<T> {
         return this;
     }
 
-    Handler<T> validate(Validator validator) {
-        this.validator = validator;
+    Handler<T> validate(TypeValidator typeValidator) {
+        this.typeValidator = typeValidator;
         return this;
     }
 
@@ -89,14 +89,14 @@ public class Handler<T> {
     }
 
     boolean needValidation() {
-        return validator != null;
+        return typeValidator != null;
     }
 
     String quickValidate(Object value) {
-        return validator.validate(value);
+        return typeValidator.quickTest(value);
     }
 
     List<String> fullValidate(Object value) {
-        return validator.validateAllConstraints(value);
+        return typeValidator.test(value);
     }
 }

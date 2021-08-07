@@ -1,7 +1,7 @@
 package io.github.nambach.excelutil.validator;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
-import io.github.nambach.excelutil.validator.builtin.Validator;
+import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +17,7 @@ class Extractor {
     private final String fieldName;
 
     @Setter(AccessLevel.PACKAGE)
-    private Validator validator;
+    private TypeValidator typeValidator;
 
     public Extractor(String fieldName, Function<?, ?> extractor) {
         this.fieldName = fieldName;

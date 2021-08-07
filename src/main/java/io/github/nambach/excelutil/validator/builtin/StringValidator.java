@@ -14,7 +14,7 @@ import static io.github.nambach.excelutil.validator.builtin.StringConstraint.Not
 import static io.github.nambach.excelutil.validator.builtin.StringConstraint.NotEmpty;
 
 @Getter(AccessLevel.PACKAGE)
-public class StringValidator extends Validator {
+public class StringValidator extends TypeValidator {
 
     StringValidator() {
     }
@@ -26,15 +26,15 @@ public class StringValidator extends Validator {
     }
 
     @Override
-    public String validate(Object value) {
+    public String quickTest(Object value) {
         preCheck();
-        return super.validate(value);
+        return super.quickTest(value);
     }
 
     @Override
-    public List<String> validateAllConstraints(Object value) {
+    public List<String> test(Object value) {
         preCheck();
-        return super.validateAllConstraints(value);
+        return super.test(value);
     }
 
     @Override

@@ -10,15 +10,12 @@ import java.util.Date;
 /**
  * Contains information of the current read cell.
  */
-public class ReaderCell {
+public class ReaderCell extends ReaderController {
     /**
      * Original Apache POI {@link Cell}
      */
     private final Cell cell;
     private final String columnTitle;
-
-    String error;
-    boolean earlyExist;
 
     ReaderCell(Cell cell, String columnTitle) {
         this.cell = cell;
@@ -171,20 +168,7 @@ public class ReaderCell {
         }
     }
 
-    public void setError(String message) {
-        this.error = message;
-    }
-
-    public void throwError(String message) {
-        this.error = message;
-        this.earlyExist = true;
-    }
-
-    boolean hasError() {
-        return error != null;
-    }
-
-    void clearError() {
-        this.error = null;
+    String getError() {
+        return super.getError(getAddress());
     }
 }

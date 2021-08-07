@@ -1,7 +1,7 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
-import io.github.nambach.excelutil.validator.builtin.Validator;
+import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**
@@ -35,6 +36,8 @@ public class ReaderConfig<T> {
 
     // Store value as list to stack up multiple handlers on a same column
     private Map<Integer, Handlers<T>> handlerMap = new HashMap<>();
+
+    private BiConsumer<T, ReaderRow> beforeAddItemHandle;
 
     ReaderConfig(Class<T> tClass) {
         this.tClass = tClass;
@@ -77,6 +80,10 @@ public class ReaderConfig<T> {
         }
         copy.dataFromIndex = dataFromIndex + rowOffset;
         handlerMap.forEach((i, handler) -> copy.handlerMap.put(i + colOffset, handler));
+
+        // other data
+        copy.earlyExist = earlyExist;
+        copy.beforeAddItemHandle = beforeAddItemHandle;
         return copy;
     }
 
@@ -119,12 +126,12 @@ public class ReaderConfig<T> {
         return column(index, fieldName, null);
     }
 
-    public ReaderConfig<T> column(int index, String fieldName, Validator validator) {
+    public ReaderConfig<T> column(int index, String fieldName, TypeValidator typeValidator) {
         if (index >= 0 && ReflectUtil.getField(fieldName, tClass) != null) {
             Handler<T> handler = new Handler<T>()
                     .atColumn(index)
                     .field(fieldName)
-                    .validate(validator);
+                    .validate(typeValidator);
 
             Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
             list.add(handler);
@@ -156,6 +163,15 @@ public class ReaderConfig<T> {
         }
 
         return this;
+    }
+
+    public ReaderConfig<T> beforeAddingItem(BiConsumer<T, ReaderRow> handler) {
+        this.beforeAddItemHandle = ReflectUtil.safeWrap(handler);
+        return this;
+    }
+
+    boolean handleBeforeAdd() {
+        return this.beforeAddItemHandle != null;
     }
 
     /**

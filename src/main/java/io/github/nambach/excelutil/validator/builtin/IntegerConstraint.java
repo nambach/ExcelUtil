@@ -8,7 +8,7 @@ import java.util.function.Function;
 class IntegerConstraint {
     static final Constraint IsInteger = new Constraint("[Integer] is integer",
                                                        o -> o instanceof Integer || o instanceof Long,
-                                                       "Value must be integer.").nullable();
+                                                       "must be an integer").nullable();
 
     static final Function<Long, Constraint> MinInteger =
             min -> new Constraint("[Integer] min value",
@@ -21,7 +21,7 @@ class IntegerConstraint {
                                       }
                                       return false;
                                   },
-                                  String.format("Minimum value is %d.", min)).nullable();
+                                  String.format("minimum value is %d", min)).nullable();
 
     static final Function<Long, Constraint> MaxInteger =
             max -> new Constraint("[Integer] max value",
@@ -34,7 +34,7 @@ class IntegerConstraint {
                                       }
                                       return false;
                                   },
-                                  String.format("Maximum value is %d.", max)).nullable();
+                                  String.format("maximum value is %d", max)).nullable();
 
     static final BiFunction<Long, Long, Constraint> BoundInteger =
             (min, max) -> new Constraint("[Integer] boundary",
@@ -49,5 +49,5 @@ class IntegerConstraint {
                                              }
                                              return false;
                                          },
-                                         String.format("Value must be from %d to %d", min, max)).nullable();
+                                         String.format("must be from %d to %d", min, max)).nullable();
 }

@@ -11,7 +11,7 @@ import static io.github.nambach.excelutil.validator.builtin.DecimalConstraint.Ma
 import static io.github.nambach.excelutil.validator.builtin.DecimalConstraint.MinDecimal;
 
 @Getter(AccessLevel.PACKAGE)
-public class DecimalValidator extends Validator {
+public class DecimalValidator extends TypeValidator {
 
     DecimalValidator() {
     }
@@ -23,15 +23,15 @@ public class DecimalValidator extends Validator {
     }
 
     @Override
-    public String validate(Object value) {
+    public String quickTest(Object value) {
         preCheck();
-        return super.validate(value);
+        return super.quickTest(value);
     }
 
     @Override
-    public List<String> validateAllConstraints(Object value) {
+    public List<String> test(Object value) {
         preCheck();
-        return super.validateAllConstraints(value);
+        return super.test(value);
     }
 
     @Override

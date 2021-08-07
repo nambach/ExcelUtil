@@ -15,14 +15,14 @@ public class Result<T> extends ArrayList<T> implements List<T> {
     private final Class<T> tClass;
 
     private final List<Raw<T>> rawData = new ArrayList<>();
-    private final ReaderError error = new ReaderError();
+    private final List<LineError> errors = new ArrayList<>();
 
     public Result(Class<T> tClass) {
         this.tClass = tClass;
     }
 
     public boolean hasError() {
-        return ListUtil.hasMember(error);
+        return ListUtil.hasMember(errors);
     }
 
     void addRaw(Raw<T> raw) {
@@ -31,14 +31,14 @@ public class Result<T> extends ArrayList<T> implements List<T> {
     }
 
     void addError(int index, String fieldName, List<String> messages) {
-        ReaderError.Line existed = error.stream().filter(l -> l.getIndex() == index).findFirst().orElse(null);
+        LineError existed = errors.stream().filter(l -> l.getIndex() == index).findFirst().orElse(null);
         if (existed != null) {
             existed.objectError.add(fieldName, messages);
         } else {
             Error objectError = new Error(tClass);
             objectError.add(fieldName, messages);
-            ReaderError.Line newOne = new ReaderError.Line(index, objectError);
-            error.add(newOne);
+            LineError newOne = new LineError(index, objectError);
+            errors.add(newOne);
         }
     }
 

@@ -103,8 +103,7 @@ class BaseReader extends BaseEditor {
 
                             // write error
                             if (readerCell.hasError()) {
-                                String errorMessage = String.format("%s: %s", readerCell.getAddress(), readerCell.error);
-                                result.addError(rowIndex, null, errorMessage);
+                                result.addError(rowIndex, null, readerCell.getError());
                                 readerCell.clearError();
                                 if (readerCell.earlyExist) {
                                     return result;
@@ -117,7 +116,25 @@ class BaseReader extends BaseEditor {
                     }
                 }
 
-                result.addRaw(raw);
+                // handle before adding new item
+                ReaderRow readerRow = new ReaderRow();
+                if (config.handleBeforeAdd()) {
+                    config.getBeforeAddItemHandle().accept(object, readerRow);
+                }
+
+                // write error
+                if (readerRow.hasError()) {
+                    result.addError(rowIndex, null, readerRow.error);
+                    readerRow.clearError();
+                    if (readerRow.earlyExist) {
+                        return result;
+                    }
+                }
+
+                // add item
+                if (!readerRow.skipThisObject) {
+                    result.addRaw(raw);
+                }
             }
 
             return result;

@@ -1,6 +1,6 @@
 package io.github.nambach.excelutil.validator;
 
-import io.github.nambach.excelutil.validator.builtin.Validator;
+import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.function.Function;
 
 @Getter(AccessLevel.PACKAGE)
-public class ValidationBuilder<T> {
+public class Builder<T> {
     private final Class<T> clazz;
     private final List<Extractor> extractors;
     private Extractor extractor;
 
-    ValidationBuilder(Class<T> clazz) {
+    Builder(Class<T> clazz) {
         this.clazz = clazz;
         this.extractors = new ArrayList<>();
     }
 
     @SneakyThrows
-    public ValidationBuilder<T> field(String field) {
+    public Builder<T> field(String field) {
         if (extractor != null) {
             throw new Exception("Must call .validate() after .field()");
         }
@@ -30,7 +30,7 @@ public class ValidationBuilder<T> {
     }
 
     @SneakyThrows
-    public ValidationBuilder<T> field(String field, Function<T, ?> extractFn) {
+    public Builder<T> field(String field, Function<T, ?> extractFn) {
         if (extractor != null) {
             throw new Exception("Must call .validate() after .field()");
         }
@@ -39,22 +39,22 @@ public class ValidationBuilder<T> {
     }
 
 
-    public ValidationBuilder<T> validate(Validator validator) {
-        extractor.setValidator(validator);
+    public Builder<T> validate(TypeValidator typeValidator) {
+        extractor.setTypeValidator(typeValidator);
         extractors.add(extractor);
         extractor = null;
         return this;
     }
 
-    public ValidationBuilder<T> validate(Function<Validator, Validator> builder) {
-        Validator validator = builder.apply(Validator.init());
-        extractor.setValidator(validator);
+    public Builder<T> validate(Function<TypeValidator, TypeValidator> builder) {
+        TypeValidator typeValidator = builder.apply(TypeValidator.init());
+        extractor.setTypeValidator(typeValidator);
         extractors.add(extractor);
         extractor = null;
         return this;
     }
 
-    public Validation<T> build() {
-        return new Validation<>(clazz, extractors);
+    public Validator<T> build() {
+        return new Validator<>(clazz, extractors);
     }
 }
