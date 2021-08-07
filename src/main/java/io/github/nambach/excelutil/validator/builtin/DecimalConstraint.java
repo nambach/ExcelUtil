@@ -6,12 +6,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 class DecimalConstraint {
-    static final Constraint IsDecimal = new Constraint("is decimal",
+    static final Constraint IsDecimal = new Constraint("[Decimal] is decimal",
                                                        o -> o == null || o instanceof Float || o instanceof Double,
-                                                       "Value must be a decimal.");
+                                                       "Value must be a decimal.").nullable();
 
     static final Function<Double, Constraint> MinDecimal =
-            min -> new Constraint("decimal min value",
+            min -> new Constraint("[Decimal] min value",
                                   o -> {
                                       if (o instanceof Float) {
                                           return ((Float) o) >= min;
@@ -21,10 +21,10 @@ class DecimalConstraint {
                                       }
                                       return false;
                                   },
-                                  String.format("Minimum value is %f.", min));
+                                  String.format("Minimum value is %f.", min)).nullable();
 
     static final Function<Double, Constraint> MaxDecimal =
-            max -> new Constraint("decimal max value",
+            max -> new Constraint("[Decimal] max value",
                                   o -> {
                                       if (o instanceof Float) {
                                           return ((Float) o) <= max;
@@ -34,10 +34,10 @@ class DecimalConstraint {
                                       }
                                       return false;
                                   },
-                                  String.format("Maximum value is %f.", max));
+                                  String.format("Maximum value is %f.", max)).nullable();
 
     static final BiFunction<Double, Double, Constraint> BoundDecimal =
-            (min, max) -> new Constraint("decimal boundary",
+            (min, max) -> new Constraint("[Decimal] boundary",
                                          o -> {
                                              if (o instanceof Float) {
                                                  float val = (Float) o;
@@ -49,5 +49,5 @@ class DecimalConstraint {
                                              }
                                              return false;
                                          },
-                                         String.format("Value must be from %f to %f", min, max));
+                                         String.format("Value must be from %f to %f", min, max)).nullable();
 }

@@ -1,18 +1,37 @@
-package io.github.nambach.excelutil.validator;
+package io.github.nambach.excelutil.validator.builtin;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.BoundDecimal;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.IsDecimal;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.MaxDecimal;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.MinDecimal;
+import java.util.List;
+
+import static io.github.nambach.excelutil.validator.builtin.DecimalConstraint.BoundDecimal;
+import static io.github.nambach.excelutil.validator.builtin.DecimalConstraint.IsDecimal;
+import static io.github.nambach.excelutil.validator.builtin.DecimalConstraint.MaxDecimal;
+import static io.github.nambach.excelutil.validator.builtin.DecimalConstraint.MinDecimal;
 
 @Getter(AccessLevel.PACKAGE)
 public class DecimalValidator extends Validator {
 
     DecimalValidator() {
-        constraints.add(IsDecimal);
+    }
+
+    private void preCheck() {
+        if (containOnlyBased()) {
+            constraints.add(IsDecimal);
+        }
+    }
+
+    @Override
+    public String validate(Object value) {
+        preCheck();
+        return super.validate(value);
+    }
+
+    @Override
+    public List<String> validateAllConstraints(Object value) {
+        preCheck();
+        return super.validateAllConstraints(value);
     }
 
     @Override

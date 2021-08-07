@@ -1,20 +1,40 @@
-package io.github.nambach.excelutil.validator;
+package io.github.nambach.excelutil.validator.builtin;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.BoundLength;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.IsEmail;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.IsString;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.MaxLength;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.MinLength;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.NotBlank;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.NotEmpty;
+import java.util.List;
+
+import static io.github.nambach.excelutil.validator.builtin.StringConstraint.BoundLength;
+import static io.github.nambach.excelutil.validator.builtin.StringConstraint.IsEmail;
+import static io.github.nambach.excelutil.validator.builtin.StringConstraint.IsString;
+import static io.github.nambach.excelutil.validator.builtin.StringConstraint.MaxLength;
+import static io.github.nambach.excelutil.validator.builtin.StringConstraint.MinLength;
+import static io.github.nambach.excelutil.validator.builtin.StringConstraint.NotBlank;
+import static io.github.nambach.excelutil.validator.builtin.StringConstraint.NotEmpty;
 
 @Getter(AccessLevel.PACKAGE)
 public class StringValidator extends Validator {
+
     StringValidator() {
-        constraints.add(IsString);
+    }
+
+    private void preCheck() {
+        if (containOnlyBased()) {
+            constraints.add(IsString);
+        }
+    }
+
+    @Override
+    public String validate(Object value) {
+        preCheck();
+        return super.validate(value);
+    }
+
+    @Override
+    public List<String> validateAllConstraints(Object value) {
+        preCheck();
+        return super.validateAllConstraints(value);
     }
 
     @Override

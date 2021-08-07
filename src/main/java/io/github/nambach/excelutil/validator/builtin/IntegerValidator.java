@@ -1,18 +1,37 @@
-package io.github.nambach.excelutil.validator;
+package io.github.nambach.excelutil.validator.builtin;
 
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.BoundInteger;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.IsInteger;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.MaxInteger;
-import static io.github.nambach.excelutil.validator.builtin.BuiltInConstraint.MinInteger;
+import java.util.List;
+
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.BoundInteger;
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.IsInteger;
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.MaxInteger;
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.MinInteger;
 
 @Getter(AccessLevel.PACKAGE)
 public class IntegerValidator extends Validator {
 
     IntegerValidator() {
-        constraints.add(IsInteger);
+    }
+
+    private void preCheck() {
+        if (containOnlyBased()) {
+            constraints.add(IsInteger);
+        }
+    }
+
+    @Override
+    public String validate(Object value) {
+        preCheck();
+        return super.validate(value);
+    }
+
+    @Override
+    public List<String> validateAllConstraints(Object value) {
+        preCheck();
+        return super.validateAllConstraints(value);
     }
 
     @Override

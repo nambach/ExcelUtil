@@ -9,13 +9,18 @@ import java.util.function.Predicate;
 @Getter
 public class Constraint {
     private final String name;
-    private final Predicate<?> condition;
+    private Predicate<?> condition;
     private final String message;
 
     public Constraint(String name, Predicate<?> condition, String message) {
         this.name = name;
         this.condition = condition;
         this.message = message;
+    }
+
+    public Constraint nullable() {
+        this.condition = this.condition.or(Objects::isNull);
+        return this;
     }
 
     public Constraint withMessage(String message) {
@@ -33,11 +38,19 @@ public class Constraint {
         return !((Predicate) condition).test(value);
     }
 
-    static class Set extends LinkedHashSet<Constraint> {
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Constraint) {
+            return this.name.equals(((Constraint) obj).name);
+        }
+        return false;
+    }
+
+    public static class Set extends LinkedHashSet<Constraint> {
         @Override
         public boolean add(Constraint item) {
             // Get rid of old one.
-            boolean wasThere = removeIf(i -> Objects.equals(i.name, item.name));
+            boolean wasThere = removeIf(i -> i.equals(item));
             // Add it.
             super.add(item);
             // Contract is "true if this set did not already contain the specified element"

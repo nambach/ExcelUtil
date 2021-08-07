@@ -5,6 +5,7 @@ import lombok.Getter;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 public class Error extends HashMap<String, List<String>> implements Iterable<Error.Entry> {
@@ -36,6 +37,13 @@ public class Error extends HashMap<String, List<String>> implements Iterable<Err
         Entry(String fieldName, List<String> messages) {
             this.fieldName = fieldName;
             this.messages = messages;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("field '%s':", fieldName) + "\n"
+                   + messages.stream().map(s -> String.format("- %s", s))
+                             .collect(Collectors.joining("\n"));
         }
     }
 

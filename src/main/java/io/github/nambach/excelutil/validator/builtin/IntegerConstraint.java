@@ -6,12 +6,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 class IntegerConstraint {
-    static final Constraint IsInteger = new Constraint("is integer",
-                                                       o -> o == null || o instanceof Integer || o instanceof Long,
-                                                       "Value must be integer.");
+    static final Constraint IsInteger = new Constraint("[Integer] is integer",
+                                                       o -> o instanceof Integer || o instanceof Long,
+                                                       "Value must be integer.").nullable();
 
     static final Function<Long, Constraint> MinInteger =
-            min -> new Constraint("integer min value",
+            min -> new Constraint("[Integer] min value",
                                   o -> {
                                       if (o instanceof Integer) {
                                           return ((Integer) o) >= min;
@@ -21,10 +21,10 @@ class IntegerConstraint {
                                       }
                                       return false;
                                   },
-                                  String.format("Minimum value is %d.", min));
+                                  String.format("Minimum value is %d.", min)).nullable();
 
     static final Function<Long, Constraint> MaxInteger =
-            max -> new Constraint("integer max value",
+            max -> new Constraint("[Integer] max value",
                                   o -> {
                                       if (o instanceof Integer) {
                                           return ((Integer) o) <= max;
@@ -34,10 +34,10 @@ class IntegerConstraint {
                                       }
                                       return false;
                                   },
-                                  String.format("Maximum value is %d.", max));
+                                  String.format("Maximum value is %d.", max)).nullable();
 
     static final BiFunction<Long, Long, Constraint> BoundInteger =
-            (min, max) -> new Constraint("integer boundary",
+            (min, max) -> new Constraint("[Integer] boundary",
                                          o -> {
                                              if (o instanceof Integer) {
                                                  int val = (int) o;
@@ -49,5 +49,5 @@ class IntegerConstraint {
                                              }
                                              return false;
                                          },
-                                         String.format("Value must be from %d to %d", min, max));
+                                         String.format("Value must be from %d to %d", min, max)).nullable();
 }

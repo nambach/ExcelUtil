@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.validator;
 
+import io.github.nambach.excelutil.validator.builtin.Validator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -46,7 +47,7 @@ public class ValidationBuilder<T> {
     }
 
     public ValidationBuilder<T> validate(Function<Validator, Validator> builder) {
-        Validator validator = builder.apply(new Validator());
+        Validator validator = builder.apply(Validator.init());
         extractor.setValidator(validator);
         extractors.add(extractor);
         extractor = null;

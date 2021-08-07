@@ -1,6 +1,7 @@
 package io.github.nambach.excelutil.validator;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.validator.builtin.Validator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
