@@ -4,7 +4,10 @@ import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static io.github.nambach.excelutil.util.ListUtil.findElse;
 
 @Getter
 public class Error extends ArrayList<Error.TypeError> {
@@ -21,8 +24,9 @@ public class Error extends ArrayList<Error.TypeError> {
         return this.isEmpty();
     }
 
-    public boolean add(String fieldName, List<String> messages) {
-        return super.add(new TypeError(fieldName, messages));
+    public void appendError(String fieldName, List<String> messages) {
+        TypeError current = findElse(this, e -> Objects.equals(e.fieldName, fieldName), new TypeError(fieldName, new ArrayList<>()));
+        current.messages.addAll(messages);
     }
 
     @Override
@@ -30,8 +34,8 @@ public class Error extends ArrayList<Error.TypeError> {
         return this.stream().map(TypeError::toString).collect(Collectors.joining("\n"));
     }
 
+    @Getter
     public static class TypeError {
-        @Getter
         private final String fieldName;
         private final List<String> messages;
 
@@ -41,22 +45,22 @@ public class Error extends ArrayList<Error.TypeError> {
         }
 
         private String getPrefix(boolean newLine) {
-            return fieldName != null ? String.format("field '%s':", fieldName) + (newLine ? "\n" : " ") : "";
+            return fieldName != null ? String.format("'%s':", fieldName) + (newLine ? "\n" : " ") : "";
         }
 
-        public String getMessage() {
+        public String toMessage() {
             String suffix = messages.stream().map(s -> String.format("- %s", s))
                                     .collect(Collectors.joining("\n"));
             return getPrefix(true) + suffix;
         }
 
-        public String getInlineMessage() {
-            return getPrefix(false) + String.join("; ", messages);
+        public String toInlineMessage() {
+            return getPrefix(false) + String.join(", ", messages);
         }
 
         @Override
         public String toString() {
-            return getMessage();
+            return toMessage();
         }
     }
 

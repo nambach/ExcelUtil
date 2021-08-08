@@ -20,7 +20,7 @@ import java.util.function.Predicate;
  * A template that contains mapping rules to extract
  * DTO properties and write as Excel table.
  *
- * @param <T>
+ * @param <T> DTO
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
@@ -293,7 +293,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
     /**
      * Configuration builder for {@link DataTemplate}.
      *
-     * @param <T>
+     * @param <T> DTO of {@link DataTemplate}
      */
     public static class Builder<T> {
         private final DataTemplate<T> template;

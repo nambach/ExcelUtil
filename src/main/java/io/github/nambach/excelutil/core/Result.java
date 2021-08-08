@@ -1,13 +1,14 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ListUtil;
-import io.github.nambach.excelutil.validator.Error;
 import lombok.AccessLevel;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static io.github.nambach.excelutil.util.ListUtil.findElse;
 
 @Getter
 public class Result<T> extends ArrayList<T> implements List<T> {
@@ -31,15 +32,8 @@ public class Result<T> extends ArrayList<T> implements List<T> {
     }
 
     void addError(int index, String fieldName, List<String> messages) {
-        LineError existed = errors.stream().filter(l -> l.getIndex() == index).findFirst().orElse(null);
-        if (existed != null) {
-            existed.objectError.add(fieldName, messages);
-        } else {
-            Error objectError = new Error(tClass);
-            objectError.add(fieldName, messages);
-            LineError newOne = new LineError(index, objectError);
-            errors.add(newOne);
-        }
+        LineError lineError = findElse(errors, l -> l.getIndex() == index, new LineError(index, tClass));
+        lineError.appendError(fieldName, messages);
     }
 
     void addError(int index, String fieldName, String message) {

@@ -15,7 +15,7 @@ import static io.github.nambach.excelutil.util.ListUtil.hasMember;
 /**
  * Mapper that contains rule to map property of DTO into column value
  *
- * @param <T> DTO type
+ * @param <T> DTO
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)

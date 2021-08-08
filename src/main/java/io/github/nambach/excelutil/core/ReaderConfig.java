@@ -23,15 +23,15 @@ import java.util.function.Function;
  * A configuration object containing rules for reading
  * data from Excel table and map to DTO class.
  *
- * @param <T>
+ * @param <T> DTO
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
 public class ReaderConfig<T> {
 
     private Class<T> tClass;
-    private int dataFromIndex = 1;
-    private int titleRowIndex = 0;
+    private int titleRowIndex = -1;
+    private int dataFromIndex = -1;
     private boolean earlyExit;
 
     // Store value as list to stack up multiple handlers on a same column
@@ -123,7 +123,13 @@ public class ReaderConfig<T> {
      * @return current config
      */
     public ReaderConfig<T> column(int index, String fieldName) {
-        return column(index, fieldName, null);
+        TypeValidator nullValidator = null;
+        return column(index, fieldName, nullValidator);
+    }
+
+    public ReaderConfig<T> column(int index, String fieldName, Function<TypeValidator, TypeValidator> builder) {
+        TypeValidator typeValidator = builder.apply(TypeValidator.init());
+        return column(index, fieldName, typeValidator);
     }
 
     public ReaderConfig<T> column(int index, String fieldName, TypeValidator typeValidator) {
@@ -131,7 +137,7 @@ public class ReaderConfig<T> {
             Handler<T> handler = new Handler<T>()
                     .atColumn(index)
                     .field(fieldName)
-                    .withValidator(typeValidator);
+                    .validate(typeValidator);
 
             Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
             list.add(handler);

@@ -6,14 +6,14 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * An entity that specifies way to read data from Excel and store into DTO
  *
- * @param <T>
+ * @param <T> DTO
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
@@ -71,8 +71,13 @@ public class Handler<T> {
         return this;
     }
 
-    Handler<T> withValidator(TypeValidator typeValidator) {
+    public Handler<T> validate(TypeValidator typeValidator) {
         this.typeValidator = typeValidator;
+        return this;
+    }
+
+    public Handler<T> validate(Function<TypeValidator, TypeValidator> builder) {
+        this.typeValidator = builder.apply(TypeValidator.init());
         return this;
     }
 
@@ -90,9 +95,5 @@ public class Handler<T> {
 
     boolean needValidation() {
         return typeValidator != null;
-    }
-
-    List<String> validate(Object value) {
-        return typeValidator.test(value);
     }
 }

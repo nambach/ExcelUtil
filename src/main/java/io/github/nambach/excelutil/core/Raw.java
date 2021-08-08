@@ -12,7 +12,7 @@ import java.util.Map;
  * A wrapper of DTO that contains the resulted DTO after reading process
  * and other properties found while reading the Excel file.
  *
- * @param <T>
+ * @param <T> DTO
  */
 @Getter
 @Setter(AccessLevel.PACKAGE)

@@ -3,16 +3,30 @@ package io.github.nambach.excelutil.core;
 import io.github.nambach.excelutil.validator.Error;
 import lombok.Getter;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class LineError {
+    private final Error objectError;
+
     @Getter
     private final int index;
-    final Error objectError;
 
-    public LineError(int index, Error objectError) {
+    public LineError(int index, Class<?> clazz) {
         this.index = index;
-        this.objectError = objectError;
+        this.objectError = new Error(clazz);
+    }
+
+    void appendError(String field, List<String> messages) {
+        objectError.appendError(field, messages);
+    }
+
+    public Error getDetailedError() {
+        return this.objectError;
+    }
+
+    public String getLine() {
+        return "Line " + (index + 1);
     }
 
     public String getMessage() {
@@ -20,11 +34,11 @@ public class LineError {
     }
 
     public String getInlineMessage() {
-        return objectError.stream().map(Error.TypeError::getInlineMessage).collect(Collectors.joining("; "));
+        return objectError.stream().map(Error.TypeError::toInlineMessage).collect(Collectors.joining("; "));
     }
 
     @Override
     public String toString() {
-        return String.format("Line %d: %s", (index + 1), getInlineMessage());
+        return getLine() + ": " + getInlineMessage();
     }
 }

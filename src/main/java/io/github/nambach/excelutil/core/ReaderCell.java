@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Contains information of the current read cell.
@@ -182,7 +183,8 @@ public class ReaderCell extends ReaderController {
 
     @Override
     public void setError(String message) {
-        result.addError(getRowIndex(), columnTitle, message);
+        String addressAppended = String.format("[%s] %s", getAddress(), message);
+        result.addError(getRowIndex(), columnTitle, addressAppended);
     }
 
     @Override
@@ -191,7 +193,7 @@ public class ReaderCell extends ReaderController {
         super.terminateNow();
     }
 
-    void validate(String fieldName, TypeValidator typeValidator) {
+    void validate(TypeValidator typeValidator) {
         List<String> errors = null;
         if (typeValidator instanceof StringValidator) {
             String val = readString();
@@ -214,7 +216,8 @@ public class ReaderCell extends ReaderController {
 
         // set errors to result
         if (ListUtil.hasMember(errors)) {
-            result.addError(getRowIndex(), fieldName, errors);
+            List<String> addressAppended = errors.stream().map(s -> String.format("[%s] %s", getAddress(), s)).collect(Collectors.toList());
+            result.addError(getRowIndex(), columnTitle, addressAppended);
             if (isEarlyExit()) {
                 super.terminateNow();
             }

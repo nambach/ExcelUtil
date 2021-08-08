@@ -24,7 +24,7 @@ public class Validator<T> {
             Object value = extractor.extract(object);
             List<String> messages = extractor.getTypeValidator().test(value);
             if (ListUtil.hasMember(messages)) {
-                error.add(extractor.getFieldName(), messages);
+                error.appendError(extractor.getFieldName(), messages);
             }
         }
         return error;

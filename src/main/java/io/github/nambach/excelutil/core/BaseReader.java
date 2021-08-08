@@ -85,7 +85,7 @@ class BaseReader extends BaseEditor {
 
                         // Do validation first
                         if (handler.needValidation()) {
-                            readerCell.validate(fieldName, handler.getTypeValidator());
+                            readerCell.validate(handler.getTypeValidator());
                         }
 
                         if (pd != null) {
