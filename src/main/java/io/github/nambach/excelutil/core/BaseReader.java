@@ -1,6 +1,5 @@
 package io.github.nambach.excelutil.core;
 
-import io.github.nambach.excelutil.util.ListUtil;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -9,7 +8,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
@@ -73,7 +71,7 @@ class BaseReader extends BaseEditor {
                     String colTitle = titleMap.get(colIndex);
 
                     // Wrap cell
-                    ReaderCell readerCell = new ReaderCell(cell, colTitle);
+                    ReaderCell readerCell = new ReaderCell(cell, colTitle, config, result);
 
                     // process raw only one time
                     boolean rawReached = false;
@@ -85,54 +83,40 @@ class BaseReader extends BaseEditor {
                         PropertyDescriptor pd = ReflectUtil.getField(fieldName, config.getTClass());
                         BiConsumer<T, ReaderCell> handle = handler.getHandler();
 
-                        if (pd != null) {
-                            Object cellValue = handleField(pd, object, readerCell);
+                        // Do validation first
+                        if (handler.needValidation()) {
+                            readerCell.validate(fieldName, handler.getTypeValidator());
+                        }
 
-                            // handle validation
-                            if (handler.needValidation()) {
-                                List<String> errorMessage = handler.validate(cellValue);
-                                if (ListUtil.hasMember(errorMessage)) {
-                                    result.addError(rowIndex, fieldName, errorMessage);
-                                    if (baseConfig.isEarlyExist()) {
-                                        return result;
-                                    }
-                                }
-                            }
+                        if (pd != null) {
+                            handleField(pd, object, readerCell);
                         } else if (handle != null) {
                             handle.accept(object, readerCell);
-
-                            // write error
-                            if (readerCell.hasError()) {
-                                result.addError(rowIndex, null, readerCell.getError());
-                                readerCell.clearError();
-                                if (readerCell.earlyExist) {
-                                    return result;
-                                }
-                            }
                         } else if (!rawReached) {
                             rawReached = true;
                             handleOther(raw, cell, fieldName, colTitle);
+                        }
+
+                        // Post-check validation
+                        if (readerCell.isExitNow()) {
+                            return result;
                         }
                     }
                 }
 
                 // handle before adding new item
-                ReaderRow readerRow = new ReaderRow();
+                ReaderRow readerRow = new ReaderRow(currentRow, config, result);
                 if (config.needHandleBeforeAdd()) {
                     config.getBeforeAddItemHandle().accept(object, readerRow);
                 }
 
-                // write error
-                if (readerRow.hasError()) {
-                    result.addError(rowIndex, null, readerRow.error);
-                    readerRow.clearError();
-                    if (readerRow.earlyExist) {
-                        return result;
-                    }
+                // Post-check validation
+                if (readerRow.isExitNow()) {
+                    return result;
                 }
 
                 // add item
-                if (!readerRow.skipThisObject) {
+                if (!readerRow.isSkipThisObject()) {
                     result.addRaw(raw);
                 }
             }

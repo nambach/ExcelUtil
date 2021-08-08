@@ -23,6 +23,6 @@ class BaseEditor {
 
     protected ReaderCell getCellAt(Sheet sheet, Pointer pointer) {
         Cell cell = getCellAt(getRowAt(sheet, pointer.getRow()), pointer.getCol());
-        return new ReaderCell(cell, null);
+        return ReaderCell.wrap(cell);
     }
 }

@@ -1,32 +1,29 @@
 package io.github.nambach.excelutil.core;
 
-public class ReaderController {
-    protected String error;
-    protected boolean earlyExist;
+import lombok.AccessLevel;
+import lombok.Getter;
 
-    public void setError(String message) {
-        this.error = message;
-    }
+public abstract class ReaderController {
+    protected Result<?> result;
 
-    public void throwError(String message) {
-        this.error = message;
-        this.earlyExist = true;
-    }
+    @Getter(AccessLevel.PACKAGE)
+    private boolean isExitNow;
 
-    protected boolean hasError() {
-        return error != null;
-    }
+    @Getter(AccessLevel.PACKAGE)
+    private boolean isEarlyExit;
 
-    protected void clearError() {
-        this.error = null;
-    }
-
-    protected String getError(String address) {
-        if (address != null) {
-            return String.format("%s: %s", address, error);
+    ReaderController(ReaderConfig<?> config, Result<?> result) {
+        if (config != null) {
+            this.isEarlyExit = config.isEarlyExit();
         }
-        return error;
+        this.result = result;
     }
 
+    public abstract void setError(String message);
 
+    public abstract void throwError(String message);
+
+    protected void terminateNow() {
+        this.isExitNow = true;
+    }
 }

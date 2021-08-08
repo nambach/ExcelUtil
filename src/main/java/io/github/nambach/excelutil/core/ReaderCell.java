@@ -1,11 +1,18 @@
 package io.github.nambach.excelutil.core;
 
 
+import io.github.nambach.excelutil.util.ListUtil;
+import io.github.nambach.excelutil.validator.builtin.DecimalValidator;
+import io.github.nambach.excelutil.validator.builtin.IntegerValidator;
+import io.github.nambach.excelutil.validator.builtin.StringValidator;
+import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Contains information of the current read cell.
@@ -17,9 +24,14 @@ public class ReaderCell extends ReaderController {
     private final Cell cell;
     private final String columnTitle;
 
-    ReaderCell(Cell cell, String columnTitle) {
+    ReaderCell(Cell cell, String columnTitle, ReaderConfig<?> config, Result<?> result) {
+        super(config, result);
         this.cell = cell;
         this.columnTitle = columnTitle;
+    }
+
+    public static ReaderCell wrap(Cell cell) {
+        return new ReaderCell(cell, null, null, null);
     }
 
     /**
@@ -168,7 +180,79 @@ public class ReaderCell extends ReaderController {
         }
     }
 
-    String getError() {
-        return super.getError(getAddress());
+    @Override
+    public void setError(String message) {
+        result.addError(getRowIndex(), columnTitle, message);
+    }
+
+    @Override
+    public void throwError(String message) {
+        this.setError(message);
+        super.terminateNow();
+    }
+
+    void validate(String fieldName, TypeValidator typeValidator) {
+        List<String> errors = null;
+        if (typeValidator instanceof StringValidator) {
+            String val = readString();
+            errors = typeValidator.test(val);
+        } else if (typeValidator instanceof DecimalValidator) {
+            try {
+                Double val = readDoubleRisky();
+                errors = typeValidator.test(val);
+            } catch (NumberFormatException e) {
+                errors = Collections.singletonList("need to be a decimal");
+            }
+        } else if (typeValidator instanceof IntegerValidator) {
+            try {
+                Long val = readLongRisky();
+                errors = typeValidator.test(val);
+            } catch (NumberFormatException e) {
+                errors = Collections.singletonList("need to be an integer");
+            }
+        }
+
+        // set errors to result
+        if (ListUtil.hasMember(errors)) {
+            result.addError(getRowIndex(), fieldName, errors);
+            if (isEarlyExit()) {
+                super.terminateNow();
+            }
+        }
+    }
+
+    private Double readDoubleRisky() throws NumberFormatException {
+        switch (cell.getCellType()) {
+            case STRING:
+                String strVal = cell.getStringCellValue();
+                if (strVal == null) {
+                    return null;
+                }
+                return Double.parseDouble(strVal);
+            case NUMERIC:
+                return cell.getNumericCellValue();
+            default:
+                throw new NumberFormatException();
+        }
+    }
+
+    private Long readLongRisky() throws NumberFormatException {
+        switch (cell.getCellType()) {
+            case STRING:
+                String strVal = cell.getStringCellValue();
+                if (strVal == null) {
+                    return null;
+                }
+                return Long.parseLong(strVal);
+            case NUMERIC:
+                double val = cell.getNumericCellValue();
+                if ((val % 1) == 0) { // test if this is a long
+                    return (long) val;
+                } else {
+                    throw new NumberFormatException();
+                }
+            default:
+                throw new NumberFormatException();
+        }
     }
 }

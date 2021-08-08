@@ -32,7 +32,7 @@ public class ReaderConfig<T> {
     private Class<T> tClass;
     private int dataFromIndex = 1;
     private int titleRowIndex = 0;
-    private boolean earlyExist;
+    private boolean earlyExit;
 
     // Store value as list to stack up multiple handlers on a same column
     private Map<Integer, Handlers<T>> handlerMap = new HashMap<>();
@@ -82,7 +82,7 @@ public class ReaderConfig<T> {
         handlerMap.forEach((i, handler) -> copy.handlerMap.put(i + colOffset, handler));
 
         // other data
-        copy.earlyExist = earlyExist;
+        copy.earlyExit = earlyExit;
         copy.beforeAddItemHandle = beforeAddItemHandle;
         return copy;
     }
@@ -110,8 +110,8 @@ public class ReaderConfig<T> {
         return this;
     }
 
-    public ReaderConfig<T> existWhenValidationFailed(boolean b) {
-        this.earlyExist = b;
+    public ReaderConfig<T> exitWhenValidationFailed(boolean b) {
+        this.earlyExit = b;
         return this;
     }
 
