@@ -220,6 +220,25 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         return config.translate(rowAt, colAt);
     }
 
+    /**
+     * Get the {@link ReaderConfig} for reading Excel file that was exported by this template.
+     *
+     * @return a {@link ReaderConfig}
+     */
+    @SneakyThrows
+    public ReaderConfig<T> getReaderConfigByColumnTitle() {
+        ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
+        for (ColumnMapper<T> mapper : this) {
+            if (mapper.getTitle() == null) {
+                throw new Exception("Title of field '" + mapper.getFieldName() + "' must be provided.");
+            }
+            config.column(mapper.getTitle(), mapper.getFieldName());
+        }
+        config.titleAtRow(0);
+        config.dataFromRow(1);
+        return config.translate(rowAt, colAt);
+    }
+
     @SuppressWarnings({"unchecked"})
     DataTemplate<FlatData> getFlatTemplate() {
         DataTemplate<FlatData> result = new DataTemplate<>(FlatData.class);

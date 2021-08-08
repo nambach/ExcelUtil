@@ -25,7 +25,7 @@ class BaseReader extends BaseEditor {
             }
 
             ReaderConfig<T> config = baseConfig.translate(rowAt, colAt);
-            Map<Integer, Handlers<T>> handlerMap = config.getHandlerMap();
+            HandlerMap<T> handlerMap = config.getHandlerMap();
 
             int hasTitle = 0;
             Map<Integer, String> titleMap = new HashMap<>();
@@ -63,12 +63,12 @@ class BaseReader extends BaseEditor {
                         continue;
                     }
 
-                    Handlers<T> handlers = handlerMap.get(colIndex);
+                    String colTitle = titleMap.get(colIndex);
+
+                    HandlerMap.Handlers<T> handlers = handlerMap.get(colIndex, colTitle);
                     if (handlers == null) {
                         continue;
                     }
-
-                    String colTitle = titleMap.get(colIndex);
 
                     // Wrap cell
                     ReaderCell readerCell = new ReaderCell(cell, colTitle, config, result);

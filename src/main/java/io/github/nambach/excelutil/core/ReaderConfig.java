@@ -9,7 +9,6 @@ import lombok.SneakyThrows;
 
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -35,7 +34,7 @@ public class ReaderConfig<T> {
     private boolean earlyExit;
 
     // Store value as list to stack up multiple handlers on a same column
-    private Map<Integer, Handlers<T>> handlerMap = new HashMap<>();
+    private HandlerMap<T> handlerMap = new HandlerMap<>();
 
     private BiConsumer<T, ReaderRow> beforeAddItemHandle;
 
@@ -56,7 +55,7 @@ public class ReaderConfig<T> {
 
     private Pointer getBaseCoordinate() {
         int baseRow = titleRowIndex >= 0 ? titleRowIndex : dataFromIndex;
-        int baseCol = handlerMap.keySet().stream().reduce(Math::min).orElse(0);
+        int baseCol = handlerMap.getMinIndex();
         return new Pointer(baseRow, baseCol);
     }
 
@@ -75,11 +74,18 @@ public class ReaderConfig<T> {
         }
 
         ReaderConfig<T> copy = new ReaderConfig<>(tClass);
+
+        // translate starting point
         if (titleRowIndex >= 0) {
             copy.titleRowIndex = titleRowIndex + rowOffset;
         }
-        copy.dataFromIndex = dataFromIndex + rowOffset;
-        handlerMap.forEach((i, handler) -> copy.handlerMap.put(i + colOffset, handler));
+        if (dataFromIndex >= 0) {
+            copy.dataFromIndex = dataFromIndex + rowOffset;
+        }
+
+        // translate handler map
+        copy.handlerMap = handlerMap.cloneSelf();
+        copy.handlerMap.shiftIndexMap(colOffset);
 
         // other data
         copy.earlyExit = earlyExit;
@@ -139,9 +145,40 @@ public class ReaderConfig<T> {
                     .field(fieldName)
                     .validate(typeValidator);
 
-            Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
-            list.add(handler);
-            handlerMap.put(index, list);
+            handlerMap.put(index, handler);
+        }
+        return this;
+    }
+
+    /**
+     * Map the cell value at a column into target field of DTO.
+     *
+     * @param title     title of the column (provide through {@link ReaderConfig#titleAtRow(int)}
+     * @param fieldName field name of DTO to map
+     * @return current config
+     */
+    public ReaderConfig<T> column(String title, String fieldName) {
+        TypeValidator nullValidator = null;
+        return column(title, fieldName, nullValidator);
+    }
+
+    public ReaderConfig<T> column(String title, String fieldName, Function<TypeValidator, TypeValidator> builder) {
+        TypeValidator typeValidator = builder.apply(TypeValidator.init());
+        return column(title, fieldName, typeValidator);
+    }
+
+    @SneakyThrows
+    public ReaderConfig<T> column(String title, String fieldName, TypeValidator typeValidator) {
+        if (title != null && ReflectUtil.getField(fieldName, tClass) != null) {
+            if (titleRowIndex < 0) {
+                throw new Exception("Index of title row must be provided via .titleAtRow(int)");
+            }
+            Handler<T> handler = new Handler<T>()
+                    .atColumn(title)
+                    .field(fieldName)
+                    .validate(typeValidator);
+
+            handlerMap.put(title, handler);
         }
         return this;
     }
@@ -154,18 +191,20 @@ public class ReaderConfig<T> {
      */
     @SneakyThrows
     public ReaderConfig<T> handler(Function<Handler<T>, Handler<T>> func) {
-        Objects.requireNonNull(func);
-
         Handler<T> handler = new Handler<>();
         func.apply(handler);
-        if (handler.getColAt() == null && handler.getColFrom() == null) {
-            throw new Exception("Handler must be provided a column index with .atColumn() or .fromColumn()");
-        }
-        if (handler.getIndex() != null) {
-            int index = handler.getIndex();
-            Handlers<T> list = handlerMap.getOrDefault(index, new Handlers<>());
-            list.add(handler);
-            handlerMap.put(index, list);
+        Integer index = handler.getIndex();
+        String title = handler.getColTitle();
+        if (index == null && title == null) {
+            throw new Exception("Handler must have a column index with .atColumn(int) or .fromColumn(int)," +
+                                " or a column title with .atColumn(String)");
+        } else if (index != null) {
+            handlerMap.put(index, handler);
+        } else if (title != null) {
+            if (titleRowIndex < 0) {
+                throw new Exception("Index of title row must be provided via .titleAtRow(int)");
+            }
+            handlerMap.put(title, handler);
         }
 
         return this;

@@ -21,6 +21,7 @@ public class Handler<T> {
 
     private Integer colAt;
     private Integer colFrom;
+    private String colTitle;
     private String fieldName;
     private BiConsumer<T, ReaderCell> handler;
     private TypeValidator typeValidator;
@@ -46,6 +47,11 @@ public class Handler<T> {
      */
     public Handler<T> atColumn(int i) {
         colAt = i;
+        return this;
+    }
+
+    public Handler<T> atColumn(String colTitle) {
+        this.colTitle = colTitle;
         return this;
     }
 
