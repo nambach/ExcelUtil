@@ -209,11 +209,13 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      *
      * @return a {@link ReaderConfig}
      */
-    public ReaderConfig<T> getReaderConfig() {
+    public ReaderConfig<T> getReaderConfigByColumnIndex() {
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
         int i = 0;
         for (ColumnMapper<T> mapper : this) {
-            config.column(i++, mapper.getFieldName());
+            if (mapper.getFieldName() != null) {
+                config.column(i++, mapper.getFieldName());
+            }
         }
         config.titleAtRow(0);
         config.dataFromRow(1);
@@ -226,13 +228,15 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @return a {@link ReaderConfig}
      */
     @SneakyThrows
-    public ReaderConfig<T> getReaderConfigByColumnTitle() {
+    public ReaderConfig<T> getReaderConfig() {
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
         for (ColumnMapper<T> mapper : this) {
             if (mapper.getTitle() == null) {
                 throw new Exception("Title of field '" + mapper.getFieldName() + "' must be provided.");
             }
-            config.column(mapper.getTitle(), mapper.getFieldName());
+            if (mapper.getFieldName() != null) {
+                config.column(mapper.getTitle(), mapper.getFieldName());
+            }
         }
         config.titleAtRow(0);
         config.dataFromRow(1);
