@@ -24,21 +24,21 @@ Since Apache POI has some [limitations](http://poi.apache.org/apidocs/dev/org/ap
 To help the caching mechanism work efficiently, it is recommended to pre-define all styles before doing the writing process.
 
 ```java
-static final Style BASED_STYLE = Style
-        .builder()
-        .fontName("Calibri")
-        .fontSize((short) 12)
-        .build();
+Style BASED_STYLE = Style
+    .builder()
+    .fontName("Calibri")
+    .fontSize((short) 12)
+    .build();
 
 // it is able to accumulate previous style. It will not affect
 // the caching mechanism as long as you pre-define them
-static final Style HEADER_STYLE = Style
-        .builder(BASED_STYLE)
-        .fontColorInHex("#ffffff")
-        .backgroundColorInHex("#191970")
-        .border(BorderSide.FULL)
-        .horizontalAlignment(HorizontalAlignment.LEFT)
-        .build();
+Style HEADER_STYLE = Style
+    .builder(BASED_STYLE)
+    .fontColorInHex("#ffffff")
+    .backgroundColorInHex("#191970")
+    .border(BorderSide.FULL)
+    .horizontalAlignment(HorizontalAlignment.LEFT)
+    .build();
 ```
 
 Below is an example of conditional styling.
@@ -93,20 +93,20 @@ books.sort(Comparator
 Here is example of how to configure merge rows.
 
 ```java
-static final Style VCENTER = Style.builder().verticalAlignment(VerticalAlignment.CENTER).build();
+Style VCENTER = Style.builder().verticalAlignment(VerticalAlignment.CENTER).build();
 
-static final DataTemplate<Book> BOOK_TEMPLATE = DataTemplate
-        .fromClass(Book.class)
-        .includeFields("title")
-        .column(c -> c.field("subCategory")
-                      .style(VCENTER)
-                      .mergeOnValue(true))  // merge cells with the same value consecutively
-        .column(c -> c.title("Category")
-                      .style(VCENTER)
-                      .transform(book -> book.getCategory().getName())
-                      .mergeOnId(book -> book.getCategory().getId()))  // merge on derived value
-        .config(cf -> cf.startAtCell("A2")
-                        .autoSizeColumns(true));
+DataTemplate<Book> BOOK_TEMPLATE = DataTemplate
+    .fromClass(Book.class)
+    .includeFields("title")
+    .column(c -> c.field("subCategory")
+                    .style(VCENTER)
+                    .mergeOnValue(true))  // merge cells with the same value consecutively
+    .column(c -> c.title("Category")
+                    .style(VCENTER)
+                    .transform(book -> book.getCategory().getName())
+                    .mergeOnId(book -> book.getCategory().getId()))  // merge on derived value
+    .config(cf -> cf.startAtCell("A2")
+                    .autoSizeColumns(true));
 ```
 
 #### Result
@@ -129,4 +129,4 @@ DataTemplate<Category> CATEGORY_TEMPLATE = DataTemplate
 
 #### Result
 
-![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/expand-rows.jpg)
+![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/expand-rows.png)
