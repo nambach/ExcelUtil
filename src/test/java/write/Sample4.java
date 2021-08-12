@@ -5,6 +5,7 @@ import io.github.nambach.excelutil.style.BorderSide;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.FileUtil;
 import model.Book;
+import model.Book.Category;
 import model.Constant;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 
@@ -15,8 +16,8 @@ public class Sample4 {
                                       .fontName("Times New Roman").border(BorderSide.FULL)
                                       .verticalAlignment(VerticalAlignment.CENTER).build();
 
-    static final DataTemplate<Book.Category> CATEGORY_TEMPLATE = DataTemplate
-            .fromClass(Book.Category.class)
+    static final DataTemplate<Category> CATEGORY_TEMPLATE = DataTemplate
+            .fromClass(Category.class)
             .includeFields("name")
             .column(c -> c.field("books")
                           .asList(Book.class, bookCols -> bookCols
