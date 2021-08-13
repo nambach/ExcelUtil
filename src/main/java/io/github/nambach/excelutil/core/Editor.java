@@ -4,7 +4,6 @@ import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -15,11 +14,16 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+
+import static io.github.nambach.excelutil.util.ListUtil.groupBy;
 
 public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseable, Iterable<Sheet> {
     private final Workbook workbook;
@@ -171,6 +175,12 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     // For writing
+    private void replaceStyle(CellAddress cellAddress, Style style) {
+        Row row = getRowAt(currentSheet, cellAddress.getRow());
+        Cell cell = getCellAt(row, cellAddress.getColumn());
+        cell.setCellStyle(writer.cachedStyles.accumulate(style));
+    }
+
     @Override
     public Editor useStyle(Style style) {
         this.tempStyle = style;
@@ -179,41 +189,36 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
 
     @Override
     public Editor applyStyle() {
-        if (tempStyle == null) {
-            return this;
+        if (tempStyle != null) {
+            replaceStyle(navigation.getCellAddress(), tempStyle);
         }
-        return applyStyle(tempStyle);
-    }
-
-    @Override
-    public Editor applyStyle(Style style) {
-        CellAddress address = navigation.getCellAddress();
-        updateStyle(style, address, address);
         return this;
     }
 
     @Override
-    public Editor applyStyle(Style style, String address) {
-        return applyStyle(style, address, address);
-    }
-
-    @Override
-    public Editor applyStyle(Style style, String fromAddress, String toAddress) {
-        CellAddress from = new CellAddress(fromAddress);
-        CellAddress to = new CellAddress(toAddress);
-        updateStyle(style, from, to);
+    public Editor applyStyle(Style style, String... address) {
+        if (style != null && (address == null || address.length == 0)) {
+            replaceStyle(navigation.getCellAddress(), style);
+        } else {
+            applyStyle(style, Arrays.asList(address));
+        }
         return this;
     }
 
-    private void updateStyle(Style style, CellAddress from, CellAddress to) {
-        CellStyle cellStyle = writer.cachedStyles.accumulate(style);
-        for (int rNo = from.getRow(); rNo <= to.getRow(); rNo++) {
-            Row row = getRowAt(currentSheet, rNo);
-            for (int cNo = from.getColumn(); cNo <= to.getColumn(); cNo++) {
-                Cell cell = getCellAt(row, cNo);
-                cell.setCellStyle(cellStyle);
-            }
+    @Override
+    public Editor applyStyle(Style style, Collection<String> addresses) {
+        if (style != null) {
+            Collection<CellAddress> cellAddresses = parseAddress(addresses);
+            Map<Integer, List<CellAddress>> rowMap = groupBy(cellAddresses, CellAddress::getRow);
+            rowMap.forEach((rowNum, cols) -> {
+                Row row = getRowAt(currentSheet, rowNum);
+                for (CellAddress col : cols) {
+                    Cell cell = getCellAt(row, col.getColumn());
+                    cell.setCellStyle(writer.cachedStyles.accumulate(style));
+                }
+            });
         }
+        return this;
     }
 
     @Override

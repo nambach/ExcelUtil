@@ -37,7 +37,7 @@ public class Sample3 {
 
         editor.useStyle(HEADER)
               .writeCell(c -> c.text("Travel Services Invoice").colSpan(2).style(s -> s.fontSize((short) 16)))
-              .applyStyle(HEADER, "C1", "D1");
+              .applyStyle(HEADER, "C1:D1");
 
         editor.goToCell("A3").useStyle(BASED).text("[Travel Company Name]")
               .down().text("[Street Address]")
@@ -58,15 +58,13 @@ public class Sample3 {
               .down().text("Invoice Total")
               .down().text("Total Amount Due")
               .down().text("Amount Paid")
-              .applyStyle(BORDER, "C3", "C9")
-              .applyStyle(BORDER, "C11", "C14");
+              .applyStyle(BORDER, "C3:C9", "C11:C14");
 
         editor.goToCell("A16").useStyle(BG_BROWN).text("Destination")
               .down().text("Travel Dates")
               .down().text("No. of Travelers")
               .goToCell("C18").writeCell(c -> c.text("Tax Rate").style(s -> s.horizontalAlignment(HorizontalAlignment.RIGHT)))
-              .applyStyle(BORDER, "B16", "B18")
-              .applyStyle(BORDER, "D18");
+              .applyStyle(BORDER, "B16:B18", "D18");
 
         editor.goToCell("D4").useStyle(LARGE_FONT)
               .writeCell(c -> c.text("Total Amount Due on:").style(s -> s.fontColorInHex(PRIMARY_COLOR)))
@@ -83,7 +81,7 @@ public class Sample3 {
               .enter().text("Lodging")
               .enter().text("Tours")
               .enter().text("Other")
-              .applyStyle(BORDER, "A21", "D30");
+              .applyStyle(BORDER, "A21:D30");
 
         InputStream stream = editor.exportToFile();
         FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\invoice.xlsx", stream, true);

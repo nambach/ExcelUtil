@@ -7,12 +7,12 @@ import lombok.Setter;
 import org.apache.poi.ss.util.CellAddress;
 
 import java.io.ByteArrayInputStream;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Getter(AccessLevel.PACKAGE)
@@ -130,26 +130,21 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
     }
 
     @Override
-    public Template applyStyle(Style style) {
-        updateCell(navigation.getCellAddress(), c -> c.style(style));
+    public Template applyStyle(Style style, String... address) {
+        if (address == null || address.length == 0) {
+            updateCell(navigation.getCellAddress(), c -> c.style(style));
+        } else {
+            applyStyle(style, Arrays.asList(address));
+        }
         return this;
     }
 
     @Override
-    public Template applyStyle(Style style, String address) {
-        updateCell(new CellAddress(address), c -> c.style(style));
-        return this;
-    }
-
-    @Override
-    public Template applyStyle(Style style, String fromAddress, String toAddress) {
-        CellAddress from = new CellAddress(fromAddress);
-        CellAddress to = new CellAddress(toAddress);
+    public Template applyStyle(Style style, Collection<String> addresses) {
         Function<WriterCell, WriterCell> builder = c -> c.style(style);
-        for (int rowNo = from.getRow(); rowNo <= to.getRow(); rowNo++) {
-            for (int colNo = from.getColumn(); colNo <= to.getColumn(); colNo++) {
-                updateCell(new CellAddress(rowNo, colNo), builder);
-            }
+        Collection<CellAddress> cellAddresses = parseAddress(addresses);
+        for (CellAddress cellAddress : cellAddresses) {
+            updateCell(cellAddress, builder);
         }
         return this;
     }
