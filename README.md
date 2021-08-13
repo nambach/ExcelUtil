@@ -107,7 +107,7 @@ public class Main {
 
 #### Result
 
-![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/custom-styles.png)
+![Result](https://raw.githubusercontent.com/nambach/ExcelUtil/master/wiki/img/custom-styles.png)
 
 ### **Merge rows**
 
@@ -143,7 +143,7 @@ static final DataTemplate<Book> BOOK_TEMPLATE = DataTemplate
 
 #### Result
 
-![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/merge-rows.png)
+![Result](https://raw.githubusercontent.com/nambach/ExcelUtil/master/wiki/img/merge-rows.png)
 
 ## Read Excel
 
