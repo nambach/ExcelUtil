@@ -4,7 +4,6 @@ import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
 import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -15,18 +14,22 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
-public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet> {
+import static io.github.nambach.excelutil.util.ListUtil.groupBy;
+
+public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseable, Iterable<Sheet> {
     private final Workbook workbook;
     private final BaseWriter writer;
     private final BaseReader reader;
-    private final Pointer pointer = new Pointer();
-    private final Pointer pivot = new Pointer();
+    private final PointerNavigation navigation = new PointerNavigation();
     private Sheet currentSheet;
     private Style tempStyle;
 
@@ -64,8 +67,7 @@ public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet>
 
     // Sheet navigation
     private void resetPointer() {
-        pointer.update(getNextRowIndex(), 0);
-        pivot.sync(pointer);
+        enter();
     }
 
     private int getNextRowIndex() {
@@ -121,137 +123,126 @@ public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet>
     }
 
     // Cell navigation
+    @Override
     public Editor goToCell(String address) {
-        pointer.update(address);
-        pivot.sync(pointer);
+        navigation.goToCell(address);
         return this;
     }
 
+    @Override
     public Editor goToCell(int row, int col) {
-        pointer.update(row, col);
-        pivot.sync(pointer);
+        navigation.goToCell(row, col);
         return this;
     }
 
-    public Editor moveRight() {
-        pointer.jumpRight(pivot);
-        pivot.sync(pointer);
+    @Override
+    public Editor next() {
+        navigation.next();
         return this;
     }
 
-    public Editor moveRight(int steps) {
-        if (steps > 0) {
-            moveRight();
-            pointer.moveRight(steps - 1);
-            pivot.sync(pointer);
-        }
+    @Override
+    public Editor next(int steps) {
+        navigation.next(steps);
         return this;
     }
 
-    public Editor moveDown() {
-        pointer.jumpDown(pivot);
-        pivot.sync(pointer);
+    @Override
+    public Editor down() {
+        navigation.down();
         return this;
     }
 
-    public Editor moveDown(int steps) {
-        if (steps > 0) {
-            moveDown();
-            pointer.moveDown(steps - 1);
-            pivot.sync(pointer);
-        }
+    @Override
+    public Editor down(int steps) {
+        navigation.down(steps);
         return this;
     }
 
+    @Override
     public Editor enter() {
-        pointer.update(getNextRowIndex(), 0);
-        pivot.sync(pointer);
+        navigation.update(getNextRowIndex(), 0);
         return this;
     }
 
+    @Override
     public Editor enter(int steps) {
         if (steps > 0) {
-            enter();
-            pointer.moveDown(steps - 1);
-            pivot.sync(pointer);
+            this.enter();
+            navigation.down(steps - 1);
         }
         return this;
     }
 
     // For writing
+    private void replaceStyle(CellAddress cellAddress, Style style) {
+        Row row = getRowAt(currentSheet, cellAddress.getRow());
+        Cell cell = getCellAt(row, cellAddress.getColumn());
+        cell.setCellStyle(writer.cachedStyles.accumulate(style));
+    }
+
+    @Override
     public Editor useStyle(Style style) {
         this.tempStyle = style;
         return this;
     }
 
+    @Override
     public Editor applyStyle() {
-        if (tempStyle == null) return this;
-        CellAddress address = new CellAddress(pointer.getRow(), pointer.getCol());
-        return applyStyle(tempStyle, address.formatAsString());
-    }
-
-    public Editor applyStyle(Style style) {
-        CellAddress address = new CellAddress(pointer.getRow(), pointer.getCol());
-        return applyStyle(style, address.formatAsString());
-    }
-
-    public Editor applyStyle(Style style, String address) {
-        return applyStyle(style, address, address);
-    }
-
-    public Editor applyStyle(Style style, String fromAddress, String toAddress) {
-        CellAddress from = new CellAddress(fromAddress);
-        CellAddress to = new CellAddress(toAddress);
-        CellStyle cellStyle = writer.cachedStyles.accumulate(style);
-        for (int rNo = from.getRow(); rNo <= to.getRow(); rNo++) {
-            Row row = getRowAt(currentSheet, rNo);
-            for (int cNo = from.getColumn(); cNo <= to.getColumn(); cNo++) {
-                Cell cell = getCellAt(row, cNo);
-                cell.setCellStyle(cellStyle);
-            }
+        if (tempStyle != null) {
+            replaceStyle(navigation.getCellAddress(), tempStyle);
         }
         return this;
     }
 
-    public Editor date(Date date) {
-        return writeCell(c -> c.date(date));
+    @Override
+    public Editor applyStyle(Style style, String... address) {
+        if (style != null && (address == null || address.length == 0)) {
+            replaceStyle(navigation.getCellAddress(), style);
+        } else {
+            applyStyle(style, Arrays.asList(address));
+        }
+        return this;
     }
 
-    public Editor number(double number) {
-        return writeCell(c -> c.number(number));
+    @Override
+    public Editor applyStyle(Style style, Collection<String> addresses) {
+        if (style != null) {
+            Collection<CellAddress> cellAddresses = parseAddress(addresses);
+            Map<Integer, List<CellAddress>> rowMap = groupBy(cellAddresses, CellAddress::getRow);
+            rowMap.forEach((rowNum, cols) -> {
+                Row row = getRowAt(currentSheet, rowNum);
+                for (CellAddress col : cols) {
+                    Cell cell = getCellAt(row, col.getColumn());
+                    cell.setCellStyle(writer.cachedStyles.accumulate(style));
+                }
+            });
+        }
+        return this;
     }
 
-    public Editor text(String text) {
-        return writeCell(c -> c.text(text));
-    }
-
+    @Override
     public Editor writeCell(Function<WriterCell, WriterCell> f) {
-        WriterCell cell = new WriterCell(pointer, tempStyle);
-        f.apply(cell);
+        WriterCell cell = f.apply(new WriterCell(navigation.getCellAddress(), tempStyle));
         writer.writeCellInfo(currentSheet, cell);
 
         // update pivot
-        pivot.moveRight(cell.getColSpan() - 1);
-        pivot.moveDown(cell.getRowSpan() - 1);
+        navigation.updatePivotRight(cell.getColSpan() - 1);
+        navigation.updatePivotDown(cell.getRowSpan() - 1);
         return this;
     }
 
     public Editor writeTemplate(Template template) {
         writer.writeTemplate(currentSheet, template);
 
+        int[] rowIndex = template.getRowIndex();
+        int[] colIndex = template.getColIndex();
+
         // update pointer
-        int minRow = template.getCells().stream().map(WriterCell::getRowAt)
-                             .reduce(Math::min).orElse(0);
-        int minCol = template.getCells().stream().map(WriterCell::getColAt)
-                             .reduce(Math::min).orElse(0);
-        pointer.update(minRow, minCol);
+        navigation.update(rowIndex[0], colIndex[0]);
 
         // update pivot
-        int maxRow = template.getCells().stream().map(c -> c.getRowAt() + c.getRowSpan() - 1)
-                             .reduce(Math::max).orElse(0);
-        int maxCol = template.getCells().stream().map(c -> c.getColAt() + c.getColSpan() - 1)
-                             .reduce(Math::max).orElse(0);
-        pivot.update(maxRow, maxCol);
+        navigation.updatePivot(rowIndex[1], colIndex[1]);
         return this;
     }
 
@@ -259,12 +250,12 @@ public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet>
         if (data == null) {
             data = Collections.emptyList();
         }
-        writer.writeData(currentSheet, template, data, pointer.getRow(), pointer.getCol());
+        writer.writeData(currentSheet, template, data, navigation.getRow(), navigation.getCol());
 
         // update pivot
-        pivot.moveRight(template.size() - 1);
+        navigation.updatePivotRight(template.size() - 1);
         int headerRows = template.isNoHeader() ? 0 : 1;
-        pivot.moveDown(data.size() - 1 + headerRows);
+        navigation.updatePivotDown(data.size() - 1 + headerRows);
 
         return this;
     }
@@ -287,39 +278,39 @@ public class Editor extends BaseEditor implements AutoCloseable, Iterable<Sheet>
     // For reading
 
     public String readString() {
-        return getCellAt(currentSheet, pointer).readString();
+        return getCellAt(currentSheet, navigation).readString();
     }
 
     public Date readDate() {
-        return getCellAt(currentSheet, pointer).readDate();
+        return getCellAt(currentSheet, navigation).readDate();
     }
 
     public LocalDateTime readLocalDateTime() {
-        return getCellAt(currentSheet, pointer).readLocalDateTime();
+        return getCellAt(currentSheet, navigation).readLocalDateTime();
     }
 
     public Double readDouble() {
-        return getCellAt(currentSheet, pointer).readDouble();
+        return getCellAt(currentSheet, navigation).readDouble();
     }
 
     public Float readFloat() {
-        return getCellAt(currentSheet, pointer).readFloat();
+        return getCellAt(currentSheet, navigation).readFloat();
     }
 
     public Long readLong() {
-        return getCellAt(currentSheet, pointer).readLong();
+        return getCellAt(currentSheet, navigation).readLong();
     }
 
     public Integer readInt() {
-        return getCellAt(currentSheet, pointer).readInt();
+        return getCellAt(currentSheet, navigation).readInt();
     }
 
     public Boolean readBoolean() {
-        return getCellAt(currentSheet, pointer).readBoolean();
+        return getCellAt(currentSheet, navigation).readBoolean();
     }
 
     public <T> Result<T> readSection(ReaderConfig<T> config) {
-        return reader.readSheet(currentSheet, config, pointer.getRow(), pointer.getCol());
+        return reader.readSheet(currentSheet, config, navigation.getRow(), navigation.getCol());
     }
 
     public Editor configSheet(Function<Config, Config> f) {

@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-class BaseWriter extends BaseEditor {
+class BaseWriter implements BaseEditor {
 
     static final Style DATE = Style.builder().date(true).build();
     final CacheStyle cachedStyles;

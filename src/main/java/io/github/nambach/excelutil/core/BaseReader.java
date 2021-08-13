@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 
-class BaseReader extends BaseEditor {
+class BaseReader implements BaseEditor {
 
     public BaseReader() {
     }

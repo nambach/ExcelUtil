@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -60,5 +62,21 @@ public class ListUtil {
             obj = defaultValue;
         }
         return obj;
+    }
+
+    public static <K, V> Map<K, List<V>> groupBy(Collection<V> collection, Function<V, K> keyExtractor) {
+        Map<K, List<V>> result = new HashMap<>();
+        if (isNullOrEmpty(collection)) {
+            return result;
+        }
+        for (V v : collection) {
+            try {
+                K key = keyExtractor.apply(v);
+                result.putIfAbsent(key, new ArrayList<>());
+                result.get(key).add(v);
+            } catch (Exception ignored) {
+            }
+        }
+        return result;
     }
 }

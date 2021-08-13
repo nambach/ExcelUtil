@@ -4,6 +4,7 @@ import io.github.nambach.excelutil.style.Style;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.poi.ss.util.CellAddress;
 
 import java.util.Date;
 import java.util.function.Function;
@@ -21,9 +22,9 @@ public class WriterCell {
     private int colSpan = 1;
     private Style style;
 
-    WriterCell(Pointer pointer, Style style) {
-        this.rowAt = pointer.getRow();
-        this.colAt = pointer.getCol();
+    WriterCell(CellAddress address, Style style) {
+        this.rowAt = address.getRow();
+        this.colAt = address.getColumn();
         this.style = style;
     }
 
