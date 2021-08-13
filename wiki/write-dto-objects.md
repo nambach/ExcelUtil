@@ -75,7 +75,7 @@ public class Main {
 
 #### Result
 
-![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/custom-styles.jpg)
+![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/custom-styles.png)
 
 # **Merge Rows**
 
@@ -111,7 +111,7 @@ DataTemplate<Book> BOOK_TEMPLATE = DataTemplate
 
 #### Result
 
-![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/merge-rows.jpg)
+![Result](https://github.com/nambach/ExcelUtil/blob/master/wiki/img/merge-rows.png)
 
 # Expand Rows
 
