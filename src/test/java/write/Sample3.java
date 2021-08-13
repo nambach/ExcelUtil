@@ -27,28 +27,22 @@ public class Sample3 {
 
 
     public static void main(String[] args) {
-        int[] colIndexes = new int[]{0, 1, 2, 3};
-
         Editor editor = new Editor();
+
+        int[] colIndexes = new int[]{0, 1, 2, 3};
         editor.goToSheet(0)
               .configSheet(cf -> cf.setColumnWidth(214, colIndexes)
                                    .setRowHeightInPoints(30, 0)
                                    .hideGrid(true));
 
+        // Header part
         editor.useStyle(HEADER)
-              .writeCell(c -> c.text("Travel Services Invoice").colSpan(2).style(s -> s.fontSize((short) 16)))
+              .writeCell(c -> c.text("Travel Services Invoice")
+                               .colSpan(2)
+                               .style(s -> s.fontSize((short) 16)))
               .applyStyle(HEADER, "C1:D1");
 
-        editor.goToCell("A3").useStyle(BASED).text("[Travel Company Name]")
-              .down().text("[Street Address]")
-              .down().text("[Address 2]")
-              .down().text("[City, ST  ZIP Code]")
-              .down().text("[Phone]")
-              .down().text("[Web Site]")
-              .down().text("[E-Mail]")
-              .down().text("[Fax]")
-              .down(2).text("[Invoice Date]");
-
+        // Form part
         editor.goToCell("B3").useStyle(ALIGN_RIGHT).text("Invoice No.")
               .down().text("Bill To")
               .down().text("Address")
@@ -60,18 +54,32 @@ public class Sample3 {
               .down().text("Amount Paid")
               .applyStyle(BORDER, "C3:C9", "C11:C14");
 
+        // To be filled in
+        editor.goToCell("A3").useStyle(BASED).text("[Travel Company Name]")
+              .down().text("[Street Address]")
+              .down().text("[Address 2]")
+              .down().text("[City, ST  ZIP Code]")
+              .down().text("[Phone]")
+              .down().text("[Web Site]")
+              .down().text("[E-Mail]")
+              .down().text("[Fax]")
+              .down(2).text("[Invoice Date]");
+
+        // Traveler part
         editor.goToCell("A16").useStyle(BG_BROWN).text("Destination")
               .down().text("Travel Dates")
               .down().text("No. of Travelers")
               .goToCell("C18").writeCell(c -> c.text("Tax Rate").style(s -> s.horizontalAlignment(HorizontalAlignment.RIGHT)))
               .applyStyle(BORDER, "B16:B18", "D18");
 
+        // Large title on right
         editor.goToCell("D4").useStyle(LARGE_FONT)
               .writeCell(c -> c.text("Total Amount Due on:").style(s -> s.fontColorInHex(PRIMARY_COLOR)))
               .down().text("[Due Date]")
               .goToCell("D10").text("Thanks for letting us")
               .down().text("serve you!");
 
+        // Detail table
         editor.goToCell("A20").useStyle(BG_BROWN).text("Service")
               .next().text("Description")
               .next().text("Amount per Traveler")

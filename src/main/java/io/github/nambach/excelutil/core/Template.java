@@ -22,11 +22,7 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
     private final PointerNavigation navigation = new PointerNavigation();
     private Style tempStyle;
 
-    Template() {
-    }
-
-    public static Template builder() {
-        return new Template();
+    public Template() {
     }
 
     int[] getRowIndex() {
