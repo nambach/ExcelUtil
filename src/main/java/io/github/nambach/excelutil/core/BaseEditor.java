@@ -4,8 +4,8 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
-class BaseEditor {
-    protected Row getRowAt(Sheet sheet, int rowAt) {
+interface BaseEditor {
+    default Row getRowAt(Sheet sheet, int rowAt) {
         Row row = sheet.getRow(rowAt);
         if (row == null) {
             row = sheet.createRow(rowAt);
@@ -13,7 +13,7 @@ class BaseEditor {
         return row;
     }
 
-    protected Cell getCellAt(Row row, int colAt) {
+    default Cell getCellAt(Row row, int colAt) {
         Cell cell = row.getCell(colAt);
         if (cell == null) {
             cell = row.createCell(colAt);
@@ -21,7 +21,7 @@ class BaseEditor {
         return cell;
     }
 
-    protected ReaderCell getCellAt(Sheet sheet, Pointer pointer) {
+    default ReaderCell getCellAt(Sheet sheet, PointerNavigation pointer) {
         Cell cell = getCellAt(getRowAt(sheet, pointer.getRow()), pointer.getCol());
         return ReaderCell.wrap(cell);
     }

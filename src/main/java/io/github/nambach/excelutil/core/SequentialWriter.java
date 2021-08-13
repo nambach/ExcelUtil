@@ -31,8 +31,8 @@ public class SequentialWriter implements AutoCloseable {
     }
 
     public void writeLine(int indent, Function<WriterCell, WriterCell> detail) {
-        editor.moveRight(indent);
-        editor.writeCell(detail)
+        editor.next(indent)
+              .writeCell(detail)
               .enter();
     }
 
