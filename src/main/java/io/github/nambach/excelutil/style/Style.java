@@ -1,8 +1,10 @@
 package io.github.nambach.excelutil.style;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.With;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
@@ -11,10 +13,12 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import java.util.LinkedHashSet;
 import java.util.UUID;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Style {
 
     @Getter(AccessLevel.PUBLIC)
-    private final String uuid = UUID.randomUUID().toString();
+    @With(AccessLevel.PRIVATE)
+    private final String uuid;
 
     // Text
     String fontName;
@@ -39,18 +43,19 @@ public class Style {
     // Borders
     LinkedHashSet<Border> borders;
 
-    public Style() {
+    private Style(String uuid) {
+        this.uuid = uuid;
     }
 
     public static StyleBuilder builder() {
-        return new StyleBuilder(new Style());
+        return new StyleBuilder(new Style(UUID.randomUUID().toString()));
     }
 
     public static StyleBuilder builder(Style style) {
         if (style != null) {
-            return new StyleBuilder(style.cloneSelf());
+            return new StyleBuilder(style.makeCopy());
         } else {
-            return new StyleBuilder(new Style());
+            return builder();
         }
     }
 
@@ -61,19 +66,11 @@ public class Style {
         return null;
     }
 
-    Style cloneSelf() {
-        return Style.builder()
-                    .fontName(fontName).fontSize(fontSize)
-                    .bold(bold).underline(underline)
-                    .indentation(indentation)
-                    .wrapText(wrapText)
-                    .date(date).datePattern(datePattern)
-                    .fontColorInHex(fontColorInHex)
-                    .backgroundColorInHex(backgroundColorInHex)
-                    .horizontalAlignment(horizontalAlignment)
-                    .verticalAlignment(verticalAlignment)
-                    .borders(borders)
-                    .build();
+    /**
+     * @return a shallow copied of this style
+     */
+    Style makeCopy() {
+        return this.withUuid(UUID.randomUUID().toString());
     }
 
     public boolean isDate() {
@@ -83,7 +80,7 @@ public class Style {
     public static class StyleBuilder {
         private final Style style;
 
-        public StyleBuilder(Style style) {
+        private StyleBuilder(Style style) {
             this.style = style;
         }
 
