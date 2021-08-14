@@ -229,7 +229,12 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      */
     @SneakyThrows
     public ReaderConfig<T> getReaderConfig() {
+        if (noHeader) {
+            throw new Error("ERROR: Source file must include header row; 'noHeader=true' found");
+        }
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
+        config.titleAtRow(rowAt);
+        config.dataFromRow(rowAt + 1);
         for (ColumnMapper<T> mapper : this) {
             if (mapper.getTitle() == null) {
                 throw new Exception("Title of field '" + mapper.getFieldName() + "' must be provided.");
@@ -238,9 +243,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
                 config.column(mapper.getTitle(), mapper.getFieldName());
             }
         }
-        config.titleAtRow(0);
-        config.dataFromRow(1);
-        return config.translate(rowAt, colAt);
+        return config;
     }
 
     @SuppressWarnings({"unchecked"})

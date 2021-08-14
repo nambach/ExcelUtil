@@ -171,7 +171,7 @@ public class ReaderConfig<T> {
     public ReaderConfig<T> column(String title, String fieldName, TypeValidator typeValidator) {
         if (title != null && ReflectUtil.getField(fieldName, tClass) != null) {
             if (titleRowIndex < 0) {
-                throw new Exception("Index of title row must be provided via .titleAtRow(int)");
+                throw new Exception("Index of title row must be provided via .titleAtRow(int); 'index=" + titleRowIndex + "' found.");
             }
             Handler<T> handler = new Handler<T>()
                     .atColumn(title)
