@@ -135,7 +135,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         return this;
     }
 
-    private DataTemplate<T> cloneSelf() {
+    public DataTemplate<T> cloneSelf() {
         DataTemplate<T> clone = new DataTemplate<>(tClass);
         clone.addAll(this);
         clone.copyConfig(this);
@@ -217,8 +217,12 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
                 config.column(i++, mapper.getFieldName());
             }
         }
-        config.titleAtRow(0);
-        config.dataFromRow(1);
+        if (noHeader) {
+            config.dataFromRow(0);
+        } else {
+            config.titleAtRow(0);
+            config.dataFromRow(1);
+        }
         return config.translate(rowAt, colAt);
     }
 
@@ -229,7 +233,12 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      */
     @SneakyThrows
     public ReaderConfig<T> getReaderConfig() {
+        if (noHeader) {
+            System.err.println("WARNING: Source file must include header row; 'noHeader=true' found");
+        }
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
+        config.titleAtRow(rowAt);
+        config.dataFromRow(rowAt + 1);
         for (ColumnMapper<T> mapper : this) {
             if (mapper.getTitle() == null) {
                 throw new Exception("Title of field '" + mapper.getFieldName() + "' must be provided.");
@@ -238,9 +247,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
                 config.column(mapper.getTitle(), mapper.getFieldName());
             }
         }
-        config.titleAtRow(0);
-        config.dataFromRow(1);
-        return config.translate(rowAt, colAt);
+        return config;
     }
 
     @SuppressWarnings({"unchecked"})
@@ -335,7 +342,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         @SneakyThrows
         public Builder<T> startAtCell(int rowAt, int colAt) {
             if (rowAt < 0 || colAt < 0) {
-                throw new Exception("Cell coordinate is negative.");
+                throw new Exception("Cell coordinate must be from (0, 0)");
             }
             template.rowAt = rowAt;
             template.colAt = colAt;
