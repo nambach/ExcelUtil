@@ -72,7 +72,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @return a copied template (which is not modified the original)
      */
     public DataTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
-        DataTemplate<T> clone = this.cloneSelf();
+        DataTemplate<T> clone = this.makeCopy();
         this.internalSplit(clone, condition);
         return clone;
     }
@@ -87,7 +87,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         if (other == null || other == this) {
             return this;
         }
-        DataTemplate<T> clone = this.cloneSelf();
+        DataTemplate<T> clone = this.makeCopy();
         this.internalConcat(clone, other);
         return clone;
     }
@@ -135,7 +135,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         return this;
     }
 
-    public DataTemplate<T> cloneSelf() {
+    public DataTemplate<T> makeCopy() {
         DataTemplate<T> clone = new DataTemplate<>(tClass);
         clone.addAll(this);
         clone.copyConfig(this);
@@ -165,7 +165,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      */
     public ByteArrayInputStream getFileForImport() {
         try (Editor editor = new Editor()) {
-            DataTemplate<T> clone = this.cloneSelf();
+            DataTemplate<T> clone = this.makeCopy();
             return editor.goToSheet(0)
                          .goToCell(rowAt, colAt)
                          .writeData(clone, null)
@@ -250,6 +250,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         return config;
     }
 
+    // Flatten Section
     @SuppressWarnings({"unchecked"})
     DataTemplate<FlatData> getFlatTemplate() {
         DataTemplate<FlatData> result = new DataTemplate<>(FlatData.class);
@@ -308,7 +309,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
             ColumnMapper<?> deepField = field.fieldTemplate.getDeepField();
 
             for (Object element : ((Collection) collection)) {
-                FlatData item = seed.cloneSelf();
+                FlatData item = seed.makeCopy();
                 item.add(element);
                 if (deepField != null) {
                     result.addAll(flattenData(item, deepField));

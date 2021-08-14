@@ -29,7 +29,7 @@ class HandlerMap<T> {
         titleMap.get(title).add(handler);
     }
 
-    public HandlerMap<T> cloneSelf() {
+    public HandlerMap<T> makeCopy() {
         HandlerMap<T> clone = new HandlerMap<>();
         clone.indexMap.putAll(this.indexMap);
         clone.titleMap.putAll(this.titleMap);
