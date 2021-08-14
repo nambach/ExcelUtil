@@ -48,7 +48,7 @@ public class CacheStyle {
             return source;
         }
 
-        Style clone = source.cloneSelf();
+        Style clone = source.makeCopy();
         if (extra.fontName != null) {
             clone.fontName = extra.fontName;
         }

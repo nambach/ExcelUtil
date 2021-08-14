@@ -4,23 +4,16 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 @Getter
 @Setter
 class FlatData extends ArrayList<Object> {
-    private final String id;
 
     FlatData() {
-        id = UUID.randomUUID().toString();
     }
 
-    private FlatData(String id) {
-        this.id = id;
-    }
-
-    public FlatData cloneSelf() {
-        FlatData clone = new FlatData(this.id);
+    public FlatData makeCopy() {
+        FlatData clone = new FlatData();
         clone.addAll(this);
         return clone;
     }

@@ -84,7 +84,7 @@ public class ReaderConfig<T> {
         }
 
         // translate handler map
-        copy.handlerMap = handlerMap.cloneSelf();
+        copy.handlerMap = handlerMap.makeCopy();
         copy.handlerMap.shiftIndexMap(colOffset);
 
         // other data
