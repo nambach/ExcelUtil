@@ -1,6 +1,7 @@
 package write;
 
 import io.github.nambach.excelutil.core.DataTemplate;
+import io.github.nambach.excelutil.core.Editor;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.FileUtil;
 import model.Book;
@@ -32,8 +33,11 @@ public class Sample2 {
         Constant.BOOKS.sort(Comparator.comparing((Book book) -> book.getCategory().getId())
                                       .thenComparing(comparing(Book::getSubCategory).reversed())
                                       .thenComparing(Book::getTitle));
-        InputStream stream = BOOK_TEMPLATE.writeData(Constant.BOOKS);
+        try (Editor editor = new Editor().configSheet(cf -> cf.debug(true))) {
+            editor.writeData(BOOK_TEMPLATE, Constant.BOOKS);
+            InputStream stream = editor.exportToFile();
+            FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\books.xlsx", stream, true);
+        }
 
-        FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\books.xlsx", stream, true);
     }
 }

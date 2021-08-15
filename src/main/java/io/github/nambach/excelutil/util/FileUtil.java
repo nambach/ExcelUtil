@@ -20,7 +20,7 @@ public class FileUtil {
                     targetFile.toPath(),
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            System.out.println("Some error happened: " + e.getMessage());
+            System.err.println("Some error happened: " + e.getMessage());
             e.printStackTrace();
         }
 
