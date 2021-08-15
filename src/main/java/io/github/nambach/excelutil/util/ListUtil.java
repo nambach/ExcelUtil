@@ -64,9 +64,9 @@ public class ListUtil {
         return obj;
     }
 
-    public static <K, V> Map<K, List<V>> groupBy(Collection<V> collection, Function<V, K> keyExtractor) {
+    public static <K, V> Map<K, List<V>> groupBy(Iterable<V> collection, Function<V, K> keyExtractor) {
         Map<K, List<V>> result = new HashMap<>();
-        if (isNullOrEmpty(collection)) {
+        if (collection == null) {
             return result;
         }
         for (V v : collection) {
