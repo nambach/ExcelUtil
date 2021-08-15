@@ -29,7 +29,7 @@ public class XSSFStyleHandler extends StyleHandler {
     }
 
     public XSSFCellStyle process(XSSFWorkbook workbook) {
-        System.out.println("New style created");
+//        System.out.println("New style created");
 
         XSSFCellStyle style = workbook.createCellStyle();
 

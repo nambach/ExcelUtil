@@ -68,11 +68,9 @@ class Node<T> {
     }
 
     public int countAllChildren() {
-        int total = 1;
-        if (!children.isEmpty()) {
-            for (Node<T> child : children.values()) {
-                total += child.countAllChildren();
-            }
+        int total = data != null ? 1 : 0;
+        for (Node<T> child : children.values()) {
+            total += child.countAllChildren();
         }
         return total;
     }

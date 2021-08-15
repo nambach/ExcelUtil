@@ -41,7 +41,7 @@ public class Sample1 {
     static final DataTemplate<Book> BOOK_TEMPLATE = DataTemplate
             .fromClass(Book.class)
             .column(c -> c.field("isbn").title("ISBN"))  // customize column title
-            .includeFields("title", "author")
+            .includeFields("title", "author", "firstPublished")
             .column(c -> c.title("Category")
                           .transform(book -> book.getCategory().getName()))  // derive new column
             .column(c -> c.field("rating")

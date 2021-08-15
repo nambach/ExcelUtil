@@ -3,10 +3,8 @@ package io.github.nambach.excelutil.core;
 import io.github.nambach.excelutil.style.CacheStyle;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
-import io.github.nambach.excelutil.util.ReflectUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -16,10 +14,24 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
+
+import static io.github.nambach.excelutil.util.ListUtil.groupBy;
 
 class BaseWriter implements BaseEditor {
+
+    static final Map<Class<?>, BiConsumer<Cell, Object>> writerHandler = new HashMap<Class<?>, BiConsumer<Cell, Object>>() {{
+        put(String.class, (cell, val) -> cell.setCellValue((String) val));
+        put(Long.class, (cell, val) -> cell.setCellValue((long) val));
+        put(Integer.class, (cell, val) -> cell.setCellValue((int) val));
+        put(Double.class, (cell, val) -> cell.setCellValue((double) val));
+        put(Float.class, (cell, val) -> cell.setCellValue((float) val));
+        put(Boolean.class, (cell, val) -> cell.setCellValue((boolean) val));
+        put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
+    }};
 
     static final Style DATE = Style.builder().date(true).build();
     final CacheStyle cachedStyles;
@@ -52,25 +64,13 @@ class BaseWriter implements BaseEditor {
         Style headerStyle = template.getHeaderStyle();
         Style dataStyle = template.getDataStyle();
 
-        // This row to store entity's metadata
-//        if (template.isReuseForImport()) {
-//            Row metadataRow = getRowAt(sheet, rowAt++);
-//            int cellCount = colAt;
-//            for (ColumnMapper<T> mapper : mappers) {
-//                Cell cell = metadataRow.createCell(cellCount++, CellType.STRING);
-//                cell.setCellValue(mapper.getFieldName());
-//            }
-//            // Hide metadata row
-//            metadataRow.setZeroHeight(true);
-//        }
-
         // This is title row
         if (!template.isNoHeader()) {
             Row headerRow = getRowAt(sheet, rowAt++);
             CellStyle defaultHeaderStyle = cachedStyles.accumulate(headerStyle);
             int cellCount = colAt;
             for (ColumnMapper<T> mapper : template) {
-                Cell cell = headerRow.createCell(cellCount++, CellType.STRING);
+                Cell cell = getCellAt(headerRow, cellCount++);
                 cell.setCellValue(mapper.getDisplayName());
                 cell.setCellStyle(defaultHeaderStyle);
             }
@@ -91,65 +91,25 @@ class BaseWriter implements BaseEditor {
             for (ColumnMapper<T> mapper : template) {
                 i++;
 
+                Cell cell = getCellAt(dataRow, i);
                 Object cellValue = mapper.retrieveValue(object);
-
-                Cell cell = null;
-                ReflectUtil.Type type = ReflectUtil.determineType(cellValue);
-                switch (type) {
-                    case STRING:
-                        cell = dataRow.createCell(i, CellType.STRING);
-                        if (cellValue != null) {
-                            cell.setCellValue((String) cellValue);
-                        } else {
-                            cell.setCellValue("");
-                        }
-                        break;
-                    case LONG:
-                        cell = dataRow.createCell(i, CellType.NUMERIC);
-                        cell.setCellValue((Long) cellValue);
-                        break;
-                    case INTEGER:
-                        cell = dataRow.createCell(i, CellType.NUMERIC);
-                        cell.setCellValue((Integer) cellValue);
-                        break;
-                    case DOUBLE:
-                        cell = dataRow.createCell(i, CellType.NUMERIC);
-                        cell.setCellValue((Double) cellValue);
-                        break;
-                    case FLOAT:
-                        cell = dataRow.createCell(i, CellType.NUMERIC);
-                        cell.setCellValue((Float) cellValue);
-                        break;
-                    case BOOLEAN:
-                        cell = dataRow.createCell(i, CellType.BOOLEAN);
-                        cell.setCellValue((Boolean) cellValue);
-                        break;
-                    case DATE:
-                        cell = dataRow.createCell(i);
-                        cell.setCellValue((Date) cellValue);
-                        if (mapper.getStyle() == null) {
-                            mapper.setStyle(DATE);
-                        } else if (!mapper.getStyle().isDate()) {
-                            // only allow direct accumulate style to .setStyle()
-                            Style dateStyle = cachedStyles.unsafeAccumulate(mapper.getStyle(), DATE);
-                            mapper.setStyle(dateStyle);
-                        }
-                        break;
-                    case OBJECT:
-                        cell = dataRow.createCell(i, CellType.STRING);
-                        if (cellValue != null) {
-                            cell.setCellValue(cellValue.toString());
-                        } else {
-                            cell.setCellValue("");
-                        }
-                        break;
+                if (cellValue == null) {
+                    cell.setCellValue("");
+                } else {
+                    BiConsumer<Cell, Object> handler = writerHandler.get(cellValue.getClass());
+                    if (handler != null) {
+                        handler.accept(cell, cellValue);
+                    } else {
+                        cell.setCellValue(cellValue.toString());
+                    }
                 }
 
                 // set cell style
+                Style dateStyle = isDateType(cellValue) ? DATE : null;
                 Style conditionalStyle = mapper.applyConditionalStyle(object);
                 Style columnStyle = mapper.getStyle();
                 Style rowStyle = template.applyConditionalRowStyle(object);
-                CellStyle cellStyle = cachedStyles.accumulate(dataStyle, rowStyle, columnStyle, conditionalStyle);
+                CellStyle cellStyle = cachedStyles.accumulate(dateStyle, dataStyle, rowStyle, columnStyle, conditionalStyle);
                 cell.setCellStyle(cellStyle);
 
                 // do merge
@@ -192,14 +152,23 @@ class BaseWriter implements BaseEditor {
     }
 
     public void writeTemplate(Sheet sheet, Template template) {
-        for (WriterCell writerCell : template) {
-            this.writeCellInfo(sheet, writerCell);
-        }
+        Map<Integer, List<WriterCell>> lines = groupBy(template, WriterCell::getRowAt);
+        lines.forEach((line, cells) -> {
+            Row row = getRowAt(sheet, line);
+            for (WriterCell writerCell : cells) {
+                Cell cell = getCellAt(row, writerCell.getColAt());
+                writeCellInfo(writerCell, cell, sheet);
+            }
+        });
     }
 
-    public void writeCellInfo(Sheet sheet, WriterCell writerCell) {
+    void writeCellInfo(Sheet sheet, WriterCell writerCell) {
         Row row = getRowAt(sheet, writerCell.getRowAt());
         Cell cell = getCellAt(row, writerCell.getColAt());
+        writeCellInfo(writerCell, cell, sheet);
+    }
+
+    public void writeCellInfo(WriterCell writerCell, Cell cell, Sheet sheet) {
 
         // Set core value
         boolean isDate = false;
@@ -216,23 +185,23 @@ class BaseWriter implements BaseEditor {
         CellStyle cellStyle = cachedStyles.accumulate(writerCell.getStyle(), (isDate ? DATE : null));
         cell.setCellStyle(cellStyle);
 
-        int rowAt = writerCell.getRowAt();
-        int colAt = writerCell.getColAt();
         int rowSpan = writerCell.getRowSpan();
         int colSpan = writerCell.getColSpan();
         if (colSpan > 1 || rowSpan > 1) {
+            int rowAt = writerCell.getRowAt();
+            int colAt = writerCell.getColAt();
 
             // Spread style to whole range
-            for (int colOffset = 0; colOffset < colSpan; colOffset++) {
-                for (int rowOffset = 0; rowOffset < rowSpan; rowOffset++) {
-                    if (rowOffset == 0 && colOffset == 0) {
-                        continue;
-                    }
-                    Row currentRow = getRowAt(sheet, rowAt + rowOffset);
-                    Cell currentCell = getCellAt(currentRow, colAt + colOffset);
-                    currentCell.setCellStyle(cellStyle);
-                }
-            }
+//            for (int colOffset = 0; colOffset < colSpan; colOffset++) {
+//                for (int rowOffset = 0; rowOffset < rowSpan; rowOffset++) {
+//                    if (rowOffset == 0 && colOffset == 0) {
+//                        continue;
+//                    }
+//                    Row currentRow = getRowAt(sheet, rowAt + rowOffset);
+//                    Cell currentCell = getCellAt(currentRow, colAt + colOffset);
+//                    currentCell.setCellStyle(cellStyle);
+//                }
+//            }
 
             sheet.addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
                                                        colAt, colAt + colSpan - 1));

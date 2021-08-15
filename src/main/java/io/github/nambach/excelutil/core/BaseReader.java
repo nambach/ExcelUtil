@@ -131,7 +131,7 @@ class BaseReader implements BaseEditor {
     private <T> Object handleField(PropertyDescriptor pd, T object, ReaderCell cell) {
         Method setter = pd.getWriteMethod();
         try {
-            Object cellValue = null;
+            Object cellValue;
             switch (ReflectUtil.checkType(pd.getPropertyType())) {
                 case STRING:
                     cellValue = cell.readString();
@@ -160,7 +160,7 @@ class BaseReader implements BaseEditor {
             setter.invoke(object, cellValue);
             return cellValue;
         } catch (Exception e) {
-            System.out.println("Error while invoking setter: " + e.getMessage());
+            System.err.println("Error while invoking setter: " + e.getMessage());
             e.printStackTrace();
             return null;
         }

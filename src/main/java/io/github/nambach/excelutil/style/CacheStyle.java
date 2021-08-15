@@ -24,6 +24,11 @@ public class CacheStyle {
         this.workbook = workbook;
     }
 
+    public String printTotalStyle() {
+        int total = root.countAllChildren();
+        return String.format("%d %s created.", total, total > 1 ? "styles were" : "style was");
+    }
+
     public boolean containStyle(String id) {
         Node<CellStyle> child = root.getChild(id);
         return child != null && child.getData() != null;
