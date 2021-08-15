@@ -32,9 +32,11 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     private final PointerNavigation navigation = new PointerNavigation();
     private Sheet currentSheet;
     private Style tempStyle;
+    private boolean isDebug;
 
     public Editor() {
         this(null);
+        goToSheet(0);
     }
 
     @SneakyThrows
@@ -100,6 +102,13 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
 
     public String getSheetName() {
         return currentSheet == null ? null : currentSheet.getSheetName();
+    }
+
+    public Editor setSheetName(String sheetName) {
+        if (currentSheet != null) {
+            workbook.setSheetName(workbook.getSheetIndex(currentSheet), sheetName);
+        }
+        return this;
     }
 
     public int getTotalSheets() {
@@ -266,10 +275,11 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
             workbook.write(out);
             ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
             out.close();
-            System.out.println("Excel file was successfully saved.");
+            System.out.println("Excel file was successfully saved\n" +
+                               (isDebug ? writer.cachedStyles.printTotalStyle() : ""));
             return in;
         } catch (Exception e) {
-            System.out.println("There some error writing excel file:");
+            System.err.println("There some error writing excel file:");
             e.printStackTrace();
             return null;
         }
@@ -397,6 +407,11 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
             if (editor.currentSheet != null) {
                 editor.currentSheet.setDisplayGridlines(!b);
             }
+            return this;
+        }
+
+        public Config debug(boolean b) {
+            editor.isDebug = b;
             return this;
         }
     }

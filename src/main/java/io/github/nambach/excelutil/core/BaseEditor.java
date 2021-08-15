@@ -4,6 +4,10 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
+
 interface BaseEditor {
     default Row getRowAt(Sheet sheet, int rowAt) {
         Row row = sheet.getRow(rowAt);
@@ -14,15 +18,17 @@ interface BaseEditor {
     }
 
     default Cell getCellAt(Row row, int colAt) {
-        Cell cell = row.getCell(colAt);
-        if (cell == null) {
-            cell = row.createCell(colAt);
-        }
-        return cell;
+        return row.getCell(colAt, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
     }
 
     default ReaderCell getCellAt(Sheet sheet, PointerNavigation pointer) {
         Cell cell = getCellAt(getRowAt(sheet, pointer.getRow()), pointer.getCol());
         return ReaderCell.wrap(cell);
+    }
+
+    default boolean isDateType(Object value) {
+        return value instanceof Date ||
+               value instanceof LocalDateTime ||
+               value instanceof LocalDate;
     }
 }

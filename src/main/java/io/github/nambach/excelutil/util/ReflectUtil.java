@@ -48,7 +48,7 @@ public class ReflectUtil {
                 map.put(pd.getName(), pd);
             }
         } catch (IntrospectionException e) {
-            System.out.println("Could not initialize property descriptor map.");
+            System.err.println("Could not initialize property descriptor map.");
             e.printStackTrace();
         }
 
@@ -92,7 +92,7 @@ public class ReflectUtil {
         try {
             return func.apply(input);
         } catch (Exception e) {
-            System.out.println("Error when applying function: " + e.getMessage());
+            System.err.println("Error when applying function: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -103,7 +103,7 @@ public class ReflectUtil {
             try {
                 return function.apply(t);
             } catch (Exception e) {
-                System.out.println("Error while applying Function: " + e.getMessage());
+                System.err.println("Error while applying function: " + e.getMessage());
                 e.printStackTrace();
                 return null;
             }
@@ -115,7 +115,7 @@ public class ReflectUtil {
             try {
                 consumer.accept(t, u);
             } catch (Exception e) {
-                System.out.println("Error while applying BiConsumer: " + e.getMessage());
+                System.err.println("Error while applying BiConsumer: " + e.getMessage());
                 e.printStackTrace();
             }
         };
@@ -134,25 +134,6 @@ public class ReflectUtil {
             return Type.FLOAT;
         } else if (Boolean.class.equals(type) || type.getName().equals("boolean")) {
             return Type.BOOLEAN;
-        }
-        return Type.OBJECT;
-    }
-
-    public static ReflectUtil.Type determineType(Object object) {
-        if (object instanceof String) {
-            return Type.STRING;
-        } else if (object instanceof Long) {
-            return Type.LONG;
-        } else if (object instanceof Integer) {
-            return Type.INTEGER;
-        } else if (object instanceof Double) {
-            return Type.DOUBLE;
-        } else if (object instanceof Float) {
-            return Type.FLOAT;
-        } else if (object instanceof Boolean) {
-            return Type.BOOLEAN;
-        } else if (object instanceof Date) {
-            return Type.DATE;
         }
         return Type.OBJECT;
     }
