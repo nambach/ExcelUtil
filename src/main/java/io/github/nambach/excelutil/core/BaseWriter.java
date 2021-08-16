@@ -127,11 +127,11 @@ class BaseWriter implements BaseEditor {
                             // Same value found => increase merge range
                             tracker.increaseRange();
                             if (objectCount == data.size()) {
-                                tracker.handleMerge(sheet, cell);
+                                tracker.handleMerge(cell);
                             }
                         } else {
                             // New value coped => finish last merge range
-                            tracker.handleMerge(sheet, cell);
+                            tracker.handleMerge(cell);
                             tracker.reset(currentValue, rowNum);
                         }
                     }
@@ -157,18 +157,12 @@ class BaseWriter implements BaseEditor {
             Row row = getRowAt(sheet, line);
             for (WriterCell writerCell : cells) {
                 Cell cell = getCellAt(row, writerCell.getColAt());
-                writeCellInfo(writerCell, cell, sheet);
+                writeCellInfo(writerCell, cell);
             }
         });
     }
 
-    void writeCellInfo(Sheet sheet, WriterCell writerCell) {
-        Row row = getRowAt(sheet, writerCell.getRowAt());
-        Cell cell = getCellAt(row, writerCell.getColAt());
-        writeCellInfo(writerCell, cell, sheet);
-    }
-
-    public void writeCellInfo(WriterCell writerCell, Cell cell, Sheet sheet) {
+    public void writeCellInfo(WriterCell writerCell, Cell cell) {
 
         // Set core value
         boolean isDate = false;
@@ -203,8 +197,8 @@ class BaseWriter implements BaseEditor {
 //                }
 //            }
 
-            sheet.addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
-                                                       colAt, colAt + colSpan - 1));
+            cell.getSheet().addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
+                                                                 colAt, colAt + colSpan - 1));
         }
     }
 

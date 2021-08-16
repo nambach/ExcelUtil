@@ -232,12 +232,13 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
 
     @Override
     public Editor writeCell(Function<WriterCell, WriterCell> f) {
-        WriterCell cell = f.apply(new WriterCell(navigation.getCellAddress(), tempStyle));
-        writer.writeCellInfo(currentSheet, cell);
+        WriterCell writerCell = f.apply(new WriterCell(navigation.getCellAddress(), tempStyle));
+        Cell cell = getCellAt(currentSheet, navigation);
+        writer.writeCellInfo(writerCell, cell);
 
         // update pivot
-        navigation.updatePivotRight(cell.getColSpan() - 1);
-        navigation.updatePivotDown(cell.getRowSpan() - 1);
+        navigation.updatePivotRight(writerCell.getColSpan() - 1);
+        navigation.updatePivotDown(writerCell.getRowSpan() - 1);
         return this;
     }
 
@@ -288,35 +289,35 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     // For reading
 
     public String readString() {
-        return getCellAt(currentSheet, navigation).readString();
+        return getReaderCellAt(currentSheet, navigation).readString();
     }
 
     public Date readDate() {
-        return getCellAt(currentSheet, navigation).readDate();
+        return getReaderCellAt(currentSheet, navigation).readDate();
     }
 
     public LocalDateTime readLocalDateTime() {
-        return getCellAt(currentSheet, navigation).readLocalDateTime();
+        return getReaderCellAt(currentSheet, navigation).readLocalDateTime();
     }
 
     public Double readDouble() {
-        return getCellAt(currentSheet, navigation).readDouble();
+        return getReaderCellAt(currentSheet, navigation).readDouble();
     }
 
     public Float readFloat() {
-        return getCellAt(currentSheet, navigation).readFloat();
+        return getReaderCellAt(currentSheet, navigation).readFloat();
     }
 
     public Long readLong() {
-        return getCellAt(currentSheet, navigation).readLong();
+        return getReaderCellAt(currentSheet, navigation).readLong();
     }
 
     public Integer readInt() {
-        return getCellAt(currentSheet, navigation).readInt();
+        return getReaderCellAt(currentSheet, navigation).readInt();
     }
 
     public Boolean readBoolean() {
-        return getCellAt(currentSheet, navigation).readBoolean();
+        return getReaderCellAt(currentSheet, navigation).readBoolean();
     }
 
     public <T> Result<T> readSection(ReaderConfig<T> config) {

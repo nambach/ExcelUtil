@@ -19,10 +19,10 @@ class MergeItem {
         this.toRow = toRow;
     }
 
-    public void handleMerge(Sheet sheet, Cell cell) {
+    public void handleMerge(Cell cell) {
         if (this.needMerge()) {
             cell.getCellStyle().setWrapText(true);
-            sheet.addMergedRegion(new CellRangeAddress(this.fromRow, this.toRow,
+            cell.getSheet().addMergedRegion(new CellRangeAddress(this.fromRow, this.toRow,
                                                        cell.getColumnIndex(), cell.getColumnIndex()));
         }
     }

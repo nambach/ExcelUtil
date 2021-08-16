@@ -21,7 +21,12 @@ interface BaseEditor {
         return row.getCell(colAt, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
     }
 
-    default ReaderCell getCellAt(Sheet sheet, PointerNavigation pointer) {
+    default Cell getCellAt(Sheet sheet, PointerNavigation navigation) {
+        Row row = getRowAt(sheet, navigation.getRow());
+        return getCellAt(row, navigation.getCol());
+    }
+
+    default ReaderCell getReaderCellAt(Sheet sheet, PointerNavigation pointer) {
         Cell cell = getCellAt(getRowAt(sheet, pointer.getRow()), pointer.getCol());
         return ReaderCell.wrap(cell);
     }
