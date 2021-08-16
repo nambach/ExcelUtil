@@ -64,7 +64,7 @@ public class WriterCell {
         return this;
     }
 
-    public WriterCell style(Style style) {
+    public WriterCell replaceStyle(Style style) {
         this.style = style;
         return this;
     }
