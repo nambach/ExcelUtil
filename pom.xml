@@ -77,6 +77,7 @@
             <groupId>com.google.code.tempus-fugit</groupId>
             <artifactId>tempus-fugit</artifactId>
             <version>1.1</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -126,7 +127,6 @@
                         </goals>
                         <configuration>
                             <includeScope>runtime</includeScope>
-<!--                            <excludeScope>test</excludeScope>-->
                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>

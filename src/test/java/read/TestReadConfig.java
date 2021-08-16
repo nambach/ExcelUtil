@@ -24,7 +24,7 @@ public class TestReadConfig {
                             .startAtCell("C3"));
 
     static final DataTemplate<Book> BOOK_TEMPLATE_NO_HEADER = BOOK_TEMPLATE
-            .cloneSelf()
+            .makeCopy()
             .config(cf -> cf.noHeader(true));
 
     static final String fileName = "C:\\Users\\Nam Bach\\Desktop\\test-books.xlsx";
