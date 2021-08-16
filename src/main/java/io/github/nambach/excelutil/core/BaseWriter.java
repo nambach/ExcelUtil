@@ -33,7 +33,7 @@ class BaseWriter implements BaseEditor {
         put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
     }};
 
-    static final Style DATE = Style.builder().date(true).build();
+    static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
     final CacheStyle cachedStyles;
 
     BaseWriter(Workbook workbook) {
@@ -185,20 +185,9 @@ class BaseWriter implements BaseEditor {
             int rowAt = writerCell.getRowAt();
             int colAt = writerCell.getColAt();
 
-            // Spread style to whole range
-//            for (int colOffset = 0; colOffset < colSpan; colOffset++) {
-//                for (int rowOffset = 0; rowOffset < rowSpan; rowOffset++) {
-//                    if (rowOffset == 0 && colOffset == 0) {
-//                        continue;
-//                    }
-//                    Row currentRow = getRowAt(sheet, rowAt + rowOffset);
-//                    Cell currentCell = getCellAt(currentRow, colAt + colOffset);
-//                    currentCell.setCellStyle(cellStyle);
-//                }
-//            }
-
-            cell.getSheet().addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
-                                                                 colAt, colAt + colSpan - 1));
+            cell.getSheet()
+                .addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
+                                                      colAt, colAt + colSpan - 1));
         }
     }
 
