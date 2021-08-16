@@ -6,6 +6,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,71 +43,21 @@ public class CacheStyle {
         root.addChild(id, style);
     }
 
-    public Style unsafeAccumulate(Style source, Style extra) {
-        if (source == extra) {
-            return source;
-        }
-        if (source == null) {
-            return extra;
-        }
-        if (extra == null) {
-            return source;
-        }
-
-        Style clone = source.makeCopy();
-        if (extra.fontName != null) {
-            clone.fontName = extra.fontName;
-        }
-        if (extra.fontSize != null) {
-            clone.fontSize = extra.fontSize;
-        }
-        if (extra.bold != null) {
-            clone.bold = extra.bold;
-        }
-        if (extra.underline != null) {
-            clone.underline = extra.underline;
-        }
-        if (extra.indentation != null) {
-            clone.indentation = extra.indentation;
-        }
-        if (extra.wrapText != null) {
-            clone.wrapText = extra.wrapText;
-        }
-        if (extra.date != null) {
-            clone.date = extra.date;
-        }
-        if (extra.datePattern != null) {
-            clone.datePattern = extra.datePattern;
-        }
-        if (extra.fontColorInHex != null) {
-            clone.fontColorInHex = extra.fontColorInHex;
-        }
-        if (extra.backgroundColorInHex != null) {
-            clone.backgroundColorInHex = extra.backgroundColorInHex;
-        }
-        if (extra.horizontalAlignment != null) {
-            clone.horizontalAlignment = extra.horizontalAlignment;
-        }
-        if (extra.verticalAlignment != null) {
-            clone.verticalAlignment = extra.verticalAlignment;
-        }
-        if (extra.borders != null) {
-            clone.borders = extra.borders;
-        }
-        return clone;
+    public CellStyle accumulate(Style... styles) {
+        return accumulate(Arrays.asList(styles));
     }
 
-    public CellStyle accumulate(Style... styles) {
-        if (styles.length == 0) {
+    public CellStyle accumulate(Collection<Style> styles) {
+        if (styles == null || styles.isEmpty()) {
             return null;
         }
-        if (Arrays.stream(styles).allMatch(Objects::isNull)) {
+        if (styles.stream().allMatch(Objects::isNull)) {
             return null;
         }
 
         // Check cache
-        List<String> idPath = Arrays
-                .stream(styles).filter(Objects::nonNull)
+        List<String> idPath = styles
+                .stream().filter(Objects::nonNull)
                 .map(Style::getUuid)
                 .collect(Collectors.toList());
         Node<CellStyle> node = root.lookup(idPath);
@@ -114,12 +65,17 @@ public class CacheStyle {
             return node.getData();
         }
 
-        // Create style and add to cache
-        Style combinedStyle = Arrays.stream(styles).reduce(null, this::unsafeAccumulate);
+        // Accumulate styles
+        Style combinedStyle = styles.stream()
+                                    .filter(Objects::nonNull)
+                                    .reduce(Style::accumulate)
+                                    .orElse(null);
         if (combinedStyle == null) {
             return null;
         }
-        CellStyle style = combinedStyle.toHandler(this).renderCellStyle(workbook);
+
+        // Create new style; Save to cache
+        CellStyle style = combinedStyle.toHandler(this).renderCellStyle();
         root.updatePath(idPath, style);
         return style;
     }

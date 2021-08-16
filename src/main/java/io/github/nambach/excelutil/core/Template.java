@@ -121,14 +121,14 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
 
     @Override
     public Template applyStyle() {
-        updateCell(navigation.getCellAddress(), c -> c.style(tempStyle));
+        updateCell(navigation.getCellAddress(), c -> c.replaceStyle(tempStyle));
         return this;
     }
 
     @Override
     public Template applyStyle(Style style, String... address) {
         if (address == null || address.length == 0) {
-            updateCell(navigation.getCellAddress(), c -> c.style(style));
+            updateCell(navigation.getCellAddress(), c -> c.replaceStyle(style));
         } else {
             applyStyle(style, Arrays.asList(address));
         }
@@ -137,7 +137,7 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
 
     @Override
     public Template applyStyle(Style style, Collection<String> addresses) {
-        Function<WriterCell, WriterCell> builder = c -> c.style(style);
+        Function<WriterCell, WriterCell> builder = c -> c.replaceStyle(style);
         Collection<CellAddress> cellAddresses = parseAddress(addresses);
         for (CellAddress cellAddress : cellAddresses) {
             updateCell(cellAddress, builder);

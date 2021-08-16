@@ -33,7 +33,7 @@ class BaseWriter implements BaseEditor {
         put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
     }};
 
-    static final Style DATE = Style.builder().date(true).build();
+    static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
     final CacheStyle cachedStyles;
 
     BaseWriter(Workbook workbook) {
@@ -127,11 +127,11 @@ class BaseWriter implements BaseEditor {
                             // Same value found => increase merge range
                             tracker.increaseRange();
                             if (objectCount == data.size()) {
-                                tracker.handleMerge(sheet, cell);
+                                tracker.handleMerge(cell);
                             }
                         } else {
                             // New value coped => finish last merge range
-                            tracker.handleMerge(sheet, cell);
+                            tracker.handleMerge(cell);
                             tracker.reset(currentValue, rowNum);
                         }
                     }
@@ -157,18 +157,12 @@ class BaseWriter implements BaseEditor {
             Row row = getRowAt(sheet, line);
             for (WriterCell writerCell : cells) {
                 Cell cell = getCellAt(row, writerCell.getColAt());
-                writeCellInfo(writerCell, cell, sheet);
+                writeCellInfo(writerCell, cell);
             }
         });
     }
 
-    void writeCellInfo(Sheet sheet, WriterCell writerCell) {
-        Row row = getRowAt(sheet, writerCell.getRowAt());
-        Cell cell = getCellAt(row, writerCell.getColAt());
-        writeCellInfo(writerCell, cell, sheet);
-    }
-
-    public void writeCellInfo(WriterCell writerCell, Cell cell, Sheet sheet) {
+    public void writeCellInfo(WriterCell writerCell, Cell cell) {
 
         // Set core value
         boolean isDate = false;
@@ -191,20 +185,9 @@ class BaseWriter implements BaseEditor {
             int rowAt = writerCell.getRowAt();
             int colAt = writerCell.getColAt();
 
-            // Spread style to whole range
-//            for (int colOffset = 0; colOffset < colSpan; colOffset++) {
-//                for (int rowOffset = 0; rowOffset < rowSpan; rowOffset++) {
-//                    if (rowOffset == 0 && colOffset == 0) {
-//                        continue;
-//                    }
-//                    Row currentRow = getRowAt(sheet, rowAt + rowOffset);
-//                    Cell currentCell = getCellAt(currentRow, colAt + colOffset);
-//                    currentCell.setCellStyle(cellStyle);
-//                }
-//            }
-
-            sheet.addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
-                                                       colAt, colAt + colSpan - 1));
+            cell.getSheet()
+                .addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
+                                                      colAt, colAt + colSpan - 1));
         }
     }
 

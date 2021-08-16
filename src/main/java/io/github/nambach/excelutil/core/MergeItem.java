@@ -3,7 +3,6 @@ package io.github.nambach.excelutil.core;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 
 @Getter
@@ -19,11 +18,12 @@ class MergeItem {
         this.toRow = toRow;
     }
 
-    public void handleMerge(Sheet sheet, Cell cell) {
+    public void handleMerge(Cell cell) {
         if (this.needMerge()) {
             cell.getCellStyle().setWrapText(true);
-            sheet.addMergedRegion(new CellRangeAddress(this.fromRow, this.toRow,
-                                                       cell.getColumnIndex(), cell.getColumnIndex()));
+            cell.getSheet()
+                .addMergedRegion(new CellRangeAddress(this.fromRow, this.toRow,
+                                                      cell.getColumnIndex(), cell.getColumnIndex()));
         }
     }
 

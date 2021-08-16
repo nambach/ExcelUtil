@@ -19,11 +19,6 @@ import java.util.Map;
 @ToString
 public class Raw<T> {
     /**
-     * DTO resulted from the reading process.
-     */
-    private T data;
-
-    /**
      * A map that contains other values found while reading a DTO row.
      * These values might have no mapping rules so that it cannot be
      * mapped into the DTO class.
@@ -32,6 +27,10 @@ public class Raw<T> {
      * Map Value: cell value of DTO row
      */
     private final Map<String, Object> otherData;
+    /**
+     * DTO resulted from the reading process.
+     */
+    private T data;
 
     Raw() {
         otherData = new LinkedHashMap<>();

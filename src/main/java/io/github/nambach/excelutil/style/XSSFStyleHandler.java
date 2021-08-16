@@ -1,144 +1,137 @@
 package io.github.nambach.excelutil.style;
 
-import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.FontUnderline;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.xssf.usermodel.IndexedColorMap;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
+import org.apache.poi.xssf.usermodel.XSSFDataFormat;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Map;
 
-public class XSSFStyleHandler extends StyleHandler {
-    private final Map<String, XSSFColor> colorCache;
-    private final Style s;
+import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
+import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColorInHex;
+import static io.github.nambach.excelutil.style.StyleProperty.Bold;
+import static io.github.nambach.excelutil.style.StyleProperty.DatePattern;
+import static io.github.nambach.excelutil.style.StyleProperty.FontColorInHex;
+import static io.github.nambach.excelutil.style.StyleProperty.FontName;
+import static io.github.nambach.excelutil.style.StyleProperty.FontSize;
+import static io.github.nambach.excelutil.style.StyleProperty.Indentation;
+import static io.github.nambach.excelutil.style.StyleProperty.Underline;
+import static io.github.nambach.excelutil.style.StyleProperty.WrapText;
 
-    public XSSFStyleHandler(Style s, Map<String, XSSFColor> colorCache) {
-        this.s = s;
+public class XSSFStyleHandler implements StyleHandler {
+    private final Map<String, XSSFColor> colorCache;
+    private final XSSFWorkbook workbook;
+    private final Style style;
+
+    public XSSFStyleHandler(Style style, XSSFWorkbook workbook, Map<String, XSSFColor> colorCache) {
+        this.style = style;
+        this.workbook = workbook;
         this.colorCache = colorCache;
     }
 
+
     @Override
-    public CellStyle renderCellStyle(Workbook workbook) {
-        return this.process((XSSFWorkbook) workbook);
+    public void setBorderTop(Border border, CellStyle cellStyle) {
+        cellStyle.setBorderTop(border.getBorderStyle());
+
+        if (cellStyle instanceof XSSFCellStyle) {
+            XSSFColor color = parseColorHex(border.getHexColor(), StyleConstant.BLACK);
+            ((XSSFCellStyle) cellStyle).setTopBorderColor(color);
+        }
     }
 
-    public XSSFCellStyle process(XSSFWorkbook workbook) {
+    @Override
+    public void setBorderBottom(Border border, CellStyle cellStyle) {
+        cellStyle.setBorderBottom(border.getBorderStyle());
+
+        if (cellStyle instanceof XSSFCellStyle) {
+            XSSFColor color = parseColorHex(border.getHexColor(), StyleConstant.BLACK);
+            ((XSSFCellStyle) cellStyle).setBottomBorderColor(color);
+        }
+    }
+
+    @Override
+    public void setBorderLeft(Border border, CellStyle cellStyle) {
+        cellStyle.setBorderLeft(border.getBorderStyle());
+
+        if (cellStyle instanceof XSSFCellStyle) {
+            XSSFColor color = parseColorHex(border.getHexColor(), StyleConstant.BLACK);
+            ((XSSFCellStyle) cellStyle).setLeftBorderColor(color);
+        }
+    }
+
+    @Override
+    public void setBorderRight(Border border, CellStyle cellStyle) {
+        cellStyle.setBorderRight(border.getBorderStyle());
+
+        if (cellStyle instanceof XSSFCellStyle) {
+            XSSFColor color = parseColorHex(border.getHexColor(), StyleConstant.BLACK);
+            ((XSSFCellStyle) cellStyle).setRightBorderColor(color);
+        }
+    }
+
+    @Override
+    public CellStyle renderCellStyle() {
 //        System.out.println("New style created");
 
-        XSSFCellStyle style = workbook.createCellStyle();
+        XSSFCellStyle cellStyle = workbook.createCellStyle();
+        XSSFCreationHelper creationHelper = workbook.getCreationHelper();
+        XSSFDataFormat format = creationHelper.createDataFormat();
 
-        processFont(workbook, style);
+        processFont(cellStyle);
 
-        if (s.indentation != null) {
-            style.setIndention(s.indentation);
-        }
+        style.getProperty(Indentation).getShort().ifPresent(cellStyle::setIndention);
+        style.getProperty(WrapText).getBoolean().ifPresent(cellStyle::setWrapText);
+        style.getProperty(DatePattern).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
 
-        if (s.wrapText == Boolean.TRUE) {
-            style.setWrapText(true);
-        }
+        style.getProperty(BackgroundColorInHex).getString().ifPresent(val -> {
+            cellStyle.setFillForegroundColor(parseColorHex(val, StyleConstant.WHITE));
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        });
 
-        if (s.date == Boolean.TRUE) {
-            String pattern = s.datePattern != null ? s.datePattern : "MMM dd, yyyy";
-            style.setDataFormat(workbook.getCreationHelper().createDataFormat().getFormat(pattern));
-        }
+        style.getProperty(Alignments).getAny(ArrayList.class).ifPresent(list -> {
+            for (Object o : list) {
+                if (o instanceof VerticalAlignment) {
+                    cellStyle.setVerticalAlignment((VerticalAlignment) o);
+                } else if (o instanceof HorizontalAlignment) {
+                    cellStyle.setAlignment((HorizontalAlignment) o);
+                }
+            }
+        });
 
-        if (s.backgroundColorInHex != null) {
-            style.setFillForegroundColor(parseColorHex(workbook, s.backgroundColorInHex, StyleConstant.WHITE));
-            style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        }
+        processBorder(style, cellStyle);
 
-        processBorder(workbook, style);
-
-        if (s.horizontalAlignment != null) {
-            style.setAlignment(s.horizontalAlignment);
-        }
-        if (s.verticalAlignment != null) {
-            style.setVerticalAlignment(s.verticalAlignment);
-        }
-
-        return style;
+        return cellStyle;
     }
 
-    private void processFont(XSSFWorkbook workbook, XSSFCellStyle style) {
+    private void processFont(XSSFCellStyle cellStyle) {
         XSSFFont font = workbook.createFont();
-        if (s.fontName != null) {
-            font.setFontName(s.fontName);
-        }
-        if (s.fontSize != null && s.fontSize != 0) {
-            font.setFontHeightInPoints(s.fontSize);
-        }
-        if (s.bold == Boolean.TRUE) {
-            font.setBold(true);
-        }
-        if (s.underline == Boolean.TRUE) {
-            font.setUnderline(FontUnderline.SINGLE);
-        }
-        if (s.fontColorInHex != null) {
-            font.setColor(parseColorHex(workbook, s.fontColorInHex, StyleConstant.BLACK));
-        }
-        style.setFont(font);
-    }
 
-    private void processBorder(XSSFWorkbook workbook, XSSFCellStyle style) {
-        if (s.borders == null) {
-            return;
-        }
-        for (Border border : s.borders) {
-            if (border.getSide() == null) {
-                return;
-            }
-            XSSFColor color = parseColorHex(workbook, border.getHexColor(), StyleConstant.BLACK);
-            BorderStyle borderStyle = border.getBorderStyle();
-            switch (border.getSide()) {
-                case NONE:
-                    style.setBorderTop(BorderStyle.NONE);
-                    style.setBorderBottom(BorderStyle.NONE);
-                    style.setBorderLeft(BorderStyle.NONE);
-                    style.setBorderRight(BorderStyle.NONE);
-                    return;
-                case LEFT:
-                    style.setBorderLeft(borderStyle);
-                    style.setLeftBorderColor(color);
-                    break;
-                case TOP:
-                    style.setBorderTop(borderStyle);
-                    style.setTopBorderColor(color);
-                    break;
-                case RIGHT:
-                    style.setBorderRight(borderStyle);
-                    style.setRightBorderColor(color);
-                    break;
-                case BOTTOM:
-                    style.setBorderBottom(borderStyle);
-                    style.setBottomBorderColor(color);
-                    break;
-                case FULL:
-                    style.setBorderLeft(borderStyle);
-                    style.setBorderRight(borderStyle);
-                    style.setBorderTop(borderStyle);
-                    style.setBorderBottom(borderStyle);
+        style.getProperty(FontName).getString().ifPresent(font::setFontName);
+        style.getProperty(FontSize).getShort().ifPresent(font::setFontHeightInPoints);
+        style.getProperty(Bold).getBoolean().ifPresent(font::setBold);
+        style.getProperty(Underline).getBoolean().ifPresent(bool -> font.setUnderline(FontUnderline.SINGLE));
+        style.getProperty(FontColorInHex).getString().ifPresent(val -> font
+                .setColor(parseColorHex(val, StyleConstant.BLACK)));
 
-                    style.setLeftBorderColor(color);
-                    style.setRightBorderColor(color);
-                    style.setTopBorderColor(color);
-                    style.setBottomBorderColor(color);
-                    break;
-            }
-        }
-
+        cellStyle.setFont(font);
     }
 
     /**
      * https://stackoverflow.com/a/7471183
      * https://stackoverflow.com/a/23490977
      */
-    private XSSFColor parseColorHex(XSSFWorkbook workbook, String hex, String fallbackHex) {
+    private XSSFColor parseColorHex(String hex, String fallbackHex) {
         String key = hex;
         if (colorCache.containsKey(key)) {
             return colorCache.get(key);

@@ -9,8 +9,8 @@ import java.util.function.Predicate;
 @Getter
 public class Constraint {
     private final String name;
-    private Predicate<?> condition;
     private final String message;
+    private Predicate<?> condition;
 
     public Constraint(String name, Predicate<?> condition, String message) {
         this.name = name;

@@ -15,7 +15,6 @@ public class WriterCell {
     private String content;
     private Double value;
     private Date date;
-    private String datePattern;
     private int rowAt;
     private int colAt;
     private int rowSpan = 1;
@@ -40,13 +39,14 @@ public class WriterCell {
 
     public WriterCell date(Date d) {
         this.date = d;
-        this.datePattern = "MMM dd, yyyy";
         return this;
     }
 
     public WriterCell date(Date d, String datePattern) {
         this.date = d;
-        this.datePattern = datePattern;
+        if (datePattern != null) {
+            this.style(s -> s.datePattern(datePattern));
+        }
         return this;
     }
 
@@ -64,7 +64,7 @@ public class WriterCell {
         return this;
     }
 
-    public WriterCell style(Style style) {
+    public WriterCell replaceStyle(Style style) {
         this.style = style;
         return this;
     }
