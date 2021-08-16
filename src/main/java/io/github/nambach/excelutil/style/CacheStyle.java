@@ -47,29 +47,26 @@ public class CacheStyle {
         return accumulate(Arrays.asList(styles));
     }
 
-    public CellStyle accumulate(Collection<Style> styles) {
-        if (styles == null || styles.isEmpty()) {
+    public CellStyle accumulate(Collection<Style> src) {
+        if (src == null) {
             return null;
         }
-        if (styles.stream().allMatch(Objects::isNull)) {
+
+        List<Style> styles = src.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
+        if (styles.isEmpty()) {
             return null;
         }
 
         // Check cache
-        List<String> idPath = styles
-                .stream().filter(Objects::nonNull)
-                .map(Style::getUuid)
-                .collect(Collectors.toList());
+        List<String> idPath = styles.stream().map(Style::getUuid).collect(Collectors.toList());
         Node<CellStyle> node = root.lookup(idPath);
         if (node != null && node.getData() != null) {
             return node.getData();
         }
 
         // Accumulate styles
-        Style combinedStyle = styles.stream()
-                                    .filter(Objects::nonNull)
-                                    .reduce(Style::accumulate)
-                                    .orElse(null);
+        Style combinedStyle = styles.stream().reduce(Style::accumulate).orElse(null);
         if (combinedStyle == null) {
             return null;
         }
