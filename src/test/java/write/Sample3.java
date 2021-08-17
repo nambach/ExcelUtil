@@ -20,10 +20,15 @@ public class Sample3 {
                                          .horizontalAlignment(HorizontalAlignment.CENTER)
                                          .verticalAlignment(VerticalAlignment.CENTER).build();
     static final Style HEADER = Style.builder(BASED).fontColorInHex("#ffffff").backgroundColorInHex(PRIMARY_COLOR).build();
-    static final Style BORDER = Style.builder(BASED).border(BorderSide.FULL, GRAY).build();
-    static final Style ALIGN_RIGHT = Style
-            .builder(BASED).horizontalAlignment(HorizontalAlignment.RIGHT).build();
-    static final Style BG_BROWN = Style.builder(BASED).border(BorderSide.FULL, GRAY).backgroundColorInHex(BROWN).build();
+    static final Style BORDER = Style.builder(BASED)
+                                     .border(b -> b.side(BorderSide.FULL).hexColor(GRAY))
+                                     .build();
+    static final Style ALIGN_RIGHT = Style.builder(BASED)
+                                          .horizontalAlignment(HorizontalAlignment.RIGHT)
+                                          .build();
+    static final Style BG_BROWN = Style.builder(BASED)
+                                       .border(b -> b.side(BorderSide.FULL).hexColor(GRAY))
+                                       .backgroundColorInHex(BROWN).build();
 
 
     public static void main(String[] args) {

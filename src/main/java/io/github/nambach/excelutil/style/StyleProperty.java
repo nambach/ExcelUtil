@@ -1,13 +1,14 @@
 package io.github.nambach.excelutil.style;
 
-import io.github.nambach.excelutil.util.ReadableValue;
+import io.github.nambach.excelutil.util.Copyable;
+import io.github.nambach.excelutil.util.Readable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.With;
 
 @Getter
 @AllArgsConstructor
-class StyleProperty implements ReadableValue {
+class StyleProperty implements Readable, Copyable<StyleProperty> {
     static final StyleProperty FontName = new StyleProperty("fontName", null);
     static final StyleProperty FontSize = new StyleProperty("fontSize", null);
     static final StyleProperty Bold = new StyleProperty("bold", null);
@@ -15,8 +16,8 @@ class StyleProperty implements ReadableValue {
     static final StyleProperty Indentation = new StyleProperty("indentation", null);
     static final StyleProperty WrapText = new StyleProperty("wrapText", null);
     static final StyleProperty DatePattern = new StyleProperty("datePattern", null);
-    static final StyleProperty FontColorInHex = new StyleProperty("fontColorInHex", null);
-    static final StyleProperty BackgroundColorInHex = new StyleProperty("backgroundColorInHex", null);
+    static final StyleProperty FontColor = new StyleProperty("fontColor", null);
+    static final StyleProperty BackgroundColor = new StyleProperty("backgroundColor", null);
     static final StyleProperty Alignments = new StyleProperty("alignments", null);
     static final StyleProperty Borders = new StyleProperty("borders", null);
 
@@ -24,7 +25,8 @@ class StyleProperty implements ReadableValue {
     @With
     private final Object value;
 
+    @Override
     public StyleProperty makeCopy() {
-        return new StyleProperty(name, this.createCopy());
+        return new StyleProperty(name, this.copyValue());
     }
 }

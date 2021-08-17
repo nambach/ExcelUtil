@@ -8,7 +8,9 @@ import java.util.List;
 import static io.github.nambach.excelutil.style.StyleProperty.Borders;
 
 interface StyleHandler {
-    CellStyle renderCellStyle();
+    CellStyle renderCellStyle(Style style);
+
+    void processFont(Style style, CellStyle cellStyle);
 
     void setBorderTop(Border border, CellStyle cellStyle);
 
