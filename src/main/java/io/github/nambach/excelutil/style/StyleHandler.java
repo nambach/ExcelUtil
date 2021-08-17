@@ -2,26 +2,93 @@ package io.github.nambach.excelutil.style;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.DataFormat;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.FontUnderline;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Workbook;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
+import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
+import static io.github.nambach.excelutil.style.StyleProperty.Bold;
 import static io.github.nambach.excelutil.style.StyleProperty.Borders;
+import static io.github.nambach.excelutil.style.StyleProperty.DatePattern;
+import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
+import static io.github.nambach.excelutil.style.StyleProperty.FontName;
+import static io.github.nambach.excelutil.style.StyleProperty.FontSize;
+import static io.github.nambach.excelutil.style.StyleProperty.Indentation;
+import static io.github.nambach.excelutil.style.StyleProperty.Underline;
+import static io.github.nambach.excelutil.style.StyleProperty.WrapText;
 
-interface StyleHandler {
-    CellStyle renderCellStyle(Style style);
+abstract class StyleHandler {
+    abstract Workbook getWorkbook();
 
-    void processFont(Style style, CellStyle cellStyle);
+    public CellStyle renderCellStyle(Style style) {
+        CellStyle cellStyle = getWorkbook().createCellStyle();
+        CreationHelper creationHelper = getWorkbook().getCreationHelper();
+        DataFormat format = creationHelper.createDataFormat();
 
-    void setBorderTop(Border border, CellStyle cellStyle);
+        Font font = renderFont(style);
+        cellStyle.setFont(font);
 
-    void setBorderBottom(Border border, CellStyle cellStyle);
+        processBorder(style, cellStyle);
 
-    void setBorderLeft(Border border, CellStyle cellStyle);
+        style.getProperty(Indentation).getShort().ifPresent(cellStyle::setIndention);
+        style.getProperty(WrapText).getBoolean().ifPresent(cellStyle::setWrapText);
+        style.getProperty(DatePattern).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
 
-    void setBorderRight(Border border, CellStyle cellStyle);
+        style.getProperty(BackgroundColor).getAny(StyleColor.class).ifPresent(color -> {
+            if (color.isPreset()) {
+                cellStyle.setFillForegroundColor(color.toIndexedColor().index);
+            }
+            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        });
+
+        style.getProperty(Alignments).getAny(ArrayList.class).ifPresent(list -> {
+            for (Object o : list) {
+                if (o instanceof VerticalAlignment) {
+                    cellStyle.setVerticalAlignment((VerticalAlignment) o);
+                } else if (o instanceof HorizontalAlignment) {
+                    cellStyle.setAlignment((HorizontalAlignment) o);
+                }
+            }
+        });
+
+        return cellStyle;
+    }
+
+    protected Font renderFont(Style style) {
+        Font font = getWorkbook().createFont();
+
+        style.getProperty(FontName).getString().ifPresent(font::setFontName);
+        style.getProperty(FontSize).getShort().ifPresent(font::setFontHeightInPoints);
+        style.getProperty(Bold).getBoolean().ifPresent(font::setBold);
+        style.getProperty(Underline).getBoolean().ifPresent(bool -> font.setUnderline(FontUnderline.SINGLE.getByteValue()));
+        style.getProperty(FontColor).getAny(StyleColor.class).ifPresent(color -> {
+            if (color.isPreset()) {
+                font.setColor(color.toIndexedColor().index);
+            }
+        });
+
+        return font;
+    }
+
+    abstract void setBorderTop(Border border, CellStyle cellStyle);
+
+    abstract void setBorderBottom(Border border, CellStyle cellStyle);
+
+    abstract void setBorderLeft(Border border, CellStyle cellStyle);
+
+    abstract void setBorderRight(Border border, CellStyle cellStyle);
 
     @SuppressWarnings({"unchecked"})
-    default void processBorder(Style style, CellStyle cellStyle) {
+    protected void processBorder(Style style, CellStyle cellStyle) {
         List<Border> borders = style.getProperty(Borders).getAny(List.class).orElse(null);
         if (borders == null) {
             return;
@@ -54,6 +121,7 @@ interface StyleHandler {
                     break;
             }
         }
-
     }
+
+    abstract public int countColors();
 }

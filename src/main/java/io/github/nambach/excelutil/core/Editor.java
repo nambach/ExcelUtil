@@ -1,13 +1,19 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.style.HSSFColorCache;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
+import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
@@ -39,11 +45,44 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         goToSheet(0);
     }
 
-    @SneakyThrows
     public Editor(InputStream stream) {
-        XSSFWorkbook workbook = stream == null ? new XSSFWorkbook() : new XSSFWorkbook(stream);
-        this.workbook = workbook;
-        this.writer = new BaseWriter(workbook);
+        this(stream, Mode.DEFAULT);
+    }
+
+    @SneakyThrows
+    public Editor(InputStream stream, Mode mode) {
+        switch (mode) {
+            case XLS:
+                if (stream != null) {
+                    workbook = new HSSFWorkbook(stream);
+                } else {
+                    workbook = new HSSFWorkbook();
+                }
+                break;
+            case XLSX:
+                if (stream != null) {
+                    workbook = new XSSFWorkbook(stream);
+                } else {
+                    workbook = new XSSFWorkbook();
+                }
+                break;
+            case LARGE_XLSX:
+                if (stream != null) {
+                    workbook = new SXSSFWorkbook(new XSSFWorkbook(stream), mode.rowsInMemory);
+                } else {
+                    workbook = new SXSSFWorkbook(mode.rowsInMemory);
+                }
+                break;
+            default:
+                if (stream != null) {
+                    workbook = WorkbookFactory.create(stream);
+                } else {
+                    workbook = new XSSFWorkbook();
+                }
+                break;
+        }
+
+        this.writer = new BaseWriter(workbook, mode);
         this.reader = new BaseReader();
 
         // set active sheet as current
@@ -51,6 +90,10 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
             int index = workbook.getActiveSheetIndex();
             currentSheet = workbook.getSheetAt(index);
         }
+    }
+
+    public static Editor openMode(Mode mode) {
+        return new Editor(null, mode);
     }
 
     @Override
@@ -329,6 +372,30 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         return this;
     }
 
+    public enum Mode {
+        DEFAULT,
+        XLS,
+        XLSX,
+        LARGE_XLSX;
+
+        private int rowsInMemory = 100;
+        @Getter
+        private HSSFColorCache.Policy xlsColorPolicy = HSSFColorCache.Policy.USE_MOST_SIMILAR;
+
+        Mode() {
+        }
+
+        public Mode withRowsInMemory(int n) {
+            this.rowsInMemory = n;
+            return this;
+        }
+
+        public Mode withXlsColorPolicy(HSSFColorCache.Policy policy) {
+            this.xlsColorPolicy = policy;
+            return this;
+        }
+    }
+
     public static class Config {
         private final Editor editor;
 
@@ -374,10 +441,8 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
             if (rowIndexes != null && editor.currentSheet != null) {
                 for (int rowIndex : rowIndexes) {
                     if (rowIndex >= 0) {
-                        if (editor.workbook instanceof XSSFWorkbook) {
-                            Row row = editor.getRowAt(editor.currentSheet, rowIndex);
-                            row.setHeightInPoints(height);
-                        }
+                        Row row = editor.getRowAt(editor.currentSheet, rowIndex);
+                        row.setHeightInPoints(height);
                     }
                 }
             }
@@ -394,9 +459,14 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
             if (rowIndexes != null && editor.currentSheet != null) {
                 for (int rowIndex : rowIndexes) {
                     if (rowIndex >= 0) {
+                        Row row = editor.getRowAt(editor.currentSheet, rowIndex);
                         if (editor.workbook instanceof XSSFWorkbook) {
-                            Row row = editor.getRowAt(editor.currentSheet, rowIndex);
                             row.setHeight((short) -1);
+                        } else if (editor.workbook instanceof HSSFWorkbook) {
+                            CellStyle style = row.getRowStyle();
+                            if (style != null) {
+                                style.setWrapText(true);
+                            }
                         }
                     }
                 }

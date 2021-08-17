@@ -195,12 +195,12 @@ public class Style implements Copyable<Style> {
         }
 
         public StyleBuilder border(BorderSide borderSide) {
-            addBorderSafely(new Border(borderSide));
+            addBorderSafely(new Border().side(borderSide));
             return this;
         }
 
         public StyleBuilder border(Function<Border, Border> borderBuilder) {
-            Border border = borderBuilder.apply(new Border(BorderSide.NONE));
+            Border border = borderBuilder.apply(new Border());
             addBorderSafely(border);
             return this;
         }

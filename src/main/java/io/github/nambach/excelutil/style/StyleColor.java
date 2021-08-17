@@ -9,7 +9,7 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
-class StyleColor extends Color implements Copyable<StyleColor> {
+class StyleColor extends Color implements Copyable<StyleColor>, Comparable<StyleColor> {
 
     private static final Map<Integer, HSSFColor.HSSFColorPredefined> PredefinedMap = new HashMap<Integer, HSSFColor.HSSFColorPredefined>() {{
         for (HSSFColor.HSSFColorPredefined value : HSSFColor.HSSFColorPredefined.values()) {
@@ -62,14 +62,27 @@ class StyleColor extends Color implements Copyable<StyleColor> {
         return new StyleColor(this.getRGB(), hssfColor);
     }
 
-    public IndexedColors toIndexedColor() {
+    IndexedColors toIndexedColor() {
         if (hssfColor != null) {
             return IndexedColors.fromInt(hssfColor.getIndex());
         }
         return null;
     }
 
-    public boolean isPredefined() {
+    public boolean isPreset() {
         return hssfColor != null;
+    }
+
+    public boolean isCustom() {
+        return hssfColor == null;
+    }
+
+    @Override
+    public int compareTo(StyleColor o) {
+        return this.getRGB() - o.getRGB();
+    }
+
+    public short[] getTriplet() {
+        return new short[]{(short) getRed(), (short) getGreen(), (short) getBlue()};
     }
 }

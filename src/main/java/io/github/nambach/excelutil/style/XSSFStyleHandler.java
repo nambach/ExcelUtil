@@ -1,32 +1,19 @@
 package io.github.nambach.excelutil.style;
 
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.FontUnderline;
-import org.apache.poi.ss.usermodel.HorizontalAlignment;
-import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFCreationHelper;
-import org.apache.poi.xssf.usermodel.XSSFDataFormat;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.util.ArrayList;
-
-import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
 import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
-import static io.github.nambach.excelutil.style.StyleProperty.Bold;
-import static io.github.nambach.excelutil.style.StyleProperty.DatePattern;
 import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
-import static io.github.nambach.excelutil.style.StyleProperty.FontName;
-import static io.github.nambach.excelutil.style.StyleProperty.FontSize;
-import static io.github.nambach.excelutil.style.StyleProperty.Indentation;
-import static io.github.nambach.excelutil.style.StyleProperty.Underline;
-import static io.github.nambach.excelutil.style.StyleProperty.WrapText;
 
-public class XSSFStyleHandler implements StyleHandler {
-    private final XSSFColorCache colorCache; // key as RGB value
+public class XSSFStyleHandler extends StyleHandler {
+
     private final XSSFWorkbook workbook;
+    private final XSSFColorCache colorCache;
 
     public XSSFStyleHandler(XSSFWorkbook workbook, XSSFColorCache colorCache) {
         this.workbook = workbook;
@@ -34,11 +21,46 @@ public class XSSFStyleHandler implements StyleHandler {
     }
 
     @Override
+    Workbook getWorkbook() {
+        return workbook;
+    }
+
+    @Override
+    public CellStyle renderCellStyle(Style style) {
+        if (style == null) {
+            return null;
+        }
+
+        XSSFCellStyle cellStyle = (XSSFCellStyle) super.renderCellStyle(style);
+
+        style.getProperty(BackgroundColor).getAny(StyleColor.class).ifPresent(color -> {
+            if (color.isCustom()) {
+                cellStyle.setFillForegroundColor(colorCache.getColor(color));
+            }
+        });
+
+        return cellStyle;
+    }
+
+    @Override
+    protected Font renderFont(Style style) {
+        XSSFFont font = (XSSFFont) super.renderFont(style);
+
+        style.getProperty(FontColor).getAny(StyleColor.class).ifPresent(color -> {
+            if (color.isCustom()) {
+                font.setColor(colorCache.getColor(color));
+            }
+        });
+
+        return font;
+    }
+
+    @Override
     public void setBorderTop(Border border, CellStyle cellStyle) {
         cellStyle.setBorderTop(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setTopBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setTopBorderColor(colorCache.getColor(color));
@@ -50,7 +72,7 @@ public class XSSFStyleHandler implements StyleHandler {
         cellStyle.setBorderBottom(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setBottomBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setBottomBorderColor(colorCache.getColor(color));
@@ -62,7 +84,7 @@ public class XSSFStyleHandler implements StyleHandler {
         cellStyle.setBorderLeft(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setLeftBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setLeftBorderColor(colorCache.getColor(color));
@@ -74,71 +96,11 @@ public class XSSFStyleHandler implements StyleHandler {
         cellStyle.setBorderRight(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setRightBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setRightBorderColor(colorCache.getColor(color));
         }
-    }
-
-    @Override
-    public CellStyle renderCellStyle(Style style) {
-        if (style == null) {
-            return null;
-        }
-//        System.out.println("New style created");
-
-        XSSFCellStyle cellStyle = workbook.createCellStyle();
-        XSSFCreationHelper creationHelper = workbook.getCreationHelper();
-        XSSFDataFormat format = creationHelper.createDataFormat();
-
-        processFont(style, cellStyle);
-
-        style.getProperty(Indentation).getShort().ifPresent(cellStyle::setIndention);
-        style.getProperty(WrapText).getBoolean().ifPresent(cellStyle::setWrapText);
-        style.getProperty(DatePattern).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
-
-        style.getProperty(BackgroundColor).getAny(StyleColor.class).ifPresent(color -> {
-            if (color.isPredefined()) {
-                cellStyle.setFillForegroundColor(color.toIndexedColor().index);
-            } else {
-                cellStyle.setFillForegroundColor(colorCache.getColor(color));
-            }
-            cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        });
-
-        style.getProperty(Alignments).getAny(ArrayList.class).ifPresent(list -> {
-            for (Object o : list) {
-                if (o instanceof VerticalAlignment) {
-                    cellStyle.setVerticalAlignment((VerticalAlignment) o);
-                } else if (o instanceof HorizontalAlignment) {
-                    cellStyle.setAlignment((HorizontalAlignment) o);
-                }
-            }
-        });
-
-        processBorder(style, cellStyle);
-
-        return cellStyle;
-    }
-
-    @Override
-    public void processFont(Style style, CellStyle cellStyle) {
-        XSSFFont font = workbook.createFont();
-
-        style.getProperty(FontName).getString().ifPresent(font::setFontName);
-        style.getProperty(FontSize).getShort().ifPresent(font::setFontHeightInPoints);
-        style.getProperty(Bold).getBoolean().ifPresent(font::setBold);
-        style.getProperty(Underline).getBoolean().ifPresent(bool -> font.setUnderline(FontUnderline.SINGLE));
-        style.getProperty(FontColor).getAny(StyleColor.class).ifPresent(color -> {
-            if (color.isPredefined()) {
-                font.setColor(color.toIndexedColor().index);
-            } else {
-                font.setColor(colorCache.getColor(color));
-            }
-        });
-
-        cellStyle.setFont(font);
     }
 
     public int countColors() {
