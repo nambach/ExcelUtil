@@ -42,7 +42,6 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
 
     public Editor() {
         this(null);
-        goToSheet(0);
     }
 
     public Editor(InputStream stream) {
@@ -89,6 +88,11 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         if (stream != null && workbook.getNumberOfSheets() != 0) {
             int index = workbook.getActiveSheetIndex();
             currentSheet = workbook.getSheetAt(index);
+        }
+
+        // set default sheet
+        if (stream == null) {
+            goToSheet(0);
         }
     }
 
