@@ -1,15 +1,14 @@
 package io.github.nambach.excelutil.style;
 
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -18,29 +17,28 @@ public class CacheStyle {
     private final Node<CellStyle> root = new Node<>("root", null);
     private final Workbook workbook;
 
-    // For XSSF format
-    private final Map<String, XSSFColor> colorCache = new HashMap<>();
+    private final StyleHandler handler;
 
+    @SneakyThrows
     public CacheStyle(Workbook workbook) {
         this.workbook = workbook;
+        if (workbook instanceof XSSFWorkbook) {
+            XSSFWorkbook wb = (XSSFWorkbook) workbook;
+            handler = new XSSFStyleHandler(wb, new XSSFColorCache(wb));
+        } else {
+            throw new Exception("Unsupported workbook type");
+        }
     }
 
     public String printTotalStyle() {
         int total = root.countAllChildren();
-        return String.format("%d %s created.", total, total > 1 ? "styles were" : "style was");
-    }
-
-    public boolean containStyle(String id) {
-        Node<CellStyle> child = root.getChild(id);
-        return child != null && child.getData() != null;
-    }
-
-    public CellStyle get(String id) {
-        return root.getChild(id).getData();
-    }
-
-    public void put(String id, CellStyle style) {
-        root.addChild(id, style);
+        String report = String.format("%d %s created.", total, total > 1 ? "styles were" : "style was");
+        if (handler instanceof XSSFStyleHandler) {
+            int totalColors = ((XSSFStyleHandler) handler).countColors();
+            String colorReport = String.format("%d %s created.", totalColors, totalColors > 1 ? "colors were" : "color was");
+            report += "\n" + colorReport;
+        }
+        return report;
     }
 
     public CellStyle accumulate(Style... styles) {
@@ -67,12 +65,11 @@ public class CacheStyle {
 
         // Accumulate styles
         Style combinedStyle = styles.stream().reduce(Style::accumulate).orElse(null);
-        if (combinedStyle == null) {
-            return null;
-        }
 
-        // Create new style; Save to cache
-        CellStyle style = combinedStyle.toHandler(this).renderCellStyle();
+        // Render new style
+        CellStyle style = handler.renderCellStyle(combinedStyle);
+
+        // Save to cache
         root.updatePath(idPath, style);
         return style;
     }

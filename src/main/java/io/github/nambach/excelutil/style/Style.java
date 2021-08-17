@@ -1,32 +1,32 @@
 package io.github.nambach.excelutil.style;
 
-import io.github.nambach.excelutil.util.ReadableValue;
+import io.github.nambach.excelutil.util.Copyable;
+import io.github.nambach.excelutil.util.CopyableList;
+import io.github.nambach.excelutil.util.Readable;
 import lombok.AccessLevel;
 import lombok.Getter;
-import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
-import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColorInHex;
+import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
 import static io.github.nambach.excelutil.style.StyleProperty.Bold;
 import static io.github.nambach.excelutil.style.StyleProperty.Borders;
 import static io.github.nambach.excelutil.style.StyleProperty.DatePattern;
-import static io.github.nambach.excelutil.style.StyleProperty.FontColorInHex;
+import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
 import static io.github.nambach.excelutil.style.StyleProperty.FontName;
 import static io.github.nambach.excelutil.style.StyleProperty.FontSize;
 import static io.github.nambach.excelutil.style.StyleProperty.Indentation;
 import static io.github.nambach.excelutil.style.StyleProperty.Underline;
 import static io.github.nambach.excelutil.style.StyleProperty.WrapText;
 
-public class Style {
+public class Style implements Copyable<Style> {
 
     @Getter(AccessLevel.PUBLIC)
     private final String uuid;
@@ -72,21 +72,14 @@ public class Style {
     }
 
     boolean hasNoProperty() {
-        return styleMap.isEmpty() || styleMap.values().stream().allMatch(ReadableValue::isNullOrEmpty);
-    }
-
-    public StyleHandler toHandler(CacheStyle cache) {
-        Workbook workbook = cache.getWorkbook();
-        if (workbook instanceof XSSFWorkbook) {
-            return new XSSFStyleHandler(this, (XSSFWorkbook) workbook, cache.getColorCache());
-        }
-        return null;
+        return styleMap.isEmpty() || styleMap.values().stream().allMatch(Readable::isNullOrEmpty);
     }
 
     /**
      * @return a shallow copied of this style
      */
-    Style makeCopy() {
+    @Override
+    public Style makeCopy() {
         Style copy = newRandomStyle();
         this.styleMap.forEach((name, property) -> {
             copy.styleMap.put(name, property.makeCopy());
@@ -101,7 +94,7 @@ public class Style {
 
         Style accumulated = this.makeCopy();
         other.styleMap.values().stream()
-                      .filter(ReadableValue::hasValue)
+                      .filter(Readable::hasValue)
                       .forEach(accumulated::put);
         return accumulated;
     }
@@ -148,36 +141,56 @@ public class Style {
             return this;
         }
 
-        public StyleBuilder fontColorInHex(String s) {
-            style.put(FontColorInHex.withValue(s));
+        public StyleBuilder fontColor(IndexedColors color) {
+            style.put(FontColor.withValue(StyleColor.fromPredefined(color)));
             return this;
         }
 
-        public StyleBuilder backgroundColorInHex(String s) {
-            style.put(BackgroundColorInHex.withValue(s));
+        public StyleBuilder fontColorInHex(String hex) {
+            style.put(FontColor.withValue(StyleColor.fromHex(hex)));
+            return this;
+        }
+
+        public StyleBuilder fontColorInRGB(int r, int g, int b) {
+            style.put(FontColor.withValue(StyleColor.fromRGB(r, g, b)));
+            return this;
+        }
+
+        public StyleBuilder backgroundColor(IndexedColors color) {
+            style.put(BackgroundColor.withValue(StyleColor.fromPredefined(color)));
+            return this;
+        }
+
+        public StyleBuilder backgroundColorInHex(String hex) {
+            style.put(BackgroundColor.withValue(StyleColor.fromHex(hex)));
+            return this;
+        }
+
+        public StyleBuilder backgroundColorInRGB(int r, int g, int b) {
+            style.put(BackgroundColor.withValue(StyleColor.fromRGB(r, g, b)));
             return this;
         }
 
         @SuppressWarnings({"unchecked"})
         public StyleBuilder horizontalAlignment(HorizontalAlignment alignment) {
-            style.getOrDefault(Alignments.withValue(new ArrayList<>()))
-                 .getAny(ArrayList.class)
+            style.getOrDefault(Alignments.withValue(new CopyableList<>()))
+                 .getAny(CopyableList.class)
                  .ifPresent(l -> l.add(alignment));
             return this;
         }
 
         @SuppressWarnings({"unchecked"})
         public StyleBuilder verticalAlignment(VerticalAlignment alignment) {
-            style.getOrDefault(Alignments.withValue(new ArrayList<>()))
-                 .getAny(ArrayList.class)
+            style.getOrDefault(Alignments.withValue(new CopyableList<>()))
+                 .getAny(CopyableList.class)
                  .ifPresent(l -> l.add(alignment));
             return this;
         }
 
         @SuppressWarnings({"unchecked"})
         private void addBorderSafely(Border border) {
-            style.getOrDefault(Borders.withValue(new ArrayList<>()))
-                 .getAny(ArrayList.class)
+            style.getOrDefault(Borders.withValue(new CopyableList<>()))
+                 .getAny(CopyableList.class)
                  .ifPresent(l -> l.add(border));
         }
 
@@ -186,13 +199,9 @@ public class Style {
             return this;
         }
 
-        public StyleBuilder border(BorderSide borderSide, String borderColor) {
-            addBorderSafely(new Border(borderSide, borderColor));
-            return this;
-        }
-
-        public StyleBuilder border(BorderSide borderSide, String borderColor, BorderStyle borderStyle) {
-            addBorderSafely(new Border(borderSide, borderColor, borderStyle));
+        public StyleBuilder border(Function<Border, Border> borderBuilder) {
+            Border border = borderBuilder.apply(new Border(BorderSide.NONE));
+            addBorderSafely(border);
             return this;
         }
 

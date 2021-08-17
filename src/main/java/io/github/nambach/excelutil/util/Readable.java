@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public interface ReadableValue {
+public interface Readable {
     Object getValue();
 
     default Optional<String> getString() {
@@ -115,8 +115,12 @@ public interface ReadableValue {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    default Object createCopy() {
+    default Object copyValue() {
         Object value = getValue();
+
+        if (value instanceof Copyable) {
+            return ((Copyable<?>) value).makeCopy();
+        }
 
         if (value instanceof Iterable) {
             ArrayList list = new ArrayList<>();

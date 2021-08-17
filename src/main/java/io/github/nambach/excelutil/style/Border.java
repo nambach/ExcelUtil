@@ -3,30 +3,44 @@ package io.github.nambach.excelutil.style;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
 
 @Getter
 @Setter
 public class Border {
 
     private BorderSide side;
-    private String hexColor;
+    private StyleColor color;
     private BorderStyle borderStyle;
 
     public Border(BorderSide side) {
         this.side = side;
-        this.hexColor = StyleConstant.BLACK;
+        this.color = StyleConstant.BLACK;
         this.borderStyle = BorderStyle.THIN;
     }
 
-    public Border(BorderSide side, String hexColor) {
+    public Border side(BorderSide side) {
         this.side = side;
-        this.hexColor = hexColor;
-        this.borderStyle = BorderStyle.THIN;
+        return this;
     }
 
-    public Border(BorderSide side, String hexColor, BorderStyle borderStyle) {
-        this.side = side;
-        this.hexColor = hexColor;
+    public Border hexColor(String hex) {
+        this.color = StyleColor.fromHex(hex);
+        return this;
+    }
+
+    public Border rgbColor(int r, int g, int b) {
+        this.color = StyleColor.fromRGB(r, g, b);
+        return this;
+    }
+
+    public Border color(IndexedColors predefinedColor) {
+        this.color = StyleColor.fromPredefined(predefinedColor);
+        return this;
+    }
+
+    public Border style(BorderStyle borderStyle) {
         this.borderStyle = borderStyle;
+        return this;
     }
 }
