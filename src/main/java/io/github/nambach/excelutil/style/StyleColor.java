@@ -72,4 +72,8 @@ class StyleColor extends Color implements Copyable<StyleColor> {
     public boolean isPredefined() {
         return hssfColor != null;
     }
+
+    public boolean isCustom() {
+        return hssfColor == null;
+    }
 }
