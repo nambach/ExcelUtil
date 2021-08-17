@@ -1,11 +1,11 @@
 package io.github.nambach.excelutil.style;
 
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFFont;
 
 import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
 import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
@@ -42,7 +42,7 @@ public class HSSFStyleHandler extends StyleHandler {
 
     @Override
     protected Font renderFont(Style style) {
-        XSSFFont font = (XSSFFont) super.renderFont(style);
+        HSSFFont font = (HSSFFont) super.renderFont(style);
 
         style.getProperty(FontColor).getAny(StyleColor.class).ifPresent(color -> {
             font.setColor(colorCache.getIndex(color));

@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.style;
 
+import io.github.nambach.excelutil.core.Editor;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -24,7 +25,7 @@ public class CacheStyle {
     private final StyleHandler handler;
 
     @SneakyThrows
-    public CacheStyle(Workbook workbook) {
+    public CacheStyle(Workbook workbook, Editor.Mode mode) {
         this.workbook = workbook;
 
         if (workbook instanceof XSSFWorkbook) {
@@ -33,7 +34,7 @@ public class CacheStyle {
 
         } else if (workbook instanceof HSSFWorkbook) {
             HSSFWorkbook wb = (HSSFWorkbook) workbook;
-            handler = new HSSFStyleHandler(wb, new HSSFColorCache(wb, USE_MOST_SIMILAR));
+            handler = new HSSFStyleHandler(wb, new HSSFColorCache(wb, mode.getXlsColorPolicy()));
 
         } else if (workbook instanceof SXSSFWorkbook) {
             SXSSFWorkbook wb = (SXSSFWorkbook) workbook;

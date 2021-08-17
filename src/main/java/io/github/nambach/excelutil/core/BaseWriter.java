@@ -36,8 +36,8 @@ class BaseWriter implements BaseEditor {
     static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
     final CacheStyle cachedStyles;
 
-    BaseWriter(Workbook workbook) {
-        cachedStyles = new CacheStyle(workbook);
+    BaseWriter(Workbook workbook, Editor.Mode mode) {
+        cachedStyles = new CacheStyle(workbook, mode);
     }
 
     public <T> void writeData(Sheet sheet, DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {

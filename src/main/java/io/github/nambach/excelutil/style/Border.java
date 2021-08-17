@@ -9,14 +9,11 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 @Setter
 public class Border {
 
-    private BorderSide side;
-    private StyleColor color;
-    private BorderStyle borderStyle;
+    private BorderSide side = BorderSide.NONE;
+    private StyleColor color = StyleColor.fromPredefined(IndexedColors.BLACK);
+    private BorderStyle borderStyle = BorderStyle.THIN;
 
-    public Border(BorderSide side) {
-        this.side = side;
-        this.color = StyleConstant.BLACK;
-        this.borderStyle = BorderStyle.THIN;
+    public Border() {
     }
 
     public Border side(BorderSide side) {

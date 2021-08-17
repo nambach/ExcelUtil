@@ -32,7 +32,7 @@ public class Sample3 {
 
 
     public static void main(String[] args) {
-        Editor editor = new Editor();
+        Editor editor = Editor.openMode(Editor.Mode.XLS);
 
         int[] colIndexes = new int[]{0, 1, 2, 3};
         editor.goToSheet(0)
@@ -97,7 +97,7 @@ public class Sample3 {
               .applyStyle(BORDER, "A21:D30");
 
         InputStream stream = editor.exportToFile();
-        FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\invoice.xlsx", stream, true);
+        FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\invoice.xls", stream, true);
         editor.close();
     }
 }
