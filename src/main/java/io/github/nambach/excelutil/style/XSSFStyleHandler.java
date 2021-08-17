@@ -1,8 +1,8 @@
 package io.github.nambach.excelutil.style;
 
-import lombok.Getter;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -11,14 +11,18 @@ import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
 import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
 
 public class XSSFStyleHandler extends StyleHandler {
-    private final XSSFColorCache colorCache;
 
-    @Getter
     private final XSSFWorkbook workbook;
+    private final XSSFColorCache colorCache;
 
     public XSSFStyleHandler(XSSFWorkbook workbook, XSSFColorCache colorCache) {
         this.workbook = workbook;
         this.colorCache = colorCache;
+    }
+
+    @Override
+    Workbook getWorkbook() {
+        return workbook;
     }
 
     @Override
@@ -56,7 +60,7 @@ public class XSSFStyleHandler extends StyleHandler {
         cellStyle.setBorderTop(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setTopBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setTopBorderColor(colorCache.getColor(color));
@@ -68,7 +72,7 @@ public class XSSFStyleHandler extends StyleHandler {
         cellStyle.setBorderBottom(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setBottomBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setBottomBorderColor(colorCache.getColor(color));
@@ -80,7 +84,7 @@ public class XSSFStyleHandler extends StyleHandler {
         cellStyle.setBorderLeft(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setLeftBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setLeftBorderColor(colorCache.getColor(color));
@@ -92,7 +96,7 @@ public class XSSFStyleHandler extends StyleHandler {
         cellStyle.setBorderRight(border.getBorderStyle());
 
         StyleColor color = border.getColor();
-        if (color.isPredefined()) {
+        if (color.isPreset()) {
             cellStyle.setRightBorderColor(color.toIndexedColor().index);
         } else {
             ((XSSFCellStyle) cellStyle).setRightBorderColor(colorCache.getColor(color));

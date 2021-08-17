@@ -3,11 +3,14 @@ package io.github.nambach.excelutil.core;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
 import lombok.SneakyThrows;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
@@ -39,10 +42,43 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         goToSheet(0);
     }
 
-    @SneakyThrows
     public Editor(InputStream stream) {
-        XSSFWorkbook workbook = stream == null ? new XSSFWorkbook() : new XSSFWorkbook(stream);
-        this.workbook = workbook;
+        this(stream, Mode.DEFAULT);
+    }
+
+    @SneakyThrows
+    public Editor(InputStream stream, Mode mode) {
+        switch (mode) {
+            case XLS:
+                if (stream != null) {
+                    workbook = new HSSFWorkbook(stream);
+                } else {
+                    workbook = new HSSFWorkbook();
+                }
+                break;
+            case XLSX:
+                if (stream != null) {
+                    workbook = new XSSFWorkbook(stream);
+                } else {
+                    workbook = new XSSFWorkbook();
+                }
+                break;
+            case LARGE_XLSX:
+                if (stream != null) {
+                    workbook = new SXSSFWorkbook(new XSSFWorkbook(stream), mode.rowsInMemory);
+                } else {
+                    workbook = new SXSSFWorkbook(mode.rowsInMemory);
+                }
+                break;
+            default:
+                if (stream != null) {
+                    workbook = WorkbookFactory.create(stream);
+                } else {
+                    workbook = new XSSFWorkbook();
+                }
+                break;
+        }
+
         this.writer = new BaseWriter(workbook);
         this.reader = new BaseReader();
 
@@ -327,6 +363,23 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     public Editor configSheet(Function<Config, Config> f) {
         f.apply(new Config(this));
         return this;
+    }
+
+    public enum Mode {
+        DEFAULT,
+        XLS,
+        XLSX,
+        LARGE_XLSX;
+
+        private int rowsInMemory = 100;
+
+        Mode() {
+        }
+
+        public Mode withRowsInMemory(int n) {
+            this.rowsInMemory = n;
+            return this;
+        }
     }
 
     public static class Config {

@@ -44,7 +44,7 @@ abstract class StyleHandler {
         style.getProperty(DatePattern).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
 
         style.getProperty(BackgroundColor).getAny(StyleColor.class).ifPresent(color -> {
-            if (color.isPredefined()) {
+            if (color.isPreset()) {
                 cellStyle.setFillForegroundColor(color.toIndexedColor().index);
             }
             cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -71,7 +71,7 @@ abstract class StyleHandler {
         style.getProperty(Bold).getBoolean().ifPresent(font::setBold);
         style.getProperty(Underline).getBoolean().ifPresent(bool -> font.setUnderline(FontUnderline.SINGLE.getByteValue()));
         style.getProperty(FontColor).getAny(StyleColor.class).ifPresent(color -> {
-            if (color.isPredefined()) {
+            if (color.isPreset()) {
                 font.setColor(color.toIndexedColor().index);
             }
         });

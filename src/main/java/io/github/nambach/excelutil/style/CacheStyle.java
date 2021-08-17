@@ -2,8 +2,10 @@ package io.github.nambach.excelutil.style;
 
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.util.Arrays;
@@ -11,6 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static io.github.nambach.excelutil.style.HSSFColorCache.Policy.USE_MOST_SIMILAR;
 
 @Getter
 public class CacheStyle {
@@ -22,9 +26,19 @@ public class CacheStyle {
     @SneakyThrows
     public CacheStyle(Workbook workbook) {
         this.workbook = workbook;
+
         if (workbook instanceof XSSFWorkbook) {
             XSSFWorkbook wb = (XSSFWorkbook) workbook;
             handler = new XSSFStyleHandler(wb, new XSSFColorCache(wb));
+
+        } else if (workbook instanceof HSSFWorkbook) {
+            HSSFWorkbook wb = (HSSFWorkbook) workbook;
+            handler = new HSSFStyleHandler(wb, new HSSFColorCache(wb, USE_MOST_SIMILAR));
+
+        } else if (workbook instanceof SXSSFWorkbook) {
+            SXSSFWorkbook wb = (SXSSFWorkbook) workbook;
+            handler = new XSSFStyleHandler(wb.getXSSFWorkbook(), new XSSFColorCache(wb.getXSSFWorkbook()));
+
         } else {
             throw new Exception("Unsupported workbook type");
         }
@@ -33,11 +47,11 @@ public class CacheStyle {
     public String printTotalStyle() {
         int total = root.countAllChildren();
         String report = String.format("%d %s created.", total, total > 1 ? "styles were" : "style was");
-        if (handler instanceof XSSFStyleHandler) {
-            int totalColors = ((XSSFStyleHandler) handler).countColors();
-            String colorReport = String.format("%d %s created.", totalColors, totalColors > 1 ? "colors were" : "color was");
-            report += "\n" + colorReport;
-        }
+
+        int totalColors = handler.countColors();
+        String colorReport = String.format("%d %s created.", totalColors, totalColors > 1 ? "colors were" : "color was");
+        report += "\n" + colorReport;
+
         return report;
     }
 
