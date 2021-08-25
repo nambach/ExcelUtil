@@ -1,28 +1,18 @@
 # Data Excel Exporter
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.1)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.3.0)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
 
 A Java wrapper using [Apache POI](http://poi.apache.org/components/spreadsheet/quick-guide.html) to read and write Excel file in declarative fashion.
 
 ## Installation
 
+ExcelUtil is using Apache POI version 5.0.0
+
 ```xml
 <dependency>
     <groupId>io.github.nambach</groupId>
     <artifactId>ExcelUtil</artifactId>
-    <version>2.1</version>
-</dependency>
-
-<!-- Apache POI dependencies -->
-<dependency>
-    <groupId>org.apache.poi</groupId>
-    <artifactId>poi</artifactId>
-    <version>4.1.2</version>
-</dependency>
-<dependency>
-    <groupId>org.apache.poi</groupId>
-    <artifactId>poi-ooxml</artifactId>
-    <version>4.1.2</version>
+    <version>2.3.0</version>
 </dependency>
 ```
 
@@ -153,11 +143,11 @@ The building block to read data is `ReaderConfig<T>`.
 ReaderConfig<Book> BOOK_READER = ReaderConfig
         .fromClass(Book.class)
         .titleAtRow(0)
+        .dataFromRow(1)
         .column(0, "ibsn")
         .column(1, "title")
         .column(2, "author")
-        .column(3, "category")
-        .dataFromRow(1);
+        .column(3, "category");
 ```
 
 You can directly retrieve the config from your already defined `DataTemplate<T>`.
@@ -200,8 +190,10 @@ Documentation can be found [here](https://www.javadoc.io/doc/io.github.nambach/E
 
 # Notes
 
-- Minimum version: JDK 8
-- Support Excel version: 2007+ (.xlsx)
+- Minimum JDK version: 1.8
+- Support Excel version:
+  - 97-2003 (.xls)
+  - 2007+ (.xlsx)
 
 # License
 
