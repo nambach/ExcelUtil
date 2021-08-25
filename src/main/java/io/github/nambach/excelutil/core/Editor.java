@@ -485,6 +485,13 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
             return this;
         }
 
+        public Config setZoom(int percentage) {
+            if (editor.currentSheet != null) {
+                editor.currentSheet.setZoom(percentage);
+            }
+            return this;
+        }
+
         public Config debug(boolean b) {
             editor.isDebug = b;
             return this;
