@@ -6,7 +6,7 @@
 
     <groupId>io.github.nambach</groupId>
     <artifactId>ExcelUtil</artifactId>
-    <version>2.2.2-SNAPSHOT</version>
+    <version>2.3.0</version>
     <packaging>jar</packaging>
 
     <distributionManagement>
@@ -111,7 +111,6 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
-                    <debug>true</debug>
                 </configuration>
             </plugin>
 
