@@ -21,7 +21,6 @@ class Chain<S, T> {
     public static <K, L> Chain<K, L> start(Pipe<K, L> pipe) {
         Chain<K, L> chain = new Chain<K, L>();
         chain.pipes = Collections.singletonList(pipe);
-        ;
         return chain;
     }
 

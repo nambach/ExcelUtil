@@ -1,10 +1,17 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.constraint.Constraint;
+import io.github.nambach.excelutil.constraint.ConstraintHandler;
 import io.github.nambach.excelutil.style.CacheStyle;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Comment;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.usermodel.RichTextString;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -35,9 +42,11 @@ class BaseWriter implements BaseEditor {
 
     static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
     final CacheStyle cachedStyles;
+    final ConstraintHandler constraintHandler;
 
     BaseWriter(Workbook workbook, Editor.Mode mode) {
         cachedStyles = new CacheStyle(workbook, mode);
+        constraintHandler = new ConstraintHandler(workbook);
     }
 
     public <T> void writeData(Sheet sheet, DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {
@@ -112,6 +121,10 @@ class BaseWriter implements BaseEditor {
                 CellStyle cellStyle = cachedStyles.accumulate(dateStyle, dataStyle, rowStyle, columnStyle, conditionalStyle);
                 cell.setCellStyle(cellStyle);
 
+                // set data validation
+                Constraint constraint = mapper.getConstraint();
+                constraintHandler.applyConstraint(constraint, cell);
+
                 // do merge
                 if (mapper.needMerged()) {
                     int rowNum = dataRow.getRowNum();
@@ -175,9 +188,21 @@ class BaseWriter implements BaseEditor {
             isDate = true;
         }
 
+        // Set comment
+        if (writerCell.getComment() != null) {
+            writeComment(writerCell.getComment(), cell);
+        }
+
         // Set styles
         CellStyle cellStyle = cachedStyles.accumulate(writerCell.getStyle(), (isDate ? DATE : null));
-        cell.setCellStyle(cellStyle);
+        if (cellStyle != null) {
+            cell.setCellStyle(cellStyle);
+        }
+
+        // Set data validation constraint
+        if (writerCell.getConstraint() != null) {
+            constraintHandler.applyConstraint(writerCell.getConstraint(), cell);
+        }
 
         int rowSpan = writerCell.getRowSpan();
         int colSpan = writerCell.getColSpan();
@@ -189,6 +214,34 @@ class BaseWriter implements BaseEditor {
                 .addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
                                                       colAt, colAt + colSpan - 1));
         }
+    }
+
+    public void writeComment(WriterComment writerComment, Cell cell) {
+        Sheet sheet = cell.getSheet();
+        CreationHelper factory = sheet.getWorkbook().getCreationHelper();
+
+        Drawing<?> drawing = sheet.createDrawingPatriarch();
+
+        // When the comment box is visible, have it show in a 1x3 space
+        ClientAnchor anchor = factory.createClientAnchor();
+        anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
+        anchor.setCol1(cell.getColumnIndex());
+        anchor.setCol2(cell.getColumnIndex() + writerComment.getColSpan());
+        anchor.setRow1(cell.getRowIndex());
+        anchor.setRow2(cell.getRowIndex() + writerComment.getRowSpan());
+
+        // Create the comment and set the text+author
+        Comment comment = drawing.createCellComment(anchor);
+
+        RichTextString rts = factory.createRichTextString(writerComment.getContent());
+        comment.setString(rts);
+
+        if (writerComment.getAuthor() != null) {
+            comment.setAuthor(writerComment.getAuthor());
+        }
+
+        // Assign the comment to the cell
+        cell.setCellComment(comment);
     }
 
 }

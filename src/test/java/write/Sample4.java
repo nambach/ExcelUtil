@@ -20,9 +20,9 @@ public class Sample4 {
             .fromClass(Category.class)
             .includeFields("name")
             .column(c -> c.field("books")
-                          .asList(Book.class, bookCols -> bookCols
+                          .expandRows(Book.class, bookCols -> bookCols
                                   .includeFields("isbn", "title")
-                                  .column(bc -> bc.field("chars").asList())))
+                                  .column(bc -> bc.field("chars").expandRows())))
             .config(cf -> cf.startAtCell("A2")
                             .autoSizeColumns(true)
                             .dataStyle(VCENTER));

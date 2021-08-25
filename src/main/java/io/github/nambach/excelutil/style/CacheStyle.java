@@ -15,8 +15,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static io.github.nambach.excelutil.style.HSSFColorCache.Policy.USE_MOST_SIMILAR;
-
 @Getter
 public class CacheStyle {
     private final Node<CellStyle> root = new Node<>("root", null);

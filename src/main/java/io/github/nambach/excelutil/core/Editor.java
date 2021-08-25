@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.constraint.Constraint;
 import io.github.nambach.excelutil.style.HSSFColorCache;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
@@ -278,6 +279,38 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     @Override
+    public Editor applyConstraint(Constraint constraint, String... address) {
+        if (address == null || address.length == 0) {
+            Cell cell = getCellAt(currentSheet, navigation);
+            writer.constraintHandler.applyConstraint(constraint, cell);
+        } else {
+            applyConstraint(constraint, Arrays.asList(address));
+        }
+        return this;
+    }
+
+    @Override
+    public Editor applyConstraint(Constraint constraint, Collection<String> addresses) {
+        Collection<CellAddress> cellAddresses = parseAddress(addresses);
+        Map<Integer, List<CellAddress>> rowMap = groupBy(cellAddresses, CellAddress::getRow);
+        rowMap.forEach((rowNum, cols) -> {
+            Row row = getRowAt(currentSheet, rowNum);
+            for (CellAddress col : cols) {
+                Cell cell = getCellAt(row, col.getColumn());
+                writer.constraintHandler.applyConstraint(constraint, cell);
+            }
+        });
+        return this;
+    }
+
+    @Override
+    public Editor writeComment(Function<WriterComment, WriterComment> builder) {
+        Cell cell = getCellAt(currentSheet, navigation);
+        writer.writeComment(builder.apply(new WriterComment()), cell);
+        return this;
+    }
+
+    @Override
     public Editor writeCell(Function<WriterCell, WriterCell> f) {
         WriterCell writerCell = f.apply(new WriterCell(navigation.getCellAddress(), tempStyle));
         Cell cell = getCellAt(currentSheet, navigation);
@@ -481,6 +514,13 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         public Config hideGrid(boolean b) {
             if (editor.currentSheet != null) {
                 editor.currentSheet.setDisplayGridlines(!b);
+            }
+            return this;
+        }
+
+        public Config setZoom(int percentage) {
+            if (editor.currentSheet != null) {
+                editor.currentSheet.setZoom(percentage);
             }
             return this;
         }

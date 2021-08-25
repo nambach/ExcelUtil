@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.constraint.Constraint;
 import io.github.nambach.excelutil.style.Style;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -95,6 +96,13 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
         return this;
     }
 
+    /**
+     * Update cell at particular address
+     *
+     * @param cellAddress address of cell
+     * @param builder     transform function
+     * @return current template
+     */
     private WriterCell updateCell(CellAddress cellAddress, Function<WriterCell, WriterCell> builder) {
         String address = cellAddress.formatAsString();
         WriterCell current = cells.getOrDefault(address, new WriterCell(cellAddress, tempStyle));
@@ -138,10 +146,38 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
     @Override
     public Template applyStyle(Style style, Collection<String> addresses) {
         Function<WriterCell, WriterCell> builder = c -> c.replaceStyle(style);
+
         Collection<CellAddress> cellAddresses = parseAddress(addresses);
         for (CellAddress cellAddress : cellAddresses) {
             updateCell(cellAddress, builder);
         }
+        return this;
+    }
+
+    @Override
+    public Template applyConstraint(Constraint constraint, String... address) {
+        if (address == null || address.length == 0) {
+            updateCell(navigation.getCellAddress(), c -> c.constraint(constraint));
+        } else {
+            applyConstraint(constraint, Arrays.asList(address));
+        }
+        return this;
+    }
+
+    @Override
+    public Template applyConstraint(Constraint constraint, Collection<String> addresses) {
+        Function<WriterCell, WriterCell> builder = c -> c.constraint(constraint);
+
+        Collection<CellAddress> cellAddresses = parseAddress(addresses);
+        for (CellAddress cellAddress : cellAddresses) {
+            updateCell(cellAddress, builder);
+        }
+        return this;
+    }
+
+    @Override
+    public Template writeComment(Function<WriterComment, WriterComment> builder) {
+        updateCell(navigation.getCellAddress(), c -> c.comment(builder));
         return this;
     }
 

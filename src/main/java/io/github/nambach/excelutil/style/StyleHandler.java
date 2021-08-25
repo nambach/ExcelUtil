@@ -2,7 +2,6 @@ package io.github.nambach.excelutil.style;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
@@ -18,7 +17,7 @@ import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
 import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
 import static io.github.nambach.excelutil.style.StyleProperty.Bold;
 import static io.github.nambach.excelutil.style.StyleProperty.Borders;
-import static io.github.nambach.excelutil.style.StyleProperty.DatePattern;
+import static io.github.nambach.excelutil.style.StyleProperty.DataFormat;
 import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
 import static io.github.nambach.excelutil.style.StyleProperty.FontName;
 import static io.github.nambach.excelutil.style.StyleProperty.FontSize;
@@ -31,8 +30,7 @@ abstract class StyleHandler {
 
     public CellStyle renderCellStyle(Style style) {
         CellStyle cellStyle = getWorkbook().createCellStyle();
-        CreationHelper creationHelper = getWorkbook().getCreationHelper();
-        DataFormat format = creationHelper.createDataFormat();
+        DataFormat format = getWorkbook().createDataFormat();
 
         Font font = renderFont(style);
         cellStyle.setFont(font);
@@ -41,7 +39,7 @@ abstract class StyleHandler {
 
         style.getProperty(Indentation).getShort().ifPresent(cellStyle::setIndention);
         style.getProperty(WrapText).getBoolean().ifPresent(cellStyle::setWrapText);
-        style.getProperty(DatePattern).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
+        style.getProperty(DataFormat).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
 
         style.getProperty(BackgroundColor).getAny(StyleColor.class).ifPresent(color -> {
             if (color.isPreset()) {

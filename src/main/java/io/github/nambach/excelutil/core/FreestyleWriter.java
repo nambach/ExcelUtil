@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.constraint.Constraint;
 import io.github.nambach.excelutil.style.Style;
 
 import java.util.Collection;
@@ -14,6 +15,16 @@ interface FreestyleWriter<T extends FreestyleWriter<T>> extends Navigation<T> {
     T applyStyle(Style style, String... address);
 
     T applyStyle(Style style, Collection<String> addresses);
+
+    T applyConstraint(Constraint constraint, String... address);
+
+    T applyConstraint(Constraint constraint, Collection<String> addresses);
+
+    T writeComment(Function<WriterComment, WriterComment> builder);
+
+    default T comment(String comment) {
+        return writeComment(c -> c.content(comment));
+    }
 
     T writeCell(Function<WriterCell, WriterCell> builder);
 

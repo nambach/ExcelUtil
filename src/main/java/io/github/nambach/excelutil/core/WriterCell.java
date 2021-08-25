@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.constraint.Constraint;
 import io.github.nambach.excelutil.style.Style;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,6 +21,8 @@ public class WriterCell {
     private int rowSpan = 1;
     private int colSpan = 1;
     private Style style;
+    private Constraint constraint;
+    private WriterComment comment;
 
     WriterCell(CellAddress address, Style style) {
         this.rowAt = address.getRow();
@@ -64,6 +67,19 @@ public class WriterCell {
         return this;
     }
 
+    public WriterCell comment(String comment) {
+        return this.comment(c -> c.content(comment));
+    }
+
+    public WriterCell comment(String comment, String author) {
+        return this.comment(c -> c.content(comment).author(author));
+    }
+
+    public WriterCell comment(Function<WriterComment, WriterComment> builder) {
+        this.comment = builder.apply(new WriterComment());
+        return this;
+    }
+
     public WriterCell replaceStyle(Style style) {
         this.style = style;
         return this;
@@ -76,6 +92,11 @@ public class WriterCell {
             f.apply(builder);
             this.style = builder.build();
         }
+        return this;
+    }
+
+    public WriterCell constraint(Constraint constraint) {
+        this.constraint = constraint;
         return this;
     }
 }
