@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.constraint.Constraint;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import io.github.nambach.excelutil.util.TextUtil;
@@ -21,12 +22,13 @@ import static io.github.nambach.excelutil.util.ListUtil.hasMember;
 @Setter(AccessLevel.PACKAGE)
 public class ColumnMapper<T> {
 
+    // mappers of field
+    // for expanding rows
+    ColumnTemplate<?> fieldTemplate;
+
     private String fieldName;
     private String displayName;
     private Function<T, ?> mapper;
-
-    // mappers of field
-    ColumnTemplate<?> fieldTemplate;
 
     private boolean mergeOnValue;
     private Function<T, ?> mergeOnId;
@@ -34,6 +36,8 @@ public class ColumnMapper<T> {
     private Style style;
     @Getter(AccessLevel.NONE)
     private Function<T, Style> conditionalStyle;
+
+    private Constraint constraint;
 
     // Column setting
     private Integer pxWidth;
@@ -133,6 +137,11 @@ public class ColumnMapper<T> {
         return this;
     }
 
+    public ColumnMapper<T> constraint(Constraint constraint) {
+        this.constraint = constraint;
+        return this;
+    }
+
     /**
      * Set width to the current column.
      *
@@ -155,7 +164,7 @@ public class ColumnMapper<T> {
         return this;
     }
 
-    public ColumnMapper<T> asList() {
+    public ColumnMapper<T> expandRows() {
         Objects.requireNonNull(fieldName, "Field name must be provided first");
         ColumnTemplate<Object> template = new ColumnTemplate<>(Object.class);
         template.column(c -> c.title(TextUtil.splitCamelCase(fieldName))
@@ -164,7 +173,7 @@ public class ColumnMapper<T> {
         return this;
     }
 
-    public <F> ColumnMapper<T> asList(Class<F> fClass, String... fields) {
+    public <F> ColumnMapper<T> expandRows(Class<F> fClass, String... fields) {
         Objects.requireNonNull(fieldName, "Field name must be provided first");
         ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
         template.includeFields(fields);
@@ -172,7 +181,7 @@ public class ColumnMapper<T> {
         return this;
     }
 
-    public <F> ColumnMapper<T> asList(Class<F> fClass, Function<ColumnTemplate<F>, ColumnTemplate<F>> builder) {
+    public <F> ColumnMapper<T> expandRows(Class<F> fClass, Function<ColumnTemplate<F>, ColumnTemplate<F>> builder) {
         Objects.requireNonNull(fieldName, "Field name must be provided first");
         ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
         builder.apply(template);

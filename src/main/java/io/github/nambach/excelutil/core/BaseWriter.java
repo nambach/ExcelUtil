@@ -1,5 +1,7 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.constraint.Constraint;
+import io.github.nambach.excelutil.constraint.ConstraintHandler;
 import io.github.nambach.excelutil.style.CacheStyle;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
@@ -40,9 +42,11 @@ class BaseWriter implements BaseEditor {
 
     static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
     final CacheStyle cachedStyles;
+    final ConstraintHandler constraintHandler;
 
     BaseWriter(Workbook workbook, Editor.Mode mode) {
         cachedStyles = new CacheStyle(workbook, mode);
+        constraintHandler = new ConstraintHandler(workbook);
     }
 
     public <T> void writeData(Sheet sheet, DataTemplate<T> template, Collection<T> data, int rowAt, int colAt) {
@@ -117,6 +121,10 @@ class BaseWriter implements BaseEditor {
                 CellStyle cellStyle = cachedStyles.accumulate(dateStyle, dataStyle, rowStyle, columnStyle, conditionalStyle);
                 cell.setCellStyle(cellStyle);
 
+                // set data validation
+                Constraint constraint = mapper.getConstraint();
+                constraintHandler.applyConstraint(constraint, cell);
+
                 // do merge
                 if (mapper.needMerged()) {
                     int rowNum = dataRow.getRowNum();
@@ -187,7 +195,14 @@ class BaseWriter implements BaseEditor {
 
         // Set styles
         CellStyle cellStyle = cachedStyles.accumulate(writerCell.getStyle(), (isDate ? DATE : null));
-        cell.setCellStyle(cellStyle);
+        if (cellStyle != null) {
+            cell.setCellStyle(cellStyle);
+        }
+
+        // Set data validation constraint
+        if (writerCell.getConstraint() != null) {
+            constraintHandler.applyConstraint(writerCell.getConstraint(), cell);
+        }
 
         int rowSpan = writerCell.getRowSpan();
         int colSpan = writerCell.getColSpan();

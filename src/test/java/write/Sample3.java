@@ -1,5 +1,6 @@
 package write;
 
+import io.github.nambach.excelutil.constraint.Constraint;
 import io.github.nambach.excelutil.core.Editor;
 import io.github.nambach.excelutil.style.BorderSide;
 import io.github.nambach.excelutil.style.Style;
@@ -20,9 +21,10 @@ public class Sample3 {
                                          .horizontalAlignment(HorizontalAlignment.CENTER)
                                          .verticalAlignment(VerticalAlignment.CENTER).build();
     static final Style HEADER = Style.builder(BASED).fontColorInHex("#ffffff").backgroundColorInHex(PRIMARY_COLOR).build();
-    static final Style BORDER = Style.builder(BASED)
-                                     .border(b -> b.side(BorderSide.FULL).hexColor(GRAY))
-                                     .build();
+    static final Style BORDER_BOLD = Style.builder(BASED)
+                                          .border(b -> b.side(BorderSide.FULL).hexColor(GRAY))
+                                          .build();
+    static final Style BORDER = Style.builder(BORDER_BOLD).bold(false).build();
     static final Style ALIGN_RIGHT = Style.builder(BASED)
                                           .horizontalAlignment(HorizontalAlignment.RIGHT)
                                           .build();
@@ -30,6 +32,9 @@ public class Sample3 {
                                        .border(b -> b.side(BorderSide.FULL).hexColor(GRAY))
                                        .backgroundColorInHex(BROWN).build();
 
+    static final Constraint countries = Constraint.builder()
+                                                  .dropdown("VN", "US")
+                                                  .build();
 
     public static void main(String[] args) {
         Editor editor = Editor.openMode(Editor.Mode.XLS);
@@ -57,7 +62,8 @@ public class Sample3 {
               .down().text("Invoice Total")
               .down().text("Total Amount Due")
               .down().text("Amount Paid")
-              .applyStyle(BORDER, "C3:C9", "C11:C14");
+              .applyStyle(BORDER, "C3:C9", "C11:C14")
+              .applyConstraint(countries, "C5");
 
         // To be filled in
         editor.goToCell("A3").useStyle(BASED).text("[Travel Company Name]")
@@ -89,7 +95,7 @@ public class Sample3 {
               .next().text("Description")
               .next().text("Amount per Traveler")
               .next().text("Total Amount")
-              .enter().useStyle(BORDER).text("Air Transportation")
+              .enter().useStyle(BORDER_BOLD).text("Air Transportation")
               .enter().text("Ground Transportation")
               .enter().text("Lodging")
               .enter().text("Tours")
