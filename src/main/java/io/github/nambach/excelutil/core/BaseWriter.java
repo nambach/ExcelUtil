@@ -5,6 +5,11 @@ import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Comment;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Drawing;
+import org.apache.poi.ss.usermodel.RichTextString;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -175,6 +180,11 @@ class BaseWriter implements BaseEditor {
             isDate = true;
         }
 
+        // Set comment
+        if (writerCell.getComment() != null) {
+            writeComment(writerCell.getComment(), cell);
+        }
+
         // Set styles
         CellStyle cellStyle = cachedStyles.accumulate(writerCell.getStyle(), (isDate ? DATE : null));
         cell.setCellStyle(cellStyle);
@@ -189,6 +199,34 @@ class BaseWriter implements BaseEditor {
                 .addMergedRegion(new CellRangeAddress(rowAt, rowAt + rowSpan - 1,
                                                       colAt, colAt + colSpan - 1));
         }
+    }
+
+    public void writeComment(WriterComment writerComment, Cell cell) {
+        Sheet sheet = cell.getSheet();
+        CreationHelper factory = sheet.getWorkbook().getCreationHelper();
+
+        Drawing<?> drawing = sheet.createDrawingPatriarch();
+
+        // When the comment box is visible, have it show in a 1x3 space
+        ClientAnchor anchor = factory.createClientAnchor();
+        anchor.setAnchorType(ClientAnchor.AnchorType.MOVE_DONT_RESIZE);
+        anchor.setCol1(cell.getColumnIndex());
+        anchor.setCol2(cell.getColumnIndex() + writerComment.getColSpan());
+        anchor.setRow1(cell.getRowIndex());
+        anchor.setRow2(cell.getRowIndex() + writerComment.getRowSpan());
+
+        // Create the comment and set the text+author
+        Comment comment = drawing.createCellComment(anchor);
+
+        RichTextString rts = factory.createRichTextString(writerComment.getContent());
+        comment.setString(rts);
+
+        if (writerComment.getAuthor() != null) {
+            comment.setAuthor(writerComment.getAuthor());
+        }
+
+        // Assign the comment to the cell
+        cell.setCellComment(comment);
     }
 
 }

@@ -146,6 +146,12 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
     }
 
     @Override
+    public Template writeComment(Function<WriterComment, WriterComment> builder) {
+        updateCell(navigation.getCellAddress(), c -> c.comment(builder));
+        return this;
+    }
+
+    @Override
     public Iterator<WriterCell> iterator() {
         return cells.values().iterator();
     }

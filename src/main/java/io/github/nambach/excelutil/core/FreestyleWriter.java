@@ -15,6 +15,12 @@ interface FreestyleWriter<T extends FreestyleWriter<T>> extends Navigation<T> {
 
     T applyStyle(Style style, Collection<String> addresses);
 
+    T writeComment(Function<WriterComment, WriterComment> builder);
+
+    default T comment(String comment) {
+        return writeComment(c -> c.content(comment));
+    }
+
     T writeCell(Function<WriterCell, WriterCell> builder);
 
     default T date(Date date) {

@@ -35,6 +35,7 @@ public class Sample2 {
                                       .thenComparing(Book::getTitle));
         try (Editor editor = new Editor().configSheet(cf -> cf.debug(true))) {
             editor.writeData(BOOK_TEMPLATE, Constant.BOOKS);
+            editor.goToCell("B1").comment("Hello World");
             InputStream stream = editor.exportToFile();
             FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\books.xlsx", stream, true);
         }

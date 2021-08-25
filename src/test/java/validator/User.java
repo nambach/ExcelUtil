@@ -9,12 +9,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class User {
-    private String name;
-    private boolean working;
-    private String aboutMe;
-    private Float age;
-    private String email;
-
     static final Validator<User> USER_VALIDATOR = Validator
             .fromClass(User.class)
             .field("name").validate(v -> v.notNull("Name cannot be null")
@@ -28,6 +22,11 @@ public class User {
             .field("email").validate(v -> v.isString()
                                            .isEmail("Email should be valid"))
             .build();
+    private String name;
+    private boolean working;
+    private String aboutMe;
+    private Float age;
+    private String email;
 
     public static void main(String[] args) {
         User user = new User();

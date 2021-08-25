@@ -278,6 +278,13 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     @Override
+    public Editor writeComment(Function<WriterComment, WriterComment> builder) {
+        Cell cell = getCellAt(currentSheet, navigation);
+        writer.writeComment(builder.apply(new WriterComment()), cell);
+        return this;
+    }
+
+    @Override
     public Editor writeCell(Function<WriterCell, WriterCell> f) {
         WriterCell writerCell = f.apply(new WriterCell(navigation.getCellAddress(), tempStyle));
         Cell cell = getCellAt(currentSheet, navigation);

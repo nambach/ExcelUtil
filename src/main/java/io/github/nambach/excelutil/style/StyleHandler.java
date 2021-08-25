@@ -2,7 +2,6 @@ package io.github.nambach.excelutil.style;
 
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CreationHelper;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
@@ -31,8 +30,7 @@ abstract class StyleHandler {
 
     public CellStyle renderCellStyle(Style style) {
         CellStyle cellStyle = getWorkbook().createCellStyle();
-        CreationHelper creationHelper = getWorkbook().getCreationHelper();
-        DataFormat format = creationHelper.createDataFormat();
+        DataFormat format = getWorkbook().createDataFormat();
 
         Font font = renderFont(style);
         cellStyle.setFont(font);

@@ -20,6 +20,7 @@ public class WriterCell {
     private int rowSpan = 1;
     private int colSpan = 1;
     private Style style;
+    private WriterComment comment;
 
     WriterCell(CellAddress address, Style style) {
         this.rowAt = address.getRow();
@@ -61,6 +62,19 @@ public class WriterCell {
         if (v > 1) {
             this.rowSpan = v;
         }
+        return this;
+    }
+
+    public WriterCell comment(String comment) {
+        return this.comment(c -> c.content(comment));
+    }
+
+    public WriterCell comment(String comment, String author) {
+        return this.comment(c -> c.content(comment).author(author));
+    }
+
+    public WriterCell comment(Function<WriterComment, WriterComment> builder) {
+        this.comment = builder.apply(new WriterComment());
         return this;
     }
 
