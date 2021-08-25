@@ -18,7 +18,7 @@ import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
 import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
 import static io.github.nambach.excelutil.style.StyleProperty.Bold;
 import static io.github.nambach.excelutil.style.StyleProperty.Borders;
-import static io.github.nambach.excelutil.style.StyleProperty.DatePattern;
+import static io.github.nambach.excelutil.style.StyleProperty.DataFormat;
 import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
 import static io.github.nambach.excelutil.style.StyleProperty.FontName;
 import static io.github.nambach.excelutil.style.StyleProperty.FontSize;
@@ -41,7 +41,7 @@ abstract class StyleHandler {
 
         style.getProperty(Indentation).getShort().ifPresent(cellStyle::setIndention);
         style.getProperty(WrapText).getBoolean().ifPresent(cellStyle::setWrapText);
-        style.getProperty(DatePattern).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
+        style.getProperty(DataFormat).getString().ifPresent(pattern -> cellStyle.setDataFormat(format.getFormat(pattern)));
 
         style.getProperty(BackgroundColor).getAny(StyleColor.class).ifPresent(color -> {
             if (color.isPreset()) {

@@ -18,7 +18,7 @@ import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
 import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
 import static io.github.nambach.excelutil.style.StyleProperty.Bold;
 import static io.github.nambach.excelutil.style.StyleProperty.Borders;
-import static io.github.nambach.excelutil.style.StyleProperty.DatePattern;
+import static io.github.nambach.excelutil.style.StyleProperty.DataFormat;
 import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
 import static io.github.nambach.excelutil.style.StyleProperty.FontName;
 import static io.github.nambach.excelutil.style.StyleProperty.FontSize;
@@ -137,7 +137,12 @@ public class Style implements Copyable<Style> {
         }
 
         public StyleBuilder datePattern(String s) {
-            style.put(DatePattern.withValue(s));
+            style.put(DataFormat.withValue(s));
+            return this;
+        }
+
+        public StyleBuilder dataFormat(String s) {
+            style.put(DataFormat.withValue(s));
             return this;
         }
 
