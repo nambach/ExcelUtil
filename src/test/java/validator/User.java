@@ -11,17 +11,21 @@ import lombok.Setter;
 public class User {
     static final Validator<User> USER_VALIDATOR = Validator
             .fromClass(User.class)
-            .field("name").validate(v -> v.notNull("Name cannot be null")
-                                          .isString())
-            .field("any", user -> user.name.length()).validate(v -> v.customValidator(o -> true, ""))
-            .field("aboutMe").validate(TypeValidator.string()
-                                                    .lengthBetween(10, 200, "About Me must be between 10 and 200 characters"))
-            .field("age").validate(v -> v.isDecimal().notNull()
-                                         .min(18, "Age should not be less than 18")
-                                         .max(150, "Age should not be greater than 150"))
-            .field("email").validate(v -> v.isString()
-                                           .isEmail("Email should be valid"))
-            .build();
+            .on(f -> f.field("name")
+                      .validate(v -> v.notNull("Name cannot be null").isString()))
+            .on(f -> f.field("any")
+                      .customExtract(user -> user.name.length())
+                      .validate(v -> v.customValidator(o -> true, "")))
+            .on(f -> f.field("aboutMe")
+                      .validate(TypeValidator.string()
+                                             .lengthBetween(10, 200, "About Me must be between 10 and 200 characters")))
+            .on(f -> f.field("age")
+                      .validate(v -> v.isDecimal().notNull()
+                                      .min(18, "Age should not be less than 18")
+                                      .max(150, "Age should not be greater than 150")))
+            .on(f -> f.field("email")
+                      .validate(v -> v.isString()
+                                      .isEmail("Email should be valid")));
     private String name;
     private boolean working;
     private String aboutMe;
@@ -34,7 +38,7 @@ public class User {
         user.setWorking(true);
 //        user.setAboutMe("1234567890");
         user.setAge(18f);
-        user.setEmail("a@a.vn");
+        user.setEmail("a@.vn");
 
         Error error = USER_VALIDATOR.validate(user);
         if (error.noError()) {
