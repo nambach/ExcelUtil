@@ -24,8 +24,13 @@ public class Error extends ArrayList<Error.TypeError> {
         return this.isEmpty();
     }
 
+    public boolean hasErrors() {
+        return !this.isEmpty();
+    }
+
     public void appendError(String fieldName, List<String> messages) {
-        TypeError current = findElse(this, e -> Objects.equals(e.fieldName, fieldName), new TypeError(fieldName, new ArrayList<>()));
+        TypeError current = findElse(this, e -> Objects.equals(e.fieldName, fieldName),
+                                     new TypeError(fieldName, new ArrayList<>()));
         current.messages.addAll(messages);
     }
 

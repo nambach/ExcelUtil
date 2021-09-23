@@ -1,12 +1,11 @@
 package io.github.nambach.excelutil.core;
 
-import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.validator.Error;
+import io.github.nambach.excelutil.validator.Validator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
-import java.beans.PropertyDescriptor;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -33,6 +32,9 @@ class BaseReader implements BaseEditor {
             if (rowTitleIndex >= 0) {
                 hasTitle = 1;
                 Row titleRow = sheet.getRow(rowTitleIndex);
+                if (titleRow == null) {
+                    throw new RuntimeException("Title row at index " + rowTitleIndex + " not found");
+                }
                 for (Cell cell : titleRow) {
                     if (cell.getColumnIndex() < colAt) {
                         continue;
@@ -73,14 +75,9 @@ class BaseReader implements BaseEditor {
                     // Wrap cell
                     ReaderCell readerCell = new ReaderCell(cell, colTitle, config, result);
 
-                    // process raw only one time
-                    boolean rawReached = false;
-
                     // iterate all handlers registered by user
                     for (Handler<T> handler : handlers) {
                         // Prepare ingredients
-                        String fieldName = handler.getFieldName();
-                        PropertyDescriptor pd = ReflectUtil.getField(fieldName, config.getTClass());
                         BiConsumer<T, ReaderCell> handle = handler.getHandler();
 
                         // Do validation first
@@ -88,13 +85,8 @@ class BaseReader implements BaseEditor {
                             readerCell.validate(handler.getTypeValidator());
                         }
 
-                        if (pd != null) {
-                            handleField(pd, object, readerCell);
-                        } else if (handle != null) {
+                        if (handle != null) {
                             handle.accept(object, readerCell);
-                        } else if (!rawReached) {
-                            rawReached = true;
-                            handleOther(raw, cell, fieldName, colTitle);
                         }
 
                         // Post-check validation
@@ -102,12 +94,27 @@ class BaseReader implements BaseEditor {
                             return result;
                         }
                     }
+
+                    // process raw only one time
+                    handleOther(raw, cell, colTitle);
                 }
 
                 // handle before adding new item
                 ReaderRow readerRow = new ReaderRow(currentRow, config, result);
                 if (config.needHandleBeforeAdd()) {
                     config.getBeforeAddItemHandle().accept(object, readerRow);
+                }
+
+                // validate object
+                Validator<T> validator = config.getValidator();
+                if (validator != null) {
+                    Error error = validator.validate(object);
+                    if (error.hasErrors()) {
+                        readerRow.setError(error.toString());
+                        if (config.isEarlyExit()) {
+                            readerRow.terminateNow();
+                        }
+                    }
                 }
 
                 // Post-check validation
@@ -128,48 +135,10 @@ class BaseReader implements BaseEditor {
         }
     }
 
-    private <T> Object handleField(PropertyDescriptor pd, T object, ReaderCell cell) {
-        Method setter = pd.getWriteMethod();
-        try {
-            Object cellValue;
-            switch (ReflectUtil.checkType(pd.getPropertyType())) {
-                case STRING:
-                    cellValue = cell.readString();
-                    break;
-                case LONG:
-                    cellValue = cell.readLong();
-                    break;
-                case INTEGER:
-                    cellValue = cell.readInt();
-                    break;
-                case DOUBLE:
-                    cellValue = cell.readDouble();
-                    break;
-                case FLOAT:
-                    cellValue = cell.readFloat();
-                    break;
-                case BOOLEAN:
-                    cellValue = cell.readBoolean();
-                    break;
-                case DATE:
-                    cellValue = cell.readDate();
-                    break;
-                default:
-                    return null;
-            }
-            setter.invoke(object, cellValue);
-            return cellValue;
-        } catch (Exception e) {
-            System.err.println("Error while invoking setter: " + e.getMessage());
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-    private <T> void handleOther(Raw<T> raw, Cell cell, String fieldName, String colTitle) {
-        String key = fieldName != null ? fieldName :
-                     colTitle != null ? colTitle :
-                     cell.getColumnIndex() + "";
+    private <T> void handleOther(Raw<T> raw, Cell cell, String colTitle) {
+        String key = colTitle != null
+                     ? colTitle
+                     : cell.getColumnIndex() + "";
         switch (cell.getCellType()) {
             case STRING:
             case FORMULA:
