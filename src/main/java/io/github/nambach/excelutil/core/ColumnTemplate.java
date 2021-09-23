@@ -47,10 +47,8 @@ public class ColumnTemplate<T> extends ArrayList<ColumnMapper<T>> {
         if (other == null || other == this) {
             return this;
         }
-        return internalConcat(new ColumnTemplate<>(tClass), other);
-    }
-
-    protected ColumnTemplate<T> internalConcat(ColumnTemplate<T> clone, ColumnTemplate<T> other) {
+        ColumnTemplate<T> clone = new ColumnTemplate<>(tClass);
+        clone.addAll(this);
         clone.addAll(other);
         return clone;
     }
@@ -91,7 +89,7 @@ public class ColumnTemplate<T> extends ArrayList<ColumnMapper<T>> {
      */
     public ColumnTemplate<T> excludeFields(String... fieldNames) {
         List<String> fields = ListUtil.fromArray(fieldNames);
-        this.removeIf(m -> !fields.contains(m.getField()));
+        this.removeIf(m -> fields.contains(m.getFieldName()));
         return this;
     }
 
@@ -115,7 +113,7 @@ public class ColumnTemplate<T> extends ArrayList<ColumnMapper<T>> {
 
         if (mapper.getMapper() != null) {
             if (title == null) {
-                mapper.setDisplayName(String.format("Column %d", this.size() + 1));
+                mapper.setDisplayName(String.format("Column %s", fieldName));
             }
         } else if (fieldName != null) {
             PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);

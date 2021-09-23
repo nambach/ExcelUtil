@@ -88,7 +88,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
             return this;
         }
         DataTemplate<T> clone = this.makeCopy();
-        this.internalConcat(clone, other);
+        clone.addAll(other);
         return clone;
     }
 
