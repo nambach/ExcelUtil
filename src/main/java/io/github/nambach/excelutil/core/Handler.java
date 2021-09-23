@@ -6,6 +6,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -27,16 +29,6 @@ public class Handler<T> {
     private TypeValidator typeValidator;
 
     Handler() {
-    }
-
-    Integer getIndex() {
-        if (colAt != null) {
-            return colAt;
-        }
-        if (colFrom != null) {
-            return colFrom;
-        }
-        return null;
     }
 
     /**
@@ -101,5 +93,46 @@ public class Handler<T> {
 
     boolean needValidation() {
         return typeValidator != null;
+    }
+
+    public Handler<T> wrapHandleField(PropertyDescriptor pd) {
+        Method setter = pd.getWriteMethod();
+
+        this.handler = (T object, ReaderCell cell) -> {
+            Object cellValue;
+            switch (ReflectUtil.checkType(pd.getPropertyType())) {
+                case STRING:
+                    cellValue = cell.readString();
+                    break;
+                case LONG:
+                    cellValue = cell.readLong();
+                    break;
+                case INTEGER:
+                    cellValue = cell.readInt();
+                    break;
+                case DOUBLE:
+                    cellValue = cell.readDouble();
+                    break;
+                case FLOAT:
+                    cellValue = cell.readFloat();
+                    break;
+                case BOOLEAN:
+                    cellValue = cell.readBoolean();
+                    break;
+                case DATE:
+                    cellValue = cell.readDate();
+                    break;
+                default:
+                    cellValue = null;
+            }
+
+            try {
+                setter.invoke(object, cellValue);
+            } catch (Exception e) {
+                System.err.println("Error while invoking setter: " + e.getMessage());
+            }
+        };
+
+        return this;
     }
 }

@@ -1,12 +1,14 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.validator.Validator;
 import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 
+import java.beans.PropertyDescriptor;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,6 +34,8 @@ public class ReaderConfig<T> {
     private int titleRowIndex = -1;
     private int dataFromIndex = -1;
     private boolean earlyExit;
+
+    private Validator<T> validator;
 
     // Store value as list to stack up multiple handlers on a same column
     private HandlerMap<T> handlerMap = new HandlerMap<>();
@@ -90,6 +94,7 @@ public class ReaderConfig<T> {
         // other data
         copy.earlyExit = earlyExit;
         copy.beforeAddItemHandle = beforeAddItemHandle;
+        copy.validator = validator;
         return copy;
     }
 
@@ -139,13 +144,15 @@ public class ReaderConfig<T> {
     }
 
     public ReaderConfig<T> column(int index, String fieldName, TypeValidator typeValidator) {
-        if (index >= 0 && ReflectUtil.getField(fieldName, tClass) != null) {
+        PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);
+        if (index >= 0 && pd != null) {
             Handler<T> handler = new Handler<T>()
                     .atColumn(index)
                     .field(fieldName)
+                    .wrapHandleField(pd)
                     .validate(typeValidator);
 
-            handlerMap.put(index, handler);
+            handlerMap.putAt(index, handler);
         }
         return this;
     }
@@ -169,13 +176,15 @@ public class ReaderConfig<T> {
 
     @SneakyThrows
     public ReaderConfig<T> column(String title, String fieldName, TypeValidator typeValidator) {
-        if (title != null && ReflectUtil.getField(fieldName, tClass) != null) {
+        PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);
+        if (title != null && pd != null) {
             if (titleRowIndex < 0) {
                 throw new Exception("Index of title row must be provided via .titleAtRow(int); 'index=" + titleRowIndex + "' found.");
             }
             Handler<T> handler = new Handler<T>()
                     .atColumn(title)
                     .field(fieldName)
+                    .wrapHandleField(pd)
                     .validate(typeValidator);
 
             handlerMap.put(title, handler);
@@ -193,13 +202,16 @@ public class ReaderConfig<T> {
     public ReaderConfig<T> handler(Function<Handler<T>, Handler<T>> func) {
         Handler<T> handler = new Handler<>();
         func.apply(handler);
-        Integer index = handler.getIndex();
+        Integer indexAt = handler.getColAt();
+        Integer indexFrom = handler.getColFrom();
         String title = handler.getColTitle();
-        if (index == null && title == null) {
+        if (indexAt == null && indexFrom == null && title == null) {
             throw new Exception("Handler must have a column index with .atColumn(int) or .fromColumn(int)," +
                                 " or a column title with .atColumn(String)");
-        } else if (index != null) {
-            handlerMap.put(index, handler);
+        } else if (indexAt != null) {
+            handlerMap.putAt(indexAt, handler);
+        } else if (indexFrom != null) {
+            handlerMap.putFrom(indexFrom, handler);
         } else if (title != null) {
             if (titleRowIndex < 0) {
                 throw new Exception("Index of title row must be provided via .titleAtRow(int)");
@@ -212,6 +224,11 @@ public class ReaderConfig<T> {
 
     public ReaderConfig<T> beforeAddingItem(BiConsumer<T, ReaderRow> handler) {
         this.beforeAddItemHandle = ReflectUtil.safeWrap(handler);
+        return this;
+    }
+
+    public ReaderConfig<T> validator(Validator<T> validator) {
+        this.validator = validator;
         return this;
     }
 

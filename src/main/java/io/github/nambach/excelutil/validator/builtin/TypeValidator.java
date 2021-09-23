@@ -97,7 +97,7 @@ public class TypeValidator {
         return validator;
     }
 
-    public TypeValidator customValidator(Predicate<?> condition, String message) {
+    public <T> TypeValidator customValidator(Predicate<T> condition, String message) {
         String name = "[Custom] " + UUID.randomUUID().toString();
         constraints.add(new Constraint(name, condition, message));
         return this;
