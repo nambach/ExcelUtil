@@ -5,11 +5,16 @@ import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.var;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -20,6 +25,24 @@ import java.util.function.UnaryOperator;
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
 public class Handler<T> {
+
+    private static final Map<Class<?>, Function<ReaderCell, Object>> FIELD_READERS = new HashMap<>();
+
+    static {
+        var o = FIELD_READERS;
+        o.put(String.class, ReaderCell::readString);
+        o.put(Long.class, ReaderCell::readLong);
+        o.put(long.class, ReaderCell::readLong);
+        o.put(Integer.class, ReaderCell::readInt);
+        o.put(int.class, ReaderCell::readInt);
+        o.put(Double.class, ReaderCell::readDouble);
+        o.put(double.class, ReaderCell::readDouble);
+        o.put(Float.class, ReaderCell::readFloat);
+        o.put(float.class, ReaderCell::readFloat);
+        o.put(Boolean.class, ReaderCell::readBoolean);
+        o.put(boolean.class, ReaderCell::readBoolean);
+        o.put(Date.class, ReaderCell::readDate);
+    }
 
     private Integer colAt;
     private Integer colFrom;
@@ -97,33 +120,15 @@ public class Handler<T> {
 
     public Handler<T> wrapHandleField(PropertyDescriptor pd) {
         Method setter = pd.getWriteMethod();
+        Class<?> type = pd.getPropertyType();
 
         this.coreHandler = (T object, ReaderCell cell) -> {
             Object cellValue;
-            switch (ReflectUtil.checkType(pd.getPropertyType())) {
-                case STRING:
-                    cellValue = cell.readString();
-                    break;
-                case LONG:
-                    cellValue = cell.readLong();
-                    break;
-                case INTEGER:
-                    cellValue = cell.readInt();
-                    break;
-                case DOUBLE:
-                    cellValue = cell.readDouble();
-                    break;
-                case FLOAT:
-                    cellValue = cell.readFloat();
-                    break;
-                case BOOLEAN:
-                    cellValue = cell.readBoolean();
-                    break;
-                case DATE:
-                    cellValue = cell.readDate();
-                    break;
-                default:
-                    cellValue = null;
+            Function<ReaderCell, Object> reader = FIELD_READERS.get(type);
+            if (reader == null) {
+                cellValue = null;
+            } else {
+                cellValue = reader.apply(cell);
             }
 
             try {

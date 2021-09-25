@@ -1,6 +1,7 @@
 package read;
 
 import io.github.nambach.excelutil.core.LineError;
+import io.github.nambach.excelutil.core.Raw;
 import io.github.nambach.excelutil.core.ReaderConfig;
 import io.github.nambach.excelutil.core.Result;
 import io.github.nambach.excelutil.util.FileUtil;
@@ -19,6 +20,8 @@ public class Sample2 {
             .column(1, "title", v -> v.notNull("Title must not be null"))
             .column(2, "author", v -> v.isString().notBlank("Must provide author"))
             .column(5, "rating", v -> v.isDecimal().notNull())
+            .column("First Published", "firstPublished")
+            .column("Category", "subCategory")
             .beforeAddingItem((book, row) -> {
                 if (book.getRating() < 4) {
                     row.skipThisObject();

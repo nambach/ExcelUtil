@@ -10,6 +10,7 @@ import model.Constant;
 import org.hamcrest.core.IsNot;
 import org.hamcrest.core.IsNull;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -30,14 +31,14 @@ public class TestReadConfig {
     static final String fileName = "C:\\Users\\Nam Bach\\Desktop\\test-books.xlsx";
     static final String fileNameNoHeader = "C:\\Users\\Nam Bach\\Desktop\\test-books-no-header.xlsx";
 
-    //    @Before
+    @Before
     public void initFile() {
         System.out.println(Thread.currentThread().getName());
         InputStream stream = BOOK_TEMPLATE.writeData(Constant.BOOKS);
         FileUtil.writeToDisk(fileName, stream, true);
     }
 
-    //    @Before
+    @Before
     public void initFileNoHeader() {
         System.out.println(Thread.currentThread().getName());
         InputStream stream = BOOK_TEMPLATE_NO_HEADER.writeData(Constant.BOOKS);
@@ -55,6 +56,7 @@ public class TestReadConfig {
         Assert.assertEquals(Constant.BOOKS.get(0).getRating(), books.get(0).getRating(), 0);
 
         for (Book book : books) {
+            System.out.println(book);
             Assert.assertThat(book.getIsbn(), IsNull.notNullValue());
             Assert.assertThat(book.getTitle(), IsNull.notNullValue());
             Assert.assertThat(book.getAuthor(), IsNull.notNullValue());
@@ -74,6 +76,7 @@ public class TestReadConfig {
         Assert.assertEquals(Constant.BOOKS.get(0).getRating(), books.get(0).getRating(), 0);
 
         for (Book book : books) {
+            System.out.println(book);
             Assert.assertThat(book.getIsbn(), IsNull.notNullValue());
             Assert.assertThat(book.getTitle(), IsNull.notNullValue());
             Assert.assertThat(book.getAuthor(), IsNull.notNullValue());
@@ -93,6 +96,7 @@ public class TestReadConfig {
         Assert.assertEquals(Constant.BOOKS.get(0).getRating(), books.get(0).getRating(), 0);
 
         for (Book book : books) {
+            System.out.println(book);
             Assert.assertThat(book.getIsbn(), IsNull.notNullValue());
             Assert.assertThat(book.getTitle(), IsNull.notNullValue());
             Assert.assertThat(book.getAuthor(), IsNull.notNullValue());

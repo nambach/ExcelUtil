@@ -5,6 +5,7 @@ import io.github.nambach.excelutil.constraint.ConstraintHandler;
 import io.github.nambach.excelutil.style.CacheStyle;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
+import lombok.var;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.ClientAnchor;
@@ -30,17 +31,18 @@ import static io.github.nambach.excelutil.util.ListUtil.groupBy;
 
 class BaseWriter implements BaseEditor {
 
-    static final Map<Class<?>, BiConsumer<Cell, Object>> writerHandler = new HashMap<>();
-    static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
+    private static final Map<Class<?>, BiConsumer<Cell, Object>> FIELD_WRITERS = new HashMap<>();
+    private static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
 
     static {
-        writerHandler.put(String.class, (cell, val) -> cell.setCellValue((String) val));
-        writerHandler.put(Long.class, (cell, val) -> cell.setCellValue((long) val));
-        writerHandler.put(Integer.class, (cell, val) -> cell.setCellValue((int) val));
-        writerHandler.put(Double.class, (cell, val) -> cell.setCellValue((double) val));
-        writerHandler.put(Float.class, (cell, val) -> cell.setCellValue((float) val));
-        writerHandler.put(Boolean.class, (cell, val) -> cell.setCellValue((boolean) val));
-        writerHandler.put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
+        var o = FIELD_WRITERS;
+        o.put(String.class, (cell, val) -> cell.setCellValue((String) val));
+        o.put(Long.class, (cell, val) -> cell.setCellValue((long) val));
+        o.put(Integer.class, (cell, val) -> cell.setCellValue((int) val));
+        o.put(Double.class, (cell, val) -> cell.setCellValue((double) val));
+        o.put(Float.class, (cell, val) -> cell.setCellValue((float) val));
+        o.put(Boolean.class, (cell, val) -> cell.setCellValue((boolean) val));
+        o.put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
     }
 
     final CacheStyle cachedStyles;
@@ -107,7 +109,7 @@ class BaseWriter implements BaseEditor {
                 if (cellValue == null) {
                     cell.setCellValue("");
                 } else {
-                    BiConsumer<Cell, Object> handler = writerHandler.get(cellValue.getClass());
+                    BiConsumer<Cell, Object> handler = FIELD_WRITERS.get(cellValue.getClass());
                     if (handler != null) {
                         handler.accept(cell, cellValue);
                     } else {

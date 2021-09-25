@@ -59,7 +59,7 @@ public class LargeSample {
     @SneakyThrows
     public void testLargeXlsx(Data data) {
         DataTemplate<Book> template = BOOK_TEMPLATE.makeCopy().config(cf -> cf.autoSizeColumns(false));
-        @Cleanup SXSSFWorkbook workbook = new SXSSFWorkbook();
+        @Cleanup SXSSFWorkbook workbook = new SXSSFWorkbook(100);
         @Cleanup Editor editor = new Editor(workbook);
         editor.writeData(template, data.books);
         FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\many-books-2.xlsx", editor.exportToFile(), true);

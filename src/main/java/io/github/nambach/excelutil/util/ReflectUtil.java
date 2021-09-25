@@ -123,32 +123,4 @@ public class ReflectUtil {
         };
     }
 
-    public static ReflectUtil.Type checkType(Class<?> type) {
-        if (String.class.equals(type)) {
-            return Type.STRING;
-        } else if (Long.class.equals(type) || type.getName().equals("long")) {
-            return Type.LONG;
-        } else if (Integer.class.equals(type) || type.getName().equals("int")) {
-            return Type.INTEGER;
-        } else if (Double.class.equals(type) || type.getName().equals("double")) {
-            return Type.DOUBLE;
-        } else if (Float.class.equals(type) || type.getName().equals("float")) {
-            return Type.FLOAT;
-        } else if (Boolean.class.equals(type) || type.getName().equals("boolean")) {
-            return Type.BOOLEAN;
-        }
-        return Type.OBJECT;
-    }
-
-    public enum Type {
-        STRING,
-        LONG,
-        INTEGER,
-        DOUBLE,
-        FLOAT,
-        BOOLEAN,
-        DATE,
-        OBJECT
-    }
-
 }
