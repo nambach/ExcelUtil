@@ -12,8 +12,8 @@ import static io.github.nambach.excelutil.style.StyleProperty.FontColor;
 
 public class HSSFStyleHandler extends StyleHandler {
 
+    protected final HSSFColorCache colorCache;
     private final HSSFWorkbook workbook;
-    private final HSSFColorCache colorCache;
 
     public HSSFStyleHandler(HSSFWorkbook workbook, HSSFColorCache colorCache) {
         this.workbook = workbook;

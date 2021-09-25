@@ -55,6 +55,7 @@ public class Criterion<T> {
         return this;
     }
 
+    @SuppressWarnings({"unchecked"})
     private Object extractValue(T object) {
         if (valueExtractor != null) {
             return valueExtractor.apply(object);
@@ -72,6 +73,7 @@ public class Criterion<T> {
         return null;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     int compare(T o1, T o2) {
         int nullWeight = nullPolicy.equals(NullPolicy.EVALUATE_LESS) ? 1 : -1;
         int compared;
@@ -90,9 +92,9 @@ public class Criterion<T> {
         } else {
             compared = 0;
         }
-        int direction = this.direction == Direction.ASC ? 1 :
-                        this.direction == Direction.DESC ? -1 :
-                        0;
-        return compared * direction;
+        int directionVal = this.direction == Direction.ASC ? 1 :
+                           this.direction == Direction.DESC ? -1 :
+                           0;
+        return compared * directionVal;
     }
 }

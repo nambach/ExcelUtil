@@ -5,6 +5,9 @@ import io.github.nambach.excelutil.core.Editor;
 import io.github.nambach.excelutil.style.BorderSide;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.FileUtil;
+import lombok.Cleanup;
+import lombok.SneakyThrows;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 
@@ -36,14 +39,17 @@ public class Sample3 {
                                                   .dropdown("VN", "US")
                                                   .build();
 
+    @SneakyThrows
     public static void main(String[] args) {
-        Editor editor = Editor.openMode(Editor.Mode.XLS);
+        @Cleanup HSSFWorkbook workbook = new HSSFWorkbook();
+        @Cleanup Editor editor = new Editor(workbook);
 
         int[] colIndexes = new int[]{0, 1, 2, 3};
-        editor.goToSheet(0)
+        editor.goToSheet("My Sheet")
               .configSheet(cf -> cf.setColumnWidth(214, colIndexes)
                                    .setRowHeightInPoints(30, 0)
-                                   .hideGrid(true));
+                                   .hideGrid(true)
+                                   .setZoom(70));
 
         // Header part
         editor.useStyle(HEADER)
@@ -102,8 +108,7 @@ public class Sample3 {
               .enter().text("Other")
               .applyStyle(BORDER, "A21:D30");
 
-        InputStream stream = editor.exportToFile();
-        FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\invoice.xls", stream, true);
-        editor.close();
+        @Cleanup InputStream stream = editor.exportToFile();
+        FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\invoice2.xls", stream, true);
     }
 }

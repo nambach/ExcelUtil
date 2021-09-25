@@ -3,6 +3,7 @@ package io.github.nambach.excelutil.core;
 import io.github.nambach.excelutil.util.ListUtil;
 import io.github.nambach.excelutil.util.ReflectUtil;
 import io.github.nambach.excelutil.util.TextUtil;
+import lombok.EqualsAndHashCode;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
@@ -12,8 +13,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+@EqualsAndHashCode(callSuper = true)
 public class ColumnTemplate<T> extends ArrayList<ColumnMapper<T>> {
     protected Class<T> tClass;
 
@@ -99,7 +102,7 @@ public class ColumnTemplate<T> extends ArrayList<ColumnMapper<T>> {
      * @param builder a function that builds {@link ColumnMapper}
      * @return current template
      */
-    public ColumnTemplate<T> column(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
+    public ColumnTemplate<T> column(UnaryOperator<ColumnMapper<T>> builder) {
         ColumnMapper<T> mapper = builder.apply(new ColumnMapper<>());
         if (validateMapper(mapper)) {
             this.add(mapper);

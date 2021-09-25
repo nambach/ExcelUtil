@@ -37,7 +37,7 @@ public class Sample2 {
 
         System.out.println();
 
-        if (!books.hasError()) {
+        if (books.noError()) {
             System.out.println("No error.");
         }
         for (LineError line : books.getErrors()) {

@@ -9,10 +9,11 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.github.nambach.excelutil.style.StyleProperty.Alignments;
 import static io.github.nambach.excelutil.style.StyleProperty.BackgroundColor;
@@ -26,7 +27,9 @@ import static io.github.nambach.excelutil.style.StyleProperty.Indentation;
 import static io.github.nambach.excelutil.style.StyleProperty.Underline;
 import static io.github.nambach.excelutil.style.StyleProperty.WrapText;
 
-public class Style implements Copyable<Style> {
+public class Style implements Copyable<Style>, Serializable {
+
+    private static final long serialVersionUID = -3301075124198499750L;
 
     @Getter(AccessLevel.PUBLIC)
     private final String uuid;
@@ -137,8 +140,7 @@ public class Style implements Copyable<Style> {
         }
 
         public StyleBuilder datePattern(String s) {
-            style.put(DataFormat.withValue(s));
-            return this;
+            return dataFormat(s);
         }
 
         public StyleBuilder dataFormat(String s) {
@@ -204,7 +206,7 @@ public class Style implements Copyable<Style> {
             return this;
         }
 
-        public StyleBuilder border(Function<Border, Border> borderBuilder) {
+        public StyleBuilder border(UnaryOperator<Border> borderBuilder) {
             Border border = borderBuilder.apply(new Border());
             addBorderSafely(border);
             return this;

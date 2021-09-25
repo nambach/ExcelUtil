@@ -2,6 +2,7 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ListUtil;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 import static io.github.nambach.excelutil.util.ListUtil.findElse;
 
 @Getter
+@EqualsAndHashCode(callSuper = true)
 public class Result<T> extends ArrayList<T> implements List<T> {
     @Getter(AccessLevel.NONE)
     private final Class<T> tClass;
@@ -22,8 +24,12 @@ public class Result<T> extends ArrayList<T> implements List<T> {
         this.tClass = tClass;
     }
 
-    public boolean hasError() {
+    public boolean hasErrors() {
         return ListUtil.hasMember(errors);
+    }
+
+    public boolean noError() {
+        return ListUtil.isNullOrEmpty(errors);
     }
 
     void addRaw(Raw<T> raw) {

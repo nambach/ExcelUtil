@@ -5,7 +5,7 @@ import io.github.nambach.excelutil.style.Style;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 interface FreestyleWriter<T extends FreestyleWriter<T>> extends Navigation<T> {
     T useStyle(Style style);
@@ -20,13 +20,13 @@ interface FreestyleWriter<T extends FreestyleWriter<T>> extends Navigation<T> {
 
     T applyConstraint(Constraint constraint, Collection<String> addresses);
 
-    T writeComment(Function<WriterComment, WriterComment> builder);
+    T writeComment(UnaryOperator<WriterComment> builder);
 
     default T comment(String comment) {
         return writeComment(c -> c.content(comment));
     }
 
-    T writeCell(Function<WriterCell, WriterCell> builder);
+    T writeCell(UnaryOperator<WriterCell> builder);
 
     default T date(Date date) {
         return writeCell(c -> c.date(date));

@@ -15,6 +15,9 @@ public class ReflectUtil {
 
     private static final Map<String, Map<String, PropertyDescriptor>> CACHED_SCHEME = new HashMap<>();
 
+    private ReflectUtil() {
+    }
+
     /**
      * Double-checked locking (DLC)
      * https://refactoring.guru/design-patterns/singleton/java/example#example-2

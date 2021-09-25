@@ -121,5 +121,5 @@ abstract class StyleHandler {
         }
     }
 
-    abstract public int countColors();
+    public abstract int countColors();
 }

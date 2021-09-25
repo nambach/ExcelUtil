@@ -30,22 +30,24 @@ import static io.github.nambach.excelutil.util.ListUtil.groupBy;
 
 class BaseWriter implements BaseEditor {
 
-    static final Map<Class<?>, BiConsumer<Cell, Object>> writerHandler = new HashMap<Class<?>, BiConsumer<Cell, Object>>() {{
-        put(String.class, (cell, val) -> cell.setCellValue((String) val));
-        put(Long.class, (cell, val) -> cell.setCellValue((long) val));
-        put(Integer.class, (cell, val) -> cell.setCellValue((int) val));
-        put(Double.class, (cell, val) -> cell.setCellValue((double) val));
-        put(Float.class, (cell, val) -> cell.setCellValue((float) val));
-        put(Boolean.class, (cell, val) -> cell.setCellValue((boolean) val));
-        put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
-    }};
-
+    static final Map<Class<?>, BiConsumer<Cell, Object>> writerHandler = new HashMap<>();
     static final Style DATE = Style.builder().datePattern("MMM dd, yyyy").build();
+
+    static {
+        writerHandler.put(String.class, (cell, val) -> cell.setCellValue((String) val));
+        writerHandler.put(Long.class, (cell, val) -> cell.setCellValue((long) val));
+        writerHandler.put(Integer.class, (cell, val) -> cell.setCellValue((int) val));
+        writerHandler.put(Double.class, (cell, val) -> cell.setCellValue((double) val));
+        writerHandler.put(Float.class, (cell, val) -> cell.setCellValue((float) val));
+        writerHandler.put(Boolean.class, (cell, val) -> cell.setCellValue((boolean) val));
+        writerHandler.put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
+    }
+
     final CacheStyle cachedStyles;
     final ConstraintHandler constraintHandler;
 
-    BaseWriter(Workbook workbook, Editor.Mode mode) {
-        cachedStyles = new CacheStyle(workbook, mode);
+    BaseWriter(Workbook workbook) {
+        cachedStyles = new CacheStyle(workbook);
         constraintHandler = new ConstraintHandler(workbook);
     }
 

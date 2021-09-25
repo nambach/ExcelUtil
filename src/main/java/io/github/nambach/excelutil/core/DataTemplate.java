@@ -2,8 +2,8 @@ package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.style.StyleConstant;
-import io.github.nambach.excelutil.util.ReflectUtil;
 import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 /**
  * A template that contains mapping rules to extract
@@ -24,6 +25,7 @@ import java.util.function.Predicate;
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
+@EqualsAndHashCode(callSuper = true)
 public class DataTemplate<T> extends ColumnTemplate<T> {
 
     private int rowAt;
@@ -32,10 +34,10 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
     private boolean autoSizeColumns;
     private boolean noHeader;
 
-    private Style headerStyle = StyleConstant.HEADER_STYLE;
-    private Style dataStyle = StyleConstant.DATA_STYLE;
+    private transient Style headerStyle = StyleConstant.HEADER_STYLE;
+    private transient Style dataStyle = StyleConstant.DATA_STYLE;
 
-    private Function<T, Style> conditionalRowStyle;
+    private transient Function<T, Style> conditionalRowStyle;
 
     DataTemplate(Class<T> tClass) {
         super(tClass);
@@ -58,7 +60,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @param configBuilder a function that builds configuration
      * @return current template
      */
-    public DataTemplate<T> config(Function<Builder<T>, Builder<T>> configBuilder) {
+    public DataTemplate<T> config(UnaryOperator<Builder<T>> configBuilder) {
         Objects.requireNonNull(configBuilder);
         Builder<T> cf = new Builder<>(this);
         configBuilder.apply(cf);
@@ -71,6 +73,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @param condition a {@link Predicate} that filters out mapping rules that need to keep
      * @return a copied template (which is not modified the original)
      */
+    @Override
     public DataTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
         DataTemplate<T> clone = this.makeCopy();
         this.internalSplit(clone, condition);
@@ -98,6 +101,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @param fieldNames an array of field names
      * @return current template
      */
+    @Override
     public DataTemplate<T> includeFields(String... fieldNames) {
         super.includeFields(fieldNames);
         return this;
@@ -108,6 +112,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      *
      * @return current template
      */
+    @Override
     public DataTemplate<T> includeAllFields() {
         super.includeAllFields();
         return this;
@@ -119,6 +124,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @param fieldNames an array of field names
      * @return current template
      */
+    @Override
     public DataTemplate<T> excludeFields(String... fieldNames) {
         super.excludeFields(fieldNames);
         return this;
@@ -130,7 +136,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
      * @param builder a function that builds {@link ColumnMapper}
      * @return current template
      */
-    public DataTemplate<T> column(Function<ColumnMapper<T>, ColumnMapper<T>> builder) {
+    public DataTemplate<T> column(UnaryOperator<ColumnMapper<T>> builder) {
         super.column(builder);
         return this;
     }
@@ -155,7 +161,10 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
     }
 
     Style applyConditionalRowStyle(T object) {
-        return ReflectUtil.safeApply(conditionalRowStyle, object);
+        if (conditionalRowStyle == null) {
+            return null;
+        }
+        return conditionalRowStyle.apply(object);
     }
 
     /**
@@ -241,7 +250,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         config.dataFromRow(rowAt + 1);
         for (ColumnMapper<T> mapper : this) {
             if (mapper.getTitle() == null) {
-                throw new Exception("Title of field '" + mapper.getFieldName() + "' must be provided.");
+                throw new RuntimeException("Title of field '" + mapper.getFieldName() + "' must be provided.");
             }
             if (mapper.getFieldName() != null) {
                 config.column(mapper.getTitle(), mapper.getFieldName());
@@ -343,7 +352,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
         @SneakyThrows
         public Builder<T> startAtCell(int rowAt, int colAt) {
             if (rowAt < 0 || colAt < 0) {
-                throw new Exception("Cell coordinate must be from (0, 0)");
+                throw new RuntimeException("Cell coordinate must be from (0, 0)");
             }
             template.rowAt = rowAt;
             template.colAt = colAt;
@@ -362,7 +371,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
                 CellAddress cellAddress = new CellAddress(address);
                 return startAtCell(cellAddress.getRow(), cellAddress.getColumn());
             } catch (Exception e) {
-                throw new Exception("Error while parsing cell address: ", e);
+                throw new RuntimeException("Error while parsing cell address", e);
             }
         }
 

@@ -6,6 +6,7 @@ import io.github.nambach.excelutil.util.FileUtil;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import model.Book;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.jeasy.random.EasyRandom;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -45,7 +46,7 @@ public class LargeSample {
     @Measurement(iterations = 2, time = 5)
     public void testXlsx(Data data) {
         DataTemplate<Book> template = BOOK_TEMPLATE.makeCopy().config(cf -> cf.autoSizeColumns(false));
-        @Cleanup Editor editor = Editor.openMode(Editor.Mode.DEFAULT);
+        @Cleanup Editor editor = new Editor();
         editor.writeData(template, data.books);
         FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\many-books.xlsx", editor.exportToFile(), true);
     }
@@ -55,9 +56,11 @@ public class LargeSample {
     @Fork(value = 1)
     @Warmup(iterations = 2, time = 5)
     @Measurement(iterations = 2, time = 5)
+    @SneakyThrows
     public void testLargeXlsx(Data data) {
         DataTemplate<Book> template = BOOK_TEMPLATE.makeCopy().config(cf -> cf.autoSizeColumns(false));
-        @Cleanup Editor editor = Editor.openMode(Editor.Mode.LARGE_XLSX);
+        @Cleanup SXSSFWorkbook workbook = new SXSSFWorkbook();
+        @Cleanup Editor editor = new Editor(workbook);
         editor.writeData(template, data.books);
         FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\many-books-2.xlsx", editor.exportToFile(), true);
     }

@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.nio.file.StandardCopyOption;
 
 public class FileUtil {
+    private FileUtil() {
+    }
 
     public static void writeToDisk(String path, InputStream inputStream, boolean closeQuietly) {
         File targetFile = new File(path);
@@ -30,6 +32,6 @@ public class FileUtil {
     }
 
     public static InputStream readFromDisk(String path) throws FileNotFoundException {
-        return new FileInputStream(new File(path));
+        return new FileInputStream(path);
     }
 }

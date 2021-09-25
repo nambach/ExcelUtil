@@ -1,8 +1,6 @@
 package io.github.nambach.excelutil.style;
 
-import io.github.nambach.excelutil.core.Editor;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -22,8 +20,7 @@ public class CacheStyle {
 
     private final StyleHandler handler;
 
-    @SneakyThrows
-    public CacheStyle(Workbook workbook, Editor.Mode mode) {
+    public CacheStyle(Workbook workbook) {
         this.workbook = workbook;
 
         if (workbook instanceof XSSFWorkbook) {
@@ -32,14 +29,20 @@ public class CacheStyle {
 
         } else if (workbook instanceof HSSFWorkbook) {
             HSSFWorkbook wb = (HSSFWorkbook) workbook;
-            handler = new HSSFStyleHandler(wb, new HSSFColorCache(wb, mode.getXlsColorPolicy()));
+            handler = new HSSFStyleHandler(wb, new HSSFColorCache(wb, HSSFColorCache.Policy.USE_MOST_SIMILAR));
 
         } else if (workbook instanceof SXSSFWorkbook) {
             SXSSFWorkbook wb = (SXSSFWorkbook) workbook;
             handler = new XSSFStyleHandler(wb.getXSSFWorkbook(), new XSSFColorCache(wb.getXSSFWorkbook()));
 
         } else {
-            throw new Exception("Unsupported workbook type");
+            throw new RuntimeException("Unsupported workbook type");
+        }
+    }
+
+    public void setHSSFColorPolicy(HSSFColorCache.Policy policy) {
+        if (handler instanceof HSSFStyleHandler) {
+            ((HSSFStyleHandler) handler).colorCache.setPolicy(policy);
         }
     }
 

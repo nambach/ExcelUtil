@@ -1,6 +1,7 @@
 package io.github.nambach.excelutil.style;
 
 import io.github.nambach.excelutil.util.Copyable;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -9,16 +10,19 @@ import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
+@EqualsAndHashCode(callSuper = true)
 class StyleColor extends Color implements Copyable<StyleColor>, Comparable<StyleColor> {
 
-    private static final Map<Integer, HSSFColor.HSSFColorPredefined> PredefinedMap = new HashMap<Integer, HSSFColor.HSSFColorPredefined>() {{
+    private static final Map<Integer, HSSFColor.HSSFColorPredefined> PredefinedMap = new HashMap<>();
+
+    static {
         for (HSSFColor.HSSFColorPredefined value : HSSFColor.HSSFColorPredefined.values()) {
-            put((int) value.getIndex(), value);
+            PredefinedMap.put((int) value.getIndex(), value);
         }
-    }};
+    }
 
     @Getter
-    private final HSSFColor hssfColor;
+    private final transient HSSFColor hssfColor;
 
     private StyleColor(int r, int g, int b, HSSFColor hssfColor) {
         super(r, g, b);

@@ -19,4 +19,7 @@ public class StyleConstant {
             .border(BorderSide.FULL)
             .horizontalAlignment(HorizontalAlignment.CENTER)
             .build();
+
+    private StyleConstant() {
+    }
 }

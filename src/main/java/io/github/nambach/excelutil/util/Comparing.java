@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public class Comparing<T> {
     final List<Criterion<T>> criteria = new ArrayList<>();
@@ -12,7 +13,7 @@ public class Comparing<T> {
         return new Comparing<>();
     }
 
-    public Comparing<T> thenCompare(Function<Criterion<T>, Criterion<T>> builder) {
+    public Comparing<T> thenCompare(UnaryOperator<Criterion<T>> builder) {
         Objects.requireNonNull(builder);
         Criterion<T> criterion = new Criterion<>();
         builder.apply(criterion);

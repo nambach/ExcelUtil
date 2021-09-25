@@ -10,7 +10,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * An entity that specifies way to read data from Excel and store into DTO
@@ -25,7 +25,7 @@ public class Handler<T> {
     private Integer colFrom;
     private String colTitle;
     private String fieldName;
-    private BiConsumer<T, ReaderCell> handler;
+    private BiConsumer<T, ReaderCell> coreHandler;
     private TypeValidator typeValidator;
 
     Handler() {
@@ -74,7 +74,7 @@ public class Handler<T> {
         return this;
     }
 
-    public Handler<T> validate(Function<TypeValidator, TypeValidator> builder) {
+    public Handler<T> validate(UnaryOperator<TypeValidator> builder) {
         this.typeValidator = builder.apply(TypeValidator.init());
         return this;
     }
@@ -87,7 +87,7 @@ public class Handler<T> {
      */
     public Handler<T> handle(BiConsumer<T, ReaderCell> handler) {
         Objects.requireNonNull(handler);
-        this.handler = ReflectUtil.safeWrap(handler);
+        this.coreHandler = ReflectUtil.safeWrap(handler);
         return this;
     }
 
@@ -98,7 +98,7 @@ public class Handler<T> {
     public Handler<T> wrapHandleField(PropertyDescriptor pd) {
         Method setter = pd.getWriteMethod();
 
-        this.handler = (T object, ReaderCell cell) -> {
+        this.coreHandler = (T object, ReaderCell cell) -> {
             Object cellValue;
             switch (ReflectUtil.checkType(pd.getPropertyType())) {
                 case STRING:

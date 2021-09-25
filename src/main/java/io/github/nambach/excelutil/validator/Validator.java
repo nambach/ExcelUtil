@@ -5,7 +5,7 @@ import io.github.nambach.excelutil.util.ListUtil;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public class Validator<T> {
     private final Class<T> clazz;
@@ -20,7 +20,7 @@ public class Validator<T> {
         return new Validator<>(clazz, new ArrayList<>());
     }
 
-    public Validator<T> on(Function<Field<T>, Field<T>> fieldBuilder) {
+    public Validator<T> on(UnaryOperator<Field<T>> fieldBuilder) {
         Field<T> field = fieldBuilder.apply(new Field<>(clazz));
         if (field.getFieldName() == null) {
             throw new RuntimeException("Field name must be provided.");
