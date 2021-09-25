@@ -54,7 +54,7 @@ public class Sample1 {
                             .conditionalRowStyle(book -> book.getTitle().contains("Harry Potter") ? FAVORITE_ONE : null));
 
     public static void main(String[] args) {
-        InputStream stream = BOOK_TEMPLATE.writeData(Constant.BOOKS);
+        InputStream stream = BOOK_TEMPLATE.writeData(Constant.BOOKS, "Books");
 
         FileUtil.writeToDisk("C:\\Users\\Nam Bach\\Desktop\\books.xlsx", stream, true);
     }

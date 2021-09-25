@@ -1,12 +1,12 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
+import io.github.nambach.excelutil.validator.Error;
 import io.github.nambach.excelutil.validator.Validator;
 import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.SneakyThrows;
 
 import java.beans.PropertyDescriptor;
 import java.io.InputStream;
@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * A configuration object containing rules for reading
@@ -138,7 +138,7 @@ public class ReaderConfig<T> {
         return column(index, fieldName, nullValidator);
     }
 
-    public ReaderConfig<T> column(int index, String fieldName, Function<TypeValidator, TypeValidator> builder) {
+    public ReaderConfig<T> column(int index, String fieldName, UnaryOperator<TypeValidator> builder) {
         TypeValidator typeValidator = builder.apply(TypeValidator.init());
         return column(index, fieldName, typeValidator);
     }
@@ -169,17 +169,17 @@ public class ReaderConfig<T> {
         return column(title, fieldName, nullValidator);
     }
 
-    public ReaderConfig<T> column(String title, String fieldName, Function<TypeValidator, TypeValidator> builder) {
+    public ReaderConfig<T> column(String title, String fieldName, UnaryOperator<TypeValidator> builder) {
         TypeValidator typeValidator = builder.apply(TypeValidator.init());
         return column(title, fieldName, typeValidator);
     }
 
-    @SneakyThrows
     public ReaderConfig<T> column(String title, String fieldName, TypeValidator typeValidator) {
         PropertyDescriptor pd = ReflectUtil.getField(fieldName, tClass);
         if (title != null && pd != null) {
             if (titleRowIndex < 0) {
-                throw new Exception("Index of title row must be provided via .titleAtRow(int); 'index=" + titleRowIndex + "' found.");
+                throw new RuntimeException("Index of title row must be provided through .titleAtRow(int); " +
+                                           "'index=" + titleRowIndex + "' found instead.");
             }
             Handler<T> handler = new Handler<T>()
                     .atColumn(title)
@@ -198,23 +198,22 @@ public class ReaderConfig<T> {
      * @param func a function that builds {@link Handler}
      * @return current config
      */
-    @SneakyThrows
-    public ReaderConfig<T> handler(Function<Handler<T>, Handler<T>> func) {
+    public ReaderConfig<T> handler(UnaryOperator<Handler<T>> func) {
         Handler<T> handler = new Handler<>();
         func.apply(handler);
         Integer indexAt = handler.getColAt();
         Integer indexFrom = handler.getColFrom();
         String title = handler.getColTitle();
         if (indexAt == null && indexFrom == null && title == null) {
-            throw new Exception("Handler must have a column index with .atColumn(int) or .fromColumn(int)," +
-                                " or a column title with .atColumn(String)");
+            throw new RuntimeException("Handler must have a column index with .atColumn(int) or .fromColumn(int)," +
+                                       " or a column title with .atColumn(String)");
         } else if (indexAt != null) {
             handlerMap.putAt(indexAt, handler);
         } else if (indexFrom != null) {
             handlerMap.putFrom(indexFrom, handler);
-        } else if (title != null) {
+        } else {
             if (titleRowIndex < 0) {
-                throw new Exception("Index of title row must be provided via .titleAtRow(int)");
+                throw new RuntimeException("Index of title row must be provided via .titleAtRow(int)");
             }
             handlerMap.put(title, handler);
         }
@@ -232,8 +231,23 @@ public class ReaderConfig<T> {
         return this;
     }
 
-    boolean needHandleBeforeAdd() {
-        return this.beforeAddItemHandle != null;
+    void handleBeforeAdd(T object, ReaderRow readerRow) {
+        if (beforeAddItemHandle != null) {
+            beforeAddItemHandle.accept(object, readerRow);
+        }
+    }
+
+    void validateObjectBeforeAdd(T object, ReaderRow readerRow) {
+        if (validator == null) return;
+
+        Error error = validator.validate(object);
+        if (error.hasErrors()) {
+            readerRow.setError(error.toString());
+
+            if (isEarlyExit()) {
+                readerRow.terminateNow();
+            }
+        }
     }
 
     /**

@@ -4,7 +4,6 @@ import io.github.nambach.excelutil.constraint.Constraint;
 import io.github.nambach.excelutil.style.HSSFColorCache;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
-import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
@@ -14,7 +13,6 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellAddress;
-import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
@@ -28,7 +26,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.github.nambach.excelutil.util.ListUtil.groupBy;
 
@@ -42,63 +40,48 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     private boolean isDebug;
 
     public Editor() {
-        this(null);
+        this(getWorkbookFromStream(null));
     }
 
     public Editor(InputStream stream) {
-        this(stream, Mode.DEFAULT);
+        this(getWorkbookFromStream(stream));
     }
 
-    @SneakyThrows
-    public Editor(InputStream stream, Mode mode) {
-        switch (mode) {
-            case XLS:
-                if (stream != null) {
-                    workbook = new HSSFWorkbook(stream);
-                } else {
-                    workbook = new HSSFWorkbook();
-                }
-                break;
-            case XLSX:
-                if (stream != null) {
-                    workbook = new XSSFWorkbook(stream);
-                } else {
-                    workbook = new XSSFWorkbook();
-                }
-                break;
-            case LARGE_XLSX:
-                if (stream != null) {
-                    workbook = new SXSSFWorkbook(new XSSFWorkbook(stream), mode.rowsInMemory);
-                } else {
-                    workbook = new SXSSFWorkbook(mode.rowsInMemory);
-                }
-                break;
-            default:
-                if (stream != null) {
-                    workbook = WorkbookFactory.create(stream);
-                } else {
-                    workbook = new XSSFWorkbook();
-                }
-                break;
+    public Editor(Workbook workbook) {
+        if (workbook == null) {
+            workbook = new XSSFWorkbook();
         }
 
-        this.writer = new BaseWriter(workbook, mode);
+        this.workbook = workbook;
+        this.writer = new BaseWriter(workbook);
         this.reader = new BaseReader();
 
         // set active sheet as current
-        if (stream != null && workbook.getNumberOfSheets() != 0) {
+        if (workbook.getNumberOfSheets() != 0) {
             int index = workbook.getActiveSheetIndex();
-            currentSheet = workbook.getSheetAt(index);
-        }
-
-        // set default sheet
-        if (stream == null) {
-            goToSheet(0);
+            this.currentSheet = workbook.getSheetAt(index);
         }
     }
 
-    public static Editor openMode(Mode mode) {
-        return new Editor(null, mode);
+    @SneakyThrows
+    private static Workbook getWorkbookFromStream(InputStream stream) {
+        if (stream != null) {
+            return WorkbookFactory.create(stream);
+        } else {
+            return new XSSFWorkbook();
+        }
+    }
+
+    /**
+     * If there is no current sheet, it will create "Sheet1"
+     *
+     * @return current sheet
+     */
+    private Sheet getSheet() {
+        if (this.currentSheet == null) {
+            goToSheet(0);
+        }
+        return this.currentSheet;
     }
 
     @Override
@@ -112,7 +95,7 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     public Sheet getCurrentPoiSheet() {
-        return currentSheet;
+        return this.currentSheet;
     }
 
     // Sheet navigation
@@ -121,18 +104,18 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     private int getNextRowIndex() {
-        return currentSheet.getLastRowNum() + 1;
+        return getSheet().getLastRowNum() + 1;
     }
 
     public Editor goToSheet(int index) {
         if (workbook.getNumberOfSheets() == 0) {
-            goToSheet("Sheet 1");
+            goToSheet("Sheet1");
         } else if (index < 0) {
-            currentSheet = workbook.getSheetAt(0);
+            this.currentSheet = workbook.getSheetAt(0);
         } else if (index + 1 > workbook.getNumberOfSheets()) {
-            currentSheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
+            this.currentSheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
         } else {
-            currentSheet = workbook.getSheetAt(index);
+            this.currentSheet = workbook.getSheetAt(index);
         }
         resetPointer();
         return this;
@@ -140,9 +123,9 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
 
     public Editor goToSheet(String sheetName) {
         if (workbook.getSheet(sheetName) != null) {
-            currentSheet = workbook.getSheet(sheetName);
+            this.currentSheet = workbook.getSheet(sheetName);
         } else {
-            currentSheet = workbook.createSheet(sheetName);
+            this.currentSheet = workbook.createSheet(sheetName);
         }
         resetPointer();
         return this;
@@ -153,9 +136,8 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     public Editor setSheetName(String sheetName) {
-        if (currentSheet != null) {
-            workbook.setSheetName(workbook.getSheetIndex(currentSheet), sheetName);
-        }
+        int index = workbook.getSheetIndex(getSheet());
+        workbook.setSheetName(index, sheetName);
         return this;
     }
 
@@ -233,7 +215,7 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
 
     // For writing
     private void replaceStyle(CellAddress cellAddress, Style style) {
-        Row row = getRowAt(currentSheet, cellAddress.getRow());
+        Row row = getRowAt(getSheet(), cellAddress.getRow());
         Cell cell = getCellAt(row, cellAddress.getColumn());
         cell.setCellStyle(writer.cachedStyles.accumulate(style));
     }
@@ -264,11 +246,13 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
 
     @Override
     public Editor applyStyle(Style style, Collection<String> addresses) {
+        Sheet sheet = getSheet();
+
         if (style != null) {
             Collection<CellAddress> cellAddresses = parseAddress(addresses);
             Map<Integer, List<CellAddress>> rowMap = groupBy(cellAddresses, CellAddress::getRow);
             rowMap.forEach((rowNum, cols) -> {
-                Row row = getRowAt(currentSheet, rowNum);
+                Row row = getRowAt(sheet, rowNum);
                 for (CellAddress col : cols) {
                     Cell cell = getCellAt(row, col.getColumn());
                     cell.setCellStyle(writer.cachedStyles.accumulate(style));
@@ -281,7 +265,7 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     @Override
     public Editor applyConstraint(Constraint constraint, String... address) {
         if (address == null || address.length == 0) {
-            Cell cell = getCellAt(currentSheet, navigation);
+            Cell cell = getCellAt(getSheet(), navigation);
             writer.constraintHandler.applyConstraint(constraint, cell);
         } else {
             applyConstraint(constraint, Arrays.asList(address));
@@ -293,8 +277,10 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     public Editor applyConstraint(Constraint constraint, Collection<String> addresses) {
         Collection<CellAddress> cellAddresses = parseAddress(addresses);
         Map<Integer, List<CellAddress>> rowMap = groupBy(cellAddresses, CellAddress::getRow);
+        Sheet sheet = getSheet();
+
         rowMap.forEach((rowNum, cols) -> {
-            Row row = getRowAt(currentSheet, rowNum);
+            Row row = getRowAt(sheet, rowNum);
             for (CellAddress col : cols) {
                 Cell cell = getCellAt(row, col.getColumn());
                 writer.constraintHandler.applyConstraint(constraint, cell);
@@ -304,16 +290,16 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     @Override
-    public Editor writeComment(Function<WriterComment, WriterComment> builder) {
-        Cell cell = getCellAt(currentSheet, navigation);
+    public Editor writeComment(UnaryOperator<WriterComment> builder) {
+        Cell cell = getCellAt(getSheet(), navigation);
         writer.writeComment(builder.apply(new WriterComment()), cell);
         return this;
     }
 
     @Override
-    public Editor writeCell(Function<WriterCell, WriterCell> f) {
+    public Editor writeCell(UnaryOperator<WriterCell> f) {
         WriterCell writerCell = f.apply(new WriterCell(navigation.getCellAddress(), tempStyle));
-        Cell cell = getCellAt(currentSheet, navigation);
+        Cell cell = getCellAt(getSheet(), navigation);
         writer.writeCellInfo(writerCell, cell);
 
         // update pivot
@@ -323,10 +309,10 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     public Editor writeTemplate(Template template) {
-        writer.writeTemplate(currentSheet, template);
+        writer.writeTemplate(getSheet(), template);
 
-        int[] rowIndex = template.getRowIndex();
-        int[] colIndex = template.getColIndex();
+        int[] rowIndex = template.getRowIndexRange();
+        int[] colIndex = template.getColIndexRange();
 
         // update pointer
         navigation.update(rowIndex[0], colIndex[0]);
@@ -340,7 +326,7 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         if (data == null) {
             data = Collections.emptyList();
         }
-        writer.writeData(currentSheet, template, data, navigation.getRow(), navigation.getCol());
+        writer.writeData(getSheet(), template, data, navigation.getRow(), navigation.getCol());
 
         // update pivot
         navigation.updatePivotRight(template.size() - 1);
@@ -369,120 +355,120 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     // For reading
 
     public String readString() {
-        return getReaderCellAt(currentSheet, navigation).readString();
+        return getReaderCellAt(getSheet(), navigation).readString();
     }
 
     public Date readDate() {
-        return getReaderCellAt(currentSheet, navigation).readDate();
+        return getReaderCellAt(getSheet(), navigation).readDate();
     }
 
     public LocalDateTime readLocalDateTime() {
-        return getReaderCellAt(currentSheet, navigation).readLocalDateTime();
+        return getReaderCellAt(getSheet(), navigation).readLocalDateTime();
     }
 
     public Double readDouble() {
-        return getReaderCellAt(currentSheet, navigation).readDouble();
+        return getReaderCellAt(getSheet(), navigation).readDouble();
     }
 
     public Float readFloat() {
-        return getReaderCellAt(currentSheet, navigation).readFloat();
+        return getReaderCellAt(getSheet(), navigation).readFloat();
     }
 
     public Long readLong() {
-        return getReaderCellAt(currentSheet, navigation).readLong();
+        return getReaderCellAt(getSheet(), navigation).readLong();
     }
 
     public Integer readInt() {
-        return getReaderCellAt(currentSheet, navigation).readInt();
+        return getReaderCellAt(getSheet(), navigation).readInt();
     }
 
     public Boolean readBoolean() {
-        return getReaderCellAt(currentSheet, navigation).readBoolean();
+        return getReaderCellAt(getSheet(), navigation).readBoolean();
     }
 
     public <T> Result<T> readSection(ReaderConfig<T> config) {
-        return reader.readSheet(currentSheet, config, navigation.getRow(), navigation.getCol());
+        return reader.readSheet(getSheet(), config, navigation.getRow(), navigation.getCol());
     }
 
-    public Editor configSheet(Function<Config, Config> f) {
-        f.apply(new Config(this));
+    public Editor configWorkbook(UnaryOperator<WorkbookConfig> f) {
+        f.apply(new WorkbookConfig(this));
         return this;
     }
 
-    public enum Mode {
-        DEFAULT,
-        XLS,
-        XLSX,
-        LARGE_XLSX;
+    public Editor configSheet(UnaryOperator<SheetConfig> f) {
+        f.apply(new SheetConfig(this));
+        return this;
+    }
 
-        private int rowsInMemory = 100;
-        @Getter
-        private HSSFColorCache.Policy xlsColorPolicy = HSSFColorCache.Policy.USE_MOST_SIMILAR;
+    public static class WorkbookConfig {
+        private final Editor editor;
 
-        Mode() {
+        public WorkbookConfig(Editor editor) {
+            this.editor = editor;
         }
 
-        public Mode withRowsInMemory(int n) {
-            this.rowsInMemory = n;
-            return this;
-        }
-
-        public Mode withXlsColorPolicy(HSSFColorCache.Policy policy) {
-            this.xlsColorPolicy = policy;
+        public WorkbookConfig setXLSColorPolicy(HSSFColorCache.Policy policy) {
+            editor.writer.cachedStyles.setHSSFColorPolicy(policy);
             return this;
         }
     }
 
-    public static class Config {
+    public static class SheetConfig {
         private final Editor editor;
 
-        public Config(Editor editor) {
+        public SheetConfig(Editor editor) {
             this.editor = editor;
         }
 
-        public Config freeze(int rows, int cols) {
+        public SheetConfig freeze(int rows, int cols) {
             if (rows < 0) {
                 rows = 0;
             }
             if (cols < 0) {
                 cols = 0;
             }
-            Sheet sheet = editor.currentSheet;
-            sheet.createFreezePane(cols, rows);
+            editor.getSheet().createFreezePane(cols, rows);
             return this;
         }
 
-        public Config setColumnWidth(int pixels, int... colIndexes) {
-            if (colIndexes != null && editor.currentSheet != null) {
-                for (int colIndex : colIndexes) {
-                    if (colIndex >= 0) {
-                        PixelUtil.setColumnWidth(editor.currentSheet, colIndex, pixels);
-                    }
+        public SheetConfig setColumnWidth(int pixels, int... colIndexes) {
+            if (colIndexes == null) return this;
+
+            Sheet sheet = editor.getSheet();
+            for (int colIndex : colIndexes) {
+                if (colIndex >= 0) {
+                    PixelUtil.setColumnWidth(sheet, colIndex, pixels);
                 }
             }
+
             return this;
         }
 
-        public Config autoSizeColumn(int... colIndexes) {
-            if (colIndexes != null && editor.currentSheet != null) {
-                for (int colIndex : colIndexes) {
-                    if (colIndex >= 0) {
-                        editor.currentSheet.autoSizeColumn(colIndex);
-                    }
+
+        public SheetConfig autoSizeColumn(int... colIndexes) {
+            if (colIndexes == null) return this;
+
+            Sheet sheet = editor.getSheet();
+            for (int colIndex : colIndexes) {
+                if (colIndex >= 0) {
+                    sheet.autoSizeColumn(colIndex);
                 }
             }
+
             return this;
         }
 
-        public Config setRowHeightInPoints(int height, int... rowIndexes) {
-            if (rowIndexes != null && editor.currentSheet != null) {
-                for (int rowIndex : rowIndexes) {
-                    if (rowIndex >= 0) {
-                        Row row = editor.getRowAt(editor.currentSheet, rowIndex);
-                        row.setHeightInPoints(height);
-                    }
+        public SheetConfig setRowHeightInPoints(int height, int... rowIndexes) {
+            if (rowIndexes == null) return this;
+
+            Sheet sheet = editor.getSheet();
+            for (int rowIndex : rowIndexes) {
+                if (rowIndex >= 0) {
+                    Row row = editor.getRowAt(sheet, rowIndex);
+                    row.setHeightInPoints(height);
                 }
             }
+
             return this;
         }
 
@@ -492,40 +478,38 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
          * @param rowIndexes list of rows' index
          * @return editor configuration
          */
-        public Config autoSizeRow(int... rowIndexes) {
-            if (rowIndexes != null && editor.currentSheet != null) {
-                for (int rowIndex : rowIndexes) {
-                    if (rowIndex >= 0) {
-                        Row row = editor.getRowAt(editor.currentSheet, rowIndex);
-                        if (editor.workbook instanceof XSSFWorkbook) {
-                            row.setHeight((short) -1);
-                        } else if (editor.workbook instanceof HSSFWorkbook) {
-                            CellStyle style = row.getRowStyle();
-                            if (style != null) {
-                                style.setWrapText(true);
-                            }
-                        }
+        public SheetConfig autoSizeRow(int... rowIndexes) {
+            if (rowIndexes == null) return this;
+
+            Sheet sheet = editor.getSheet();
+            for (int rowIndex : rowIndexes) {
+                if (rowIndex < 0) continue;
+
+                Row row = editor.getRowAt(sheet, rowIndex);
+                if (editor.workbook instanceof XSSFWorkbook) {
+                    row.setHeight((short) -1);
+                } else if (editor.workbook instanceof HSSFWorkbook) {
+                    CellStyle style = row.getRowStyle();
+                    if (style != null) {
+                        style.setWrapText(true);
                     }
                 }
             }
+
             return this;
         }
 
-        public Config hideGrid(boolean b) {
-            if (editor.currentSheet != null) {
-                editor.currentSheet.setDisplayGridlines(!b);
-            }
+        public SheetConfig hideGrid(boolean b) {
+            editor.getSheet().setDisplayGridlines(!b);
             return this;
         }
 
-        public Config setZoom(int percentage) {
-            if (editor.currentSheet != null) {
-                editor.currentSheet.setZoom(percentage);
-            }
+        public SheetConfig setZoom(int percentage) {
+            editor.getSheet().setZoom(percentage);
             return this;
         }
 
-        public Config debug(boolean b) {
+        public SheetConfig debug(boolean b) {
             editor.isDebug = b;
             return this;
         }

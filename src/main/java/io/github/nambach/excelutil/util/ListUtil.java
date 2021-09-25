@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 
 public class ListUtil {
 
+    private ListUtil() {
+    }
+
     public static <T, R> List<R> map(Collection<T> source, Function<? super T, R> mapper) {
         if (isNullOrEmpty(source)) {
             return Collections.emptyList();
@@ -32,7 +35,8 @@ public class ListUtil {
     }
 
     public static <T> boolean hasMember(Collection<T> list) {
-        return list != null && !list.isEmpty();
+        if (list == null) return false;
+        return !list.isEmpty();
     }
 
     public static <T> void sort(List<T> list, Comparing<T> comparing) {

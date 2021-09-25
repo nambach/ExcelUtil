@@ -2,6 +2,9 @@ package io.github.nambach.excelutil.util;
 
 public class TextUtil {
 
+    private TextUtil() {
+    }
+
     public static boolean isNullOrEmpty(String s) {
         return s == null || s.trim().isEmpty();
     }

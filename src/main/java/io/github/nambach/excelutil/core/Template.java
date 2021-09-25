@@ -13,8 +13,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.stream.Stream;
+import java.util.function.UnaryOperator;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
@@ -23,20 +24,19 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
     private final PointerNavigation navigation = new PointerNavigation();
     private Style tempStyle;
 
-    public Template() {
+    int calculateIndex(Function<WriterCell, Integer> mapper, BinaryOperator<Integer> type) {
+        return cells.values().stream().map(mapper).reduce(type).orElse(0);
     }
 
-    int[] getRowIndex() {
-        Stream<Integer> rows = cells.values().stream().map(WriterCell::getRowAt);
-        int min = rows.reduce(Math::min).orElse(0);
-        int max = rows.reduce(Math::max).orElse(0);
+    int[] getRowIndexRange() {
+        int min = calculateIndex(WriterCell::getRowAt, Math::min);
+        int max = calculateIndex(WriterCell::getRowAt, Math::max);
         return new int[]{min, max};
     }
 
-    int[] getColIndex() {
-        Stream<Integer> cols = cells.values().stream().map(WriterCell::getColAt);
-        int min = cols.reduce(Math::min).orElse(0);
-        int max = cols.reduce(Math::max).orElse(0);
+    int[] getColIndexRange() {
+        int min = calculateIndex(WriterCell::getColAt, Math::min);
+        int max = calculateIndex(WriterCell::getColAt, Math::max);
         return new int[]{min, max};
     }
 
@@ -103,7 +103,7 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
      * @param builder     transform function
      * @return current template
      */
-    private WriterCell updateCell(CellAddress cellAddress, Function<WriterCell, WriterCell> builder) {
+    private WriterCell updateCell(CellAddress cellAddress, UnaryOperator<WriterCell> builder) {
         String address = cellAddress.formatAsString();
         WriterCell current = cells.getOrDefault(address, new WriterCell(cellAddress, tempStyle));
         WriterCell newCell = builder.apply(current);
@@ -112,7 +112,7 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
     }
 
     @Override
-    public Template writeCell(Function<WriterCell, WriterCell> builder) {
+    public Template writeCell(UnaryOperator<WriterCell> builder) {
         WriterCell cell = updateCell(navigation.getCellAddress(), builder);
 
         // update pivot
@@ -145,7 +145,7 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
 
     @Override
     public Template applyStyle(Style style, Collection<String> addresses) {
-        Function<WriterCell, WriterCell> builder = c -> c.replaceStyle(style);
+        UnaryOperator<WriterCell> builder = c -> c.replaceStyle(style);
 
         Collection<CellAddress> cellAddresses = parseAddress(addresses);
         for (CellAddress cellAddress : cellAddresses) {
@@ -166,7 +166,7 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
 
     @Override
     public Template applyConstraint(Constraint constraint, Collection<String> addresses) {
-        Function<WriterCell, WriterCell> builder = c -> c.constraint(constraint);
+        UnaryOperator<WriterCell> builder = c -> c.constraint(constraint);
 
         Collection<CellAddress> cellAddresses = parseAddress(addresses);
         for (CellAddress cellAddress : cellAddresses) {
@@ -176,7 +176,7 @@ public class Template implements Iterable<WriterCell>, FreestyleWriter<Template>
     }
 
     @Override
-    public Template writeComment(Function<WriterComment, WriterComment> builder) {
+    public Template writeComment(UnaryOperator<WriterComment> builder) {
         updateCell(navigation.getCellAddress(), c -> c.comment(builder));
         return this;
     }

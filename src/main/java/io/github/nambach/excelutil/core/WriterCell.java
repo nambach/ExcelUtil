@@ -8,7 +8,7 @@ import lombok.Setter;
 import org.apache.poi.ss.util.CellAddress;
 
 import java.util.Date;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
@@ -75,7 +75,7 @@ public class WriterCell {
         return this.comment(c -> c.content(comment).author(author));
     }
 
-    public WriterCell comment(Function<WriterComment, WriterComment> builder) {
+    public WriterCell comment(UnaryOperator<WriterComment> builder) {
         this.comment = builder.apply(new WriterComment());
         return this;
     }
@@ -85,7 +85,7 @@ public class WriterCell {
         return this;
     }
 
-    public WriterCell style(Function<Style.StyleBuilder, Style.StyleBuilder> f) {
+    public WriterCell style(UnaryOperator<Style.StyleBuilder> f) {
         if (f != null) {
             // Create new copied style, not using the current reference
             Style.StyleBuilder builder = Style.builder(this.style);

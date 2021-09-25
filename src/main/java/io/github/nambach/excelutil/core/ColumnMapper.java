@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import static io.github.nambach.excelutil.util.ListUtil.hasMember;
 
@@ -22,8 +23,10 @@ import static io.github.nambach.excelutil.util.ListUtil.hasMember;
 @Setter(AccessLevel.PACKAGE)
 public class ColumnMapper<T> {
 
-    // mappers of field
+    private static final String FIELD_NAME_FIRST_MESSAGE = "Field name must be provided first";
+
     // for expanding rows
+    // mappers of field
     ColumnTemplate<?> fieldTemplate;
 
     private String fieldName;
@@ -165,7 +168,7 @@ public class ColumnMapper<T> {
     }
 
     public ColumnMapper<T> expandRows() {
-        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        Objects.requireNonNull(fieldName, FIELD_NAME_FIRST_MESSAGE);
         ColumnTemplate<Object> template = new ColumnTemplate<>(Object.class);
         template.column(c -> c.title(TextUtil.splitCamelCase(fieldName))
                               .transform(o -> o));
@@ -174,15 +177,15 @@ public class ColumnMapper<T> {
     }
 
     public <F> ColumnMapper<T> expandRows(Class<F> fClass, String... fields) {
-        Objects.requireNonNull(fieldName, "Field name must be provided first");
+        Objects.requireNonNull(fieldName, FIELD_NAME_FIRST_MESSAGE);
         ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
         template.includeFields(fields);
         fieldTemplate = template;
         return this;
     }
 
-    public <F> ColumnMapper<T> expandRows(Class<F> fClass, Function<ColumnTemplate<F>, ColumnTemplate<F>> builder) {
-        Objects.requireNonNull(fieldName, "Field name must be provided first");
+    public <F> ColumnMapper<T> expandRows(Class<F> fClass, UnaryOperator<ColumnTemplate<F>> builder) {
+        Objects.requireNonNull(fieldName, FIELD_NAME_FIRST_MESSAGE);
         ColumnTemplate<F> template = new ColumnTemplate<>(fClass);
         builder.apply(template);
         fieldTemplate = template;
@@ -199,7 +202,10 @@ public class ColumnMapper<T> {
     }
 
     Style applyConditionalStyle(T object) {
-        return ReflectUtil.safeApply(conditionalStyle, object);
+        if (conditionalStyle == null) {
+            return null;
+        }
+        return conditionalStyle.apply(object);
     }
 
     Object retrievePivotValueForMergeComparison(T object, Object cellValue) {

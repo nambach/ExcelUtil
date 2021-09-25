@@ -9,6 +9,7 @@ import lombok.SneakyThrows;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 @Getter(AccessLevel.PACKAGE)
 public class Field<T> {
@@ -36,7 +37,7 @@ public class Field<T> {
         return this;
     }
 
-    public Field<T> validate(Function<TypeValidator, TypeValidator> builder) {
+    public Field<T> validate(UnaryOperator<TypeValidator> builder) {
         this.typeValidator = builder.apply(TypeValidator.init());
         return this;
     }

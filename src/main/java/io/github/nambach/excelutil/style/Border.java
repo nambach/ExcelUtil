@@ -13,9 +13,6 @@ public class Border {
     private StyleColor color = StyleColor.fromPredefined(IndexedColors.BLACK);
     private BorderStyle borderStyle = BorderStyle.THIN;
 
-    public Border() {
-    }
-
     public Border side(BorderSide side) {
         this.side = side;
         return this;

@@ -3,7 +3,7 @@ package io.github.nambach.excelutil.core;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public class SequentialWriter implements AutoCloseable {
     private final Editor editor;
@@ -30,7 +30,7 @@ public class SequentialWriter implements AutoCloseable {
               .enter();
     }
 
-    public void writeLine(int indent, Function<WriterCell, WriterCell> detail) {
+    public void writeLine(int indent, UnaryOperator<WriterCell> detail) {
         editor.next(indent)
               .writeCell(detail)
               .enter();

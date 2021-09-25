@@ -3,7 +3,6 @@ package io.github.nambach.excelutil.core;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.SneakyThrows;
 import org.apache.poi.ss.util.CellAddress;
 
 @Setter(AccessLevel.NONE)
@@ -30,16 +29,14 @@ class Pointer {
         this.col = 0;
     }
 
-    @SneakyThrows
     public void update(String address) {
         CellAddress a = new CellAddress(address);
         update(a.getRow(), a.getColumn());
     }
 
-    @SneakyThrows
     public void update(int row, int col) {
         if (row < 0 || col < 0) {
-            throw new Exception("Coordinate is negative. ");
+            throw new RuntimeException("Coordinate must be from 0.");
         }
         this.row = row;
         this.col = col;

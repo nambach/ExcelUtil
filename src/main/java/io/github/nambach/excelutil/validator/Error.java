@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.validator;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.ArrayList;
@@ -10,6 +11,7 @@ import java.util.stream.Collectors;
 import static io.github.nambach.excelutil.util.ListUtil.findElse;
 
 @Getter
+@EqualsAndHashCode(callSuper = true)
 public class Error extends ArrayList<Error.TypeError> {
 
     private final Class<?> clazz;
@@ -50,7 +52,10 @@ public class Error extends ArrayList<Error.TypeError> {
         }
 
         private String getPrefix(boolean newLine) {
-            return fieldName != null ? String.format("'%s':", fieldName) + (newLine ? "\n" : " ") : "";
+            if (fieldName == null) {
+                return "";
+            }
+            return String.format("'%s':", fieldName) + (newLine ? "\n" : " ");
         }
 
         public String toMessage() {

@@ -41,7 +41,7 @@ class Node<T> {
     }
 
     public Node<T> lookup(List<String> path) {
-        if (path == null || path.size() == 0) {
+        if (path == null || path.isEmpty()) {
             return null;
         }
         Node<T> current = this;
