@@ -16,18 +16,13 @@ public class Sample2 {
             .fromClass(Book.class)
             .titleAtRow(1)
             .dataFromRow(2)
-            .exitWhenValidationFailed(true)
-            .column(0, "isbn", v -> v.isString().minLength(10, "ISBN must be at least 20 chars"))
+//            .exitWhenValidationFailed(true)
+            .column(0, "isbn", v -> v.isString().lengthBetween(10, 13, "Length must between 10 and 13"))
             .column(1, "title", v -> v.notNull("Title must not be null"))
             .column(2, "author", v -> v.isString().notBlank("Must provide author"))
             .column(5, "rating", v -> v.isDecimal().notNull())
             .column("First Published", "firstPublished")
-            .column("Category", "subCategory")
-            .beforeAddingItem((book, row) -> {
-                if (book.getRating() < 4) {
-                    row.skipThisObject();
-                }
-            });
+            .column("Category", "subCategory");
 
 
     @SneakyThrows
@@ -53,8 +48,8 @@ public class Sample2 {
             ObjectError objectError = line.getObjectError();
             for (FieldError field : objectError) {
                 String dtoField = field.getFieldName();
-                System.out.println("Field " + dtoField);
-                field.getMessages().forEach(System.out::println);
+//                System.out.println("Field " + dtoField);
+//                field.getMessages().forEach(System.out::println);
             }
         }
 

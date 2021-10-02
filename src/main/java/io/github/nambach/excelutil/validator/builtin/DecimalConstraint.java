@@ -7,7 +7,7 @@ import java.util.function.Function;
 
 class DecimalConstraint {
     static final Constraint IsDecimal = new Constraint("[Decimal] is decimal",
-                                                       o -> o == null || o instanceof Float || o instanceof Double,
+                                                       o -> o instanceof Float || o instanceof Double,
                                                        "must be a decimal").nullable();
 
     static final Function<Double, Constraint> MinDecimal =

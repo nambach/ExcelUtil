@@ -29,7 +29,7 @@ public class Sample3 {
             .fromClass(Book.class)
             .titleAtRow(1)
             .dataFromRow(2)
-            .exitWhenValidationFailed(true)
+//            .exitWhenValidationFailed(true)
             .column(0, "isbn")
             .column(1, "title")
             .column(2, "author")
@@ -62,8 +62,8 @@ public class Sample3 {
             ObjectError objectError = line.getObjectError();
             for (FieldError field : objectError) {
                 String dtoField = field.getFieldName();
-                System.out.println("Field " + dtoField);
-                field.getMessages().forEach(System.out::println);
+//                System.out.println("Field " + dtoField);
+//                field.getMessages().forEach(System.out::println);
             }
         }
 
