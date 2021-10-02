@@ -69,7 +69,7 @@ class BaseReader implements BaseEditor {
 
                     // Do validation first
                     if (handler.needValidation()) {
-                        readerCell.validate(handler.getTypeValidator());
+                        readerCell.validate(handler.getTypeValidator(), handler.getFieldName());
                     }
 
                     if (handle != null) {

@@ -18,7 +18,7 @@ public class Result<T> extends ArrayList<T> implements List<T> {
     private final Class<T> tClass;
 
     private final List<Raw<T>> rawData = new ArrayList<>();
-    private final List<LineError> errors = new ArrayList<>();
+    private final List<RowError> errors = new ArrayList<>();
 
     public Result(Class<T> tClass) {
         this.tClass = tClass;
@@ -37,12 +37,9 @@ public class Result<T> extends ArrayList<T> implements List<T> {
         this.add(raw.getData());
     }
 
-    void addError(int index, String fieldName, List<String> messages) {
-        LineError lineError = findElse(errors, l -> l.getIndex() == index, new LineError(index, tClass));
-        lineError.appendError(fieldName, messages);
-    }
-
-    void addError(int index, String fieldName, String message) {
-        addError(index, fieldName, Collections.singletonList(message));
+    RowError newRowError(int index) {
+        return findElse(errors,
+                        l -> l.getIndex() == index,
+                        new RowError(index, tClass));
     }
 }

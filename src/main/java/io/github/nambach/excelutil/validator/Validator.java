@@ -3,7 +3,6 @@ package io.github.nambach.excelutil.validator;
 import io.github.nambach.excelutil.util.ListUtil;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
@@ -35,24 +34,26 @@ public class Validator<T> {
         return this;
     }
 
-    public Error validate(T object) {
-        Error error = new Error(clazz);
+    public ObjectError validate(T object) {
+        ObjectError objectError = new ObjectError(clazz);
         for (Field<T> field : fields) {
             Object value = field.extract(object);
             List<String> messages = field.getTypeValidator().test(value);
             if (ListUtil.hasMember(messages)) {
-                error.appendError(field.getFieldName(), messages);
+                objectError.appendError(field.getFieldName(), messages);
             }
         }
-        return error;
+        return objectError;
     }
 
-    public Error.TypeError quickValidate(T object) {
+    public FieldError quickValidate(T object) {
         for (Field<T> field : fields) {
             Object value = field.extract(object);
             String message = field.getTypeValidator().quickTest(value);
             if (message != null) {
-                return new Error.TypeError(field.getFieldName(), Collections.singletonList(message));
+                FieldError fieldError = new FieldError(field.getFieldName());
+                fieldError.append(message);
+                return fieldError;
             }
         }
         return null;

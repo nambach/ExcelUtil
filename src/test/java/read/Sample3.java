@@ -6,28 +6,37 @@ import io.github.nambach.excelutil.core.RowError;
 import io.github.nambach.excelutil.util.FileUtil;
 import io.github.nambach.excelutil.validator.FieldError;
 import io.github.nambach.excelutil.validator.ObjectError;
+import io.github.nambach.excelutil.validator.Validator;
 import lombok.SneakyThrows;
 import model.Book;
 
 import java.io.InputStream;
 
-public class Sample2 {
+public class Sample3 {
+    public static final Validator<Book> VALIDATOR = Validator
+            .fromClass(Book.class)
+            .on(f -> f.field("isbn")
+                      .validate(v -> v.isString().notNull()
+                                      .lengthBetween(10, 13, "Length must between 10 and 13")))
+            .on(f -> f.field("title")
+                      .validate(v -> v.isString().notBlank("Title must be provided")))
+            .on(f -> f.field("author")
+                      .validate(v -> v.isString().notBlank("Author must be provided")))
+            .on(f -> f.field("rating")
+                      .validate(v -> v.isDecimal().notNull().between(0, 5)));
+
     static final ReaderConfig<Book> READER_CONFIG = ReaderConfig
             .fromClass(Book.class)
             .titleAtRow(1)
             .dataFromRow(2)
             .exitWhenValidationFailed(true)
-            .column(0, "isbn", v -> v.isString().minLength(10, "ISBN must be at least 20 chars"))
-            .column(1, "title", v -> v.notNull("Title must not be null"))
-            .column(2, "author", v -> v.isString().notBlank("Must provide author"))
-            .column(5, "rating", v -> v.isDecimal().notNull())
+            .column(0, "isbn")
+            .column(1, "title")
+            .column(2, "author")
+            .column(5, "rating")
             .column("First Published", "firstPublished")
             .column("Category", "subCategory")
-            .beforeAddingItem((book, row) -> {
-                if (book.getRating() < 4) {
-                    row.skipThisObject();
-                }
-            });
+            .validator(VALIDATOR);
 
 
     @SneakyThrows

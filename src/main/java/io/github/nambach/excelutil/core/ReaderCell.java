@@ -2,6 +2,7 @@ package io.github.nambach.excelutil.core;
 
 
 import io.github.nambach.excelutil.util.ListUtil;
+import io.github.nambach.excelutil.util.TextUtil;
 import io.github.nambach.excelutil.validator.builtin.DecimalValidator;
 import io.github.nambach.excelutil.validator.builtin.IntegerValidator;
 import io.github.nambach.excelutil.validator.builtin.StringValidator;
@@ -13,7 +14,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Contains information of the current read cell.
@@ -183,8 +183,7 @@ public class ReaderCell extends ReaderController {
 
     @Override
     public void setError(String message) {
-        String addressAppended = String.format("[%s] %s", getAddress(), message);
-        result.addError(getRowIndex(), columnTitle, addressAppended);
+        result.newRowError(getRowIndex()).setCustomError(message);
     }
 
     @Override
@@ -193,7 +192,7 @@ public class ReaderCell extends ReaderController {
         super.terminateNow();
     }
 
-    void validate(TypeValidator typeValidator) {
+    void validate(TypeValidator typeValidator, String fieldName) {
         List<String> errors = null;
         if (typeValidator instanceof StringValidator) {
             String val = readString();
@@ -216,8 +215,8 @@ public class ReaderCell extends ReaderController {
 
         // set errors to result
         if (ListUtil.hasMember(errors)) {
-            List<String> addressAppended = errors.stream().map(s -> String.format("[%s] %s", getAddress(), s)).collect(Collectors.toList());
-            result.addError(getRowIndex(), columnTitle, addressAppended);
+            String field = TextUtil.getNotNull(fieldName, columnTitle, "Column " + (getColumnIndex() + 1));
+            result.newRowError(getRowIndex()).appendError(field, errors);
             if (isEarlyExit()) {
                 super.terminateNow();
             }

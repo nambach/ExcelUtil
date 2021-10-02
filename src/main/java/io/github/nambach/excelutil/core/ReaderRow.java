@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.validator.ObjectError;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.apache.poi.ss.usermodel.Row;
@@ -19,9 +20,13 @@ public class ReaderRow extends ReaderController {
         this.skipThisObject = true;
     }
 
+    public void setObjectError(ObjectError objectError) {
+        result.newRowError(row.getRowNum()).setObjectError(objectError);
+    }
+
     @Override
     public void setError(String message) {
-        result.addError(row.getRowNum(), null, message);
+        result.newRowError(row.getRowNum()).setCustomError(message);
     }
 
     @Override

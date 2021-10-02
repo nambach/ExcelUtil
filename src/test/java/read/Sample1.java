@@ -1,6 +1,6 @@
 package read;
 
-import io.github.nambach.excelutil.core.LineError;
+import io.github.nambach.excelutil.core.RowError;
 import io.github.nambach.excelutil.core.ReaderConfig;
 import io.github.nambach.excelutil.core.Result;
 import io.github.nambach.excelutil.util.FileUtil;
@@ -21,7 +21,6 @@ public class Sample1 {
                                .handle((book, cell) -> {
                                    String value = cell.readString();
                                    book.setAuthor(value);
-                                   cell.setError("NOOO");
                                }))
             .beforeAddingItem((book, row) -> {
                 if (book.getTitle().contains("Harry")) {
@@ -45,7 +44,7 @@ public class Sample1 {
         if (books.noError()) {
             System.out.println("No error.");
         }
-        for (LineError line : books.getErrors()) {
+        for (RowError line : books.getErrors()) {
             System.out.println(line);
 //            System.out.println(line.getLine());
 //            System.out.println(line.getMessage());

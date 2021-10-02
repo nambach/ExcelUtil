@@ -1,6 +1,7 @@
 package validator;
 
-import io.github.nambach.excelutil.validator.Error;
+import io.github.nambach.excelutil.validator.FieldError;
+import io.github.nambach.excelutil.validator.ObjectError;
 import io.github.nambach.excelutil.validator.Validator;
 import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.Getter;
@@ -40,14 +41,14 @@ public class User {
         user.setAge(18f);
         user.setEmail("a@.vn");
 
-        Error error = USER_VALIDATOR.validate(user);
-        if (error.noError()) {
+        ObjectError objectError = USER_VALIDATOR.validate(user);
+        if (objectError.noError()) {
             System.out.println("No error.");
         } else {
             System.out.println(USER_VALIDATOR.quickValidate(user));
         }
-        for (Error.TypeError typeError : error) {
-            System.out.println(typeError);
+        for (FieldError fieldError : objectError) {
+            System.out.println(fieldError);
         }
     }
 }
