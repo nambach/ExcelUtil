@@ -26,4 +26,16 @@ public class TextUtil {
         return capitalize(result);
     }
 
+    public static String getNotNull(String... vals) {
+        if (vals == null || vals.length == 0) {
+            return null;
+        }
+        for (String val : vals) {
+            if (val != null) {
+                return val;
+            }
+        }
+        return vals[vals.length - 1];
+    }
+
 }

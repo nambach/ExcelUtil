@@ -2,28 +2,36 @@ package io.github.nambach.excelutil.validator;
 
 import io.github.nambach.excelutil.util.ListUtil;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 
 public class Validator<T> {
     private final Class<T> clazz;
-    private final List<Field<T>> fields;
+    private final Map<String, Field<T>> fields;
 
-    Validator(Class<T> clazz, List<Field<T>> fields) {
+    Validator(Class<T> clazz) {
         this.clazz = clazz;
-        this.fields = fields;
+        this.fields = new LinkedHashMap<>();
     }
 
     public static <T> Validator<T> fromClass(Class<T> clazz) {
-        return new Validator<>(clazz, new ArrayList<>());
+        return new Validator<>(clazz);
+    }
+
+    public Field<T> getField(String fieldName) {
+        return fields.get(fieldName);
     }
 
     public Validator<T> on(UnaryOperator<Field<T>> fieldBuilder) {
         Field<T> field = fieldBuilder.apply(new Field<>(clazz));
-        if (field.getFieldName() == null) {
+        String fieldName = field.getFieldName();
+        if (fieldName == null) {
             throw new RuntimeException("Field name must be provided.");
+        }
+        if (fields.containsKey(fieldName)) {
+            throw new RuntimeException(String.format("Field '%s' already existed.", fieldName));
         }
         if (field.getExtractor() == null) {
             field.bindField();
@@ -31,28 +39,30 @@ public class Validator<T> {
         if (field.getTypeValidator() == null) {
             throw new RuntimeException("Validator rule must be provided.");
         }
-        this.fields.add(field);
+        this.fields.put(fieldName, field);
         return this;
     }
 
-    public Error validate(T object) {
-        Error error = new Error(clazz);
-        for (Field<T> field : fields) {
+    public ObjectError validate(T object) {
+        ObjectError objectError = new ObjectError(clazz);
+        for (Field<T> field : fields.values()) {
             Object value = field.extract(object);
             List<String> messages = field.getTypeValidator().test(value);
             if (ListUtil.hasMember(messages)) {
-                error.appendError(field.getFieldName(), messages);
+                objectError.appendError(field.getFieldName(), messages);
             }
         }
-        return error;
+        return objectError;
     }
 
-    public Error.TypeError quickValidate(T object) {
-        for (Field<T> field : fields) {
+    public FieldError quickValidate(T object) {
+        for (Field<T> field : fields.values()) {
             Object value = field.extract(object);
             String message = field.getTypeValidator().quickTest(value);
             if (message != null) {
-                return new Error.TypeError(field.getFieldName(), Collections.singletonList(message));
+                FieldError fieldError = new FieldError(field.getFieldName());
+                fieldError.append(message);
+                return fieldError;
             }
         }
         return null;

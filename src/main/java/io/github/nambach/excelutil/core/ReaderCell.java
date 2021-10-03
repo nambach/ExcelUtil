@@ -2,18 +2,20 @@ package io.github.nambach.excelutil.core;
 
 
 import io.github.nambach.excelutil.util.ListUtil;
+import io.github.nambach.excelutil.util.TextUtil;
 import io.github.nambach.excelutil.validator.builtin.DecimalValidator;
 import io.github.nambach.excelutil.validator.builtin.IntegerValidator;
 import io.github.nambach.excelutil.validator.builtin.StringValidator;
 import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.FormulaEvaluator;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Contains information of the current read cell.
@@ -24,6 +26,7 @@ public class ReaderCell extends ReaderController {
      */
     private final Cell cell;
     private final String columnTitle;
+    private FormulaEvaluator evaluator;
 
     ReaderCell(Cell cell, String columnTitle, ReaderConfig<?> config, Result<?> result) {
         super(config, result);
@@ -33,6 +36,14 @@ public class ReaderCell extends ReaderController {
 
     public static ReaderCell wrap(Cell cell) {
         return new ReaderCell(cell, null, null, null);
+    }
+
+    private FormulaEvaluator getFormulaEvaluator() {
+        if (evaluator == null) {
+            evaluator = cell.getSheet().getWorkbook().getCreationHelper().createFormulaEvaluator();
+            return evaluator;
+        }
+        return evaluator;
     }
 
     /**
@@ -93,13 +104,17 @@ public class ReaderCell extends ReaderController {
      * @return string value of the cell.
      */
     public String readString() {
-        switch (cell.getCellType()) {
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = getFormulaEvaluator().evaluateFormulaCell(cell);
+        }
+        switch (cellType) {
             case STRING:
                 return cell.getStringCellValue();
             case NUMERIC:
-                return Double.toString(cell.getNumericCellValue());
             case BOOLEAN:
-                return Boolean.toString(cell.getBooleanCellValue());
+                DataFormatter formatter = new DataFormatter();
+                return formatter.formatCellValue(cell);
             default:
                 return null;
         }
@@ -129,7 +144,11 @@ public class ReaderCell extends ReaderController {
      * @return the double value of cell (if cell is numeric).
      */
     public Double readDouble() {
-        switch (cell.getCellType()) {
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = getFormulaEvaluator().evaluateFormulaCell(cell);
+        }
+        switch (cellType) {
             case STRING:
                 return tryParseDouble(cell.getStringCellValue());
             case NUMERIC:
@@ -169,7 +188,11 @@ public class ReaderCell extends ReaderController {
      * @return the boolean value of cell (if cell is boolean type).
      */
     public Boolean readBoolean() {
-        switch (cell.getCellType()) {
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = getFormulaEvaluator().evaluateFormulaCell(cell);
+        }
+        switch (cellType) {
             case STRING:
                 return tryParseBoolean(cell.getStringCellValue());
             case NUMERIC:
@@ -183,8 +206,7 @@ public class ReaderCell extends ReaderController {
 
     @Override
     public void setError(String message) {
-        String addressAppended = String.format("[%s] %s", getAddress(), message);
-        result.addError(getRowIndex(), columnTitle, addressAppended);
+        result.newRowError(getRowIndex()).setCustomError(message);
     }
 
     @Override
@@ -193,7 +215,7 @@ public class ReaderCell extends ReaderController {
         super.terminateNow();
     }
 
-    void validate(TypeValidator typeValidator) {
+    void validate(TypeValidator typeValidator, String fieldName) {
         List<String> errors = null;
         if (typeValidator instanceof StringValidator) {
             String val = readString();
@@ -216,8 +238,8 @@ public class ReaderCell extends ReaderController {
 
         // set errors to result
         if (ListUtil.hasMember(errors)) {
-            List<String> addressAppended = errors.stream().map(s -> String.format("[%s] %s", getAddress(), s)).collect(Collectors.toList());
-            result.addError(getRowIndex(), columnTitle, addressAppended);
+            String field = TextUtil.getNotNull(fieldName, columnTitle, "Column " + (getColumnIndex() + 1));
+            result.newRowError(getRowIndex()).appendError(field, errors);
             if (isEarlyExit()) {
                 super.terminateNow();
             }
@@ -225,7 +247,11 @@ public class ReaderCell extends ReaderController {
     }
 
     private Double readDoubleRisky() throws NumberFormatException {
-        switch (cell.getCellType()) {
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = getFormulaEvaluator().evaluateFormulaCell(cell);
+        }
+        switch (cellType) {
             case STRING:
                 String strVal = cell.getStringCellValue();
                 if (strVal == null) {
@@ -235,12 +261,16 @@ public class ReaderCell extends ReaderController {
             case NUMERIC:
                 return cell.getNumericCellValue();
             default:
-                throw new NumberFormatException();
+                return null;
         }
     }
 
     private Long readLongRisky() throws NumberFormatException {
-        switch (cell.getCellType()) {
+        CellType cellType = cell.getCellType();
+        if (cellType == CellType.FORMULA) {
+            cellType = getFormulaEvaluator().evaluateFormulaCell(cell);
+        }
+        switch (cellType) {
             case STRING:
                 String strVal = cell.getStringCellValue();
                 if (strVal == null) {
@@ -255,7 +285,7 @@ public class ReaderCell extends ReaderController {
                     throw new NumberFormatException();
                 }
             default:
-                throw new NumberFormatException();
+                return null;
         }
     }
 }

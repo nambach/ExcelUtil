@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.core;
 
+import io.github.nambach.excelutil.validator.Field;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -67,9 +68,18 @@ class BaseReader implements BaseEditor {
                     // Prepare ingredients
                     BiConsumer<T, ReaderCell> handle = handler.getCoreHandler();
 
-                    // Do validation first
+                    // Do validation
+                    String fieldName = handler.getFieldName();
+                    // handler's type validator
                     if (handler.needValidation()) {
-                        readerCell.validate(handler.getTypeValidator());
+                        readerCell.validate(handler.getTypeValidator(), fieldName);
+                    }
+                    // object validator
+                    if (config.getValidator() != null) {
+                        Field<T> fieldValidator = config.getValidator().getField(fieldName);
+                        if (fieldValidator != null) {
+                            readerCell.validate(fieldValidator.getTypeValidator(), fieldName);
+                        }
                     }
 
                     if (handle != null) {
@@ -92,8 +102,6 @@ class BaseReader implements BaseEditor {
             ReaderRow readerRow = new ReaderRow(currentRow, config, result);
             config.handleBeforeAdd(object, readerRow);
 
-            // validate object
-            config.validateObjectBeforeAdd(object, readerRow);
             if (readerRow.isExitNow()) {
                 return result;
             }

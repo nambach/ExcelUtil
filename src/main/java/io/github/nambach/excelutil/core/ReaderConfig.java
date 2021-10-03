@@ -1,7 +1,6 @@
 package io.github.nambach.excelutil.core;
 
 import io.github.nambach.excelutil.util.ReflectUtil;
-import io.github.nambach.excelutil.validator.Error;
 import io.github.nambach.excelutil.validator.Validator;
 import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
@@ -234,19 +233,6 @@ public class ReaderConfig<T> {
     void handleBeforeAdd(T object, ReaderRow readerRow) {
         if (beforeAddItemHandle != null) {
             beforeAddItemHandle.accept(object, readerRow);
-        }
-    }
-
-    void validateObjectBeforeAdd(T object, ReaderRow readerRow) {
-        if (validator == null) return;
-
-        Error error = validator.validate(object);
-        if (error.hasErrors()) {
-            readerRow.setError(error.toString());
-
-            if (isEarlyExit()) {
-                readerRow.terminateNow();
-            }
         }
     }
 

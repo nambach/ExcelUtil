@@ -18,9 +18,11 @@ public class TypeValidator {
                                                      Objects::nonNull,
                                                      "must not be null");
 
-    static final ArrayList<Constraint> BasedConstraints = new ArrayList<Constraint>() {{
-        add(NotNull);
-    }};
+    static final ArrayList<Constraint> BasedConstraints = new ArrayList<>();
+
+    static {
+        BasedConstraints.add(NotNull);
+    }
 
     protected Constraint.Set constraints = new Constraint.Set();
 

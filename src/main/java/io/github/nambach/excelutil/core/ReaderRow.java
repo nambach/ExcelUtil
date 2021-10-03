@@ -21,7 +21,7 @@ public class ReaderRow extends ReaderController {
 
     @Override
     public void setError(String message) {
-        result.addError(row.getRowNum(), null, message);
+        result.newRowError(row.getRowNum()).setCustomError(message);
     }
 
     @Override

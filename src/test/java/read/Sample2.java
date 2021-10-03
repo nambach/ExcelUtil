@@ -1,32 +1,29 @@
 package read;
 
-import io.github.nambach.excelutil.core.LineError;
-import io.github.nambach.excelutil.core.Raw;
 import io.github.nambach.excelutil.core.ReaderConfig;
 import io.github.nambach.excelutil.core.Result;
+import io.github.nambach.excelutil.core.RowError;
 import io.github.nambach.excelutil.util.FileUtil;
+import io.github.nambach.excelutil.validator.FieldError;
+import io.github.nambach.excelutil.validator.ObjectError;
 import lombok.SneakyThrows;
 import model.Book;
 
 import java.io.InputStream;
+import java.util.List;
 
 public class Sample2 {
     static final ReaderConfig<Book> READER_CONFIG = ReaderConfig
             .fromClass(Book.class)
             .titleAtRow(1)
             .dataFromRow(2)
-            .exitWhenValidationFailed(true)
-            .column(0, "isbn", v -> v.isString().minLength(10, "ISBN must be at least 20 chars"))
+//            .exitWhenValidationFailed(true)
+            .column(0, "isbn", v -> v.isString().lengthBetween(10, 13, "Length must between 10 and 13"))
             .column(1, "title", v -> v.notNull("Title must not be null"))
             .column(2, "author", v -> v.isString().notBlank("Must provide author"))
-            .column(5, "rating", v -> v.isDecimal().notNull())
+            .column(3, "rating", v -> v.isDecimal().notNull().between(0, 5, "Rating must be between 0 and 5"))
             .column("First Published", "firstPublished")
-            .column("Category", "subCategory")
-            .beforeAddingItem((book, row) -> {
-                if (book.getRating() < 4) {
-                    row.skipThisObject();
-                }
-            });
+            .column("Category", "subCategory");
 
 
     @SneakyThrows
@@ -43,11 +40,18 @@ public class Sample2 {
         if (books.noError()) {
             System.out.println("No error.");
         }
-        for (LineError line : books.getErrors()) {
-            System.out.println(line);
-//            System.out.println(line.getLine());
-//            System.out.println(line.getMessage());
-            System.out.println();
+        for (RowError row : books.getErrors()) {
+            int atRow = row.getExcelIndex();
+            String message = row.getInlineMessage();
+            System.out.println("Row " + atRow + ": " + message);
+
+            ObjectError objectError = row.getObjectError();
+            for (FieldError field : objectError) {
+                String dtoField = field.getFieldName();
+                List<String> dtoFieldErrors = field.getMessages();
+//                System.out.println("Field " + dtoField);
+//                field.getMessages().forEach(System.out::println);
+            }
         }
 
     }
