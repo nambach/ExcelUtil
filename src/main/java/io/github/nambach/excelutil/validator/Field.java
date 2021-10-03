@@ -16,6 +16,7 @@ public class Field<T> {
     private final Class<T> tClass;
     private Function<T, ?> extractor;
     private String fieldName;
+    @Getter(AccessLevel.PUBLIC)
     private TypeValidator typeValidator;
 
     Field(Class<T> tClass) {

@@ -3,6 +3,8 @@ package io.github.nambach.excelutil.core;
 import lombok.AccessLevel;
 import lombok.Getter;
 
+import java.util.List;
+
 public abstract class ReaderController {
     protected Result<?> result;
 
@@ -19,11 +21,19 @@ public abstract class ReaderController {
         this.result = result;
     }
 
+    public boolean hasError() {
+        return result.hasErrors();
+    }
+
+    public List<RowError> getErrors() {
+        return result.getErrors();
+    }
+
     public abstract void setError(String message);
 
     public abstract void throwError(String message);
 
-    protected void terminateNow() {
+    public void terminateNow() {
         this.isExitNow = true;
     }
 }

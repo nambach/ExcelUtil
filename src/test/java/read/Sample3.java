@@ -36,7 +36,12 @@ public class Sample3 {
             .column(5, "rating")
             .column("First Published", "firstPublished")
             .column("Category", "subCategory")
-            .validator(VALIDATOR);
+            .validator(VALIDATOR)
+            .beforeAddingItem((book, readerRow) -> {
+                if (readerRow.hasError()) {
+                    readerRow.terminateNow();
+                }
+            });
 
 
     @SneakyThrows
