@@ -23,7 +23,7 @@ public class Sample3 {
             .on(f -> f.field("author")
                       .validate(v -> v.isString().notBlank("Author must be provided")))
             .on(f -> f.field("rating")
-                      .validate(v -> v.isDecimal().notNull().between(0, 5)));
+                      .validate(v -> v.isDecimal().notNull().between(0, 5, "Rating must be between 0 and 5")));
 
     static final ReaderConfig<Book> READER_CONFIG = ReaderConfig
             .fromClass(Book.class)

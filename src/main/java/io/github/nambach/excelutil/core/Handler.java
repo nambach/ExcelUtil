@@ -118,7 +118,7 @@ public class Handler<T> {
         return typeValidator != null;
     }
 
-    public Handler<T> wrapHandleField(PropertyDescriptor pd) {
+    protected Handler<T> wrapHandleField(PropertyDescriptor pd) {
         Method setter = pd.getWriteMethod();
         Class<?> type = pd.getPropertyType();
 
