@@ -49,10 +49,6 @@ public class TypeValidator {
         return new TypeValidator().customValidator(condition, message);
     }
 
-    protected boolean containOnlyBased() {
-        return constraints.stream().filter(c -> !BasedConstraints.contains(c)).count() == 0;
-    }
-
     public String quickTest(Object value) {
         return constraints.stream()
                           .filter(constraint -> constraint.notOk(value))
@@ -100,7 +96,7 @@ public class TypeValidator {
     }
 
     public <T> TypeValidator customValidator(Predicate<T> condition, String message) {
-        String name = "[Custom] " + UUID.randomUUID().toString();
+        String name = "[Custom] " + UUID.randomUUID();
         constraints.add(new Constraint(name, condition, message));
         return this;
     }

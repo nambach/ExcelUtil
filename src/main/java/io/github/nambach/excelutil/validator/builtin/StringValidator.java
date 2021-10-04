@@ -1,9 +1,8 @@
 package io.github.nambach.excelutil.validator.builtin;
 
+import io.github.nambach.excelutil.validator.Constraint;
 import lombok.AccessLevel;
 import lombok.Getter;
-
-import java.util.List;
 
 import static io.github.nambach.excelutil.validator.builtin.StringConstraint.BoundLength;
 import static io.github.nambach.excelutil.validator.builtin.StringConstraint.IsEmail;
@@ -17,24 +16,11 @@ import static io.github.nambach.excelutil.validator.builtin.StringConstraint.Not
 public class StringValidator extends TypeValidator {
 
     StringValidator() {
-    }
+        Constraint.Set temp = new Constraint.Set();
+        temp.add(IsString);
+        temp.addAll(constraints);
 
-    private void preCheck() {
-        if (containOnlyBased()) {
-            constraints.add(IsString);
-        }
-    }
-
-    @Override
-    public String quickTest(Object value) {
-        preCheck();
-        return super.quickTest(value);
-    }
-
-    @Override
-    public List<String> test(Object value) {
-        preCheck();
-        return super.test(value);
+        constraints = temp;
     }
 
     @Override

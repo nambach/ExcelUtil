@@ -5,7 +5,6 @@ import io.github.nambach.excelutil.util.ListUtil;
 import io.github.nambach.excelutil.util.TextUtil;
 import io.github.nambach.excelutil.validator.builtin.DecimalValidator;
 import io.github.nambach.excelutil.validator.builtin.IntegerValidator;
-import io.github.nambach.excelutil.validator.builtin.StringValidator;
 import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -13,7 +12,6 @@ import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -216,25 +214,18 @@ public class ReaderCell extends ReaderController {
     }
 
     void validate(TypeValidator typeValidator, String fieldName) {
-        List<String> errors = null;
-        if (typeValidator instanceof StringValidator) {
-            String val = readString();
-            errors = typeValidator.test(val);
-        } else if (typeValidator instanceof DecimalValidator) {
-            try {
-                Double val = readDoubleRisky();
-                errors = typeValidator.test(val);
-            } catch (NumberFormatException e) {
-                errors = Collections.singletonList("need to be a decimal");
-            }
-        } else if (typeValidator instanceof IntegerValidator) {
-            try {
-                Long val = readLongRisky();
-                errors = typeValidator.test(val);
-            } catch (NumberFormatException e) {
-                errors = Collections.singletonList("need to be an integer");
-            }
+        if (typeValidator == null) {
+            return;
         }
+
+        Object val = readString();
+        if (typeValidator instanceof DecimalValidator) {
+            val = tryReadDouble();
+        } else if (typeValidator instanceof IntegerValidator) {
+            val = tryReadLong();
+        }
+
+        List<String> errors = typeValidator.test(val);
 
         // set errors to result
         if (ListUtil.hasMember(errors)) {
@@ -246,7 +237,10 @@ public class ReaderCell extends ReaderController {
         }
     }
 
-    private Double readDoubleRisky() throws NumberFormatException {
+    /**
+     * @return double value of cell; if cell cannot produce double, function returns original value type
+     */
+    private Object tryReadDouble() {
         CellType cellType = cell.getCellType();
         if (cellType == CellType.FORMULA) {
             cellType = getFormulaEvaluator().evaluateFormulaCell(cell);
@@ -254,10 +248,11 @@ public class ReaderCell extends ReaderController {
         switch (cellType) {
             case STRING:
                 String strVal = cell.getStringCellValue();
-                if (strVal == null) {
-                    return null;
+                try {
+                    return Double.parseDouble(strVal);
+                } catch (Exception e) {
+                    return strVal;
                 }
-                return Double.parseDouble(strVal);
             case NUMERIC:
                 return cell.getNumericCellValue();
             default:
@@ -265,7 +260,10 @@ public class ReaderCell extends ReaderController {
         }
     }
 
-    private Long readLongRisky() throws NumberFormatException {
+    /**
+     * @return long value of cell; if cell cannot produce long, function returns original value type
+     */
+    private Object tryReadLong() {
         CellType cellType = cell.getCellType();
         if (cellType == CellType.FORMULA) {
             cellType = getFormulaEvaluator().evaluateFormulaCell(cell);
@@ -273,16 +271,17 @@ public class ReaderCell extends ReaderController {
         switch (cellType) {
             case STRING:
                 String strVal = cell.getStringCellValue();
-                if (strVal == null) {
-                    return null;
+                try {
+                    return Long.parseLong(strVal);
+                } catch (Exception e) {
+                    return strVal;
                 }
-                return Long.parseLong(strVal);
             case NUMERIC:
                 double val = cell.getNumericCellValue();
                 if ((val % 1) == 0) { // test if this is a long
                     return (long) val;
                 } else {
-                    throw new NumberFormatException();
+                    return val;
                 }
             default:
                 return null;

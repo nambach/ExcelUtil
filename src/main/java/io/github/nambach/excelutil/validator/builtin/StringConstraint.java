@@ -7,8 +7,9 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 class StringConstraint {
+
     static final Constraint IsString = new Constraint("[String] is string",
-                                                      o -> o instanceof String,
+                                                      String.class::isInstance,
                                                       "must be a string").nullable();
 
     static final Constraint NotEmpty = new Constraint("[String] not empty",
@@ -39,4 +40,7 @@ class StringConstraint {
     static final Constraint IsEmail = new Constraint("[String] is email",
                                                      o -> o instanceof String && VALID_EMAIL_ADDRESS_REGEX.matcher((String) o).find(),
                                                      "must be a valid email").nullable();
+
+    private StringConstraint() {
+    }
 }
