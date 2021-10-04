@@ -16,6 +16,10 @@ ExcelUtil is using Apache POI version 5.0.0
 </dependency>
 ```
 
+# Usage Guides
+
+For more detail guides & example, see the [Wiki page](https://github.com/nambach/ExcelUtil/wiki).
+
 # Quick Guides
 
 ## Write Excel
