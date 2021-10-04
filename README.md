@@ -1,6 +1,6 @@
 # Data Excel Exporter
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.3.0)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.3.2)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
 
 A Java wrapper using [Apache POI](http://poi.apache.org/components/spreadsheet/quick-guide.html) to read and write Excel file in declarative fashion.
 
@@ -12,7 +12,7 @@ ExcelUtil is using Apache POI version 5.0.0
 <dependency>
     <groupId>io.github.nambach</groupId>
     <artifactId>ExcelUtil</artifactId>
-    <version>2.3.0</version>
+    <version>2.3.2</version>
 </dependency>
 ```
 
