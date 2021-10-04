@@ -9,6 +9,7 @@ import lombok.var;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +43,7 @@ public class Handler<T> {
         o.put(Boolean.class, ReaderCell::readBoolean);
         o.put(boolean.class, ReaderCell::readBoolean);
         o.put(Date.class, ReaderCell::readDate);
+        o.put(LocalDateTime.class, ReaderCell::readLocalDateTime);
     }
 
     private Integer colAt;

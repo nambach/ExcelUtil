@@ -23,7 +23,7 @@ public class Sample2 {
             .column(1, "title", TypeValidator::notNull)
             .column(2, "author", v -> v.isString().notBlank("Must provide author"))
             .column(3, "rating", v -> v.isDecimal().notNull().between(0, 5, "Rating must be between 0 and 5"))
-            .column("First Published", "firstPublished")
+            .column("First Published", "firstPublished1")
             .column("Category", "subCategory");
 
 

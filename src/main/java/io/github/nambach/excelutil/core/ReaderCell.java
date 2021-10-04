@@ -129,7 +129,7 @@ public class ReaderCell extends ReaderController {
     }
 
     /**
-     * @return date value of the cell as {@link LocalDateTime} (if the actually data is stored as date).
+     * @return date value of the cell as {@link LocalDateTime} (if the actual data is stored as date).
      */
     public LocalDateTime readLocalDateTime() {
         if (cell.getCellType() == CellType.NUMERIC) {

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -18,6 +19,7 @@ public class Book {
     private String title;
     private double rating;
     private Date firstPublished;
+    private LocalDateTime firstPublished1;
     private String author;
     private String subCategory;
     private Category category;
