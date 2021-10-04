@@ -6,6 +6,7 @@ import io.github.nambach.excelutil.core.RowError;
 import io.github.nambach.excelutil.util.FileUtil;
 import io.github.nambach.excelutil.validator.FieldError;
 import io.github.nambach.excelutil.validator.ObjectError;
+import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.SneakyThrows;
 import model.Book;
 
@@ -19,7 +20,7 @@ public class Sample2 {
             .dataFromRow(2)
 //            .exitWhenValidationFailed(true)
             .column(0, "isbn", v -> v.isString().lengthBetween(10, 13, "Length must between 10 and 13"))
-            .column(1, "title", v -> v.notNull("Title must not be null"))
+            .column(1, "title", TypeValidator::notNull)
             .column(2, "author", v -> v.isString().notBlank("Must provide author"))
             .column(3, "rating", v -> v.isDecimal().notNull().between(0, 5, "Rating must be between 0 and 5"))
             .column("First Published", "firstPublished")

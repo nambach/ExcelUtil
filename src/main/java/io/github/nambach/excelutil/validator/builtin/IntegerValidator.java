@@ -1,12 +1,14 @@
 package io.github.nambach.excelutil.validator.builtin;
 
+import io.github.nambach.excelutil.validator.Constraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 
-import java.util.List;
-
-import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.BoundInteger;
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.BetweenInteger;
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.BetweenIntegerExclusive;
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.GreaterThanInteger;
 import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.IsInteger;
+import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.LessThanInteger;
 import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.MaxInteger;
 import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.MinInteger;
 
@@ -14,24 +16,11 @@ import static io.github.nambach.excelutil.validator.builtin.IntegerConstraint.Mi
 public class IntegerValidator extends TypeValidator {
 
     IntegerValidator() {
-    }
+        Constraint.Set temp = new Constraint.Set();
+        temp.add(IsInteger);
+        temp.addAll(constraints);
 
-    private void preCheck() {
-        if (containOnlyBased()) {
-            constraints.add(IsInteger);
-        }
-    }
-
-    @Override
-    public String quickTest(Object value) {
-        preCheck();
-        return super.quickTest(value);
-    }
-
-    @Override
-    public List<String> test(Object value) {
-        preCheck();
-        return super.test(value);
+        constraints = temp;
     }
 
     @Override
@@ -67,12 +56,42 @@ public class IntegerValidator extends TypeValidator {
     }
 
     public IntegerValidator between(long min, long max) {
-        constraints.add(BoundInteger.apply(min, max));
+        constraints.add(BetweenInteger.apply(min, max));
         return this;
     }
 
     public IntegerValidator between(long min, long max, String message) {
-        constraints.add(BoundInteger.apply(min, max).withMessage(message));
+        constraints.add(BetweenInteger.apply(min, max).withMessage(message));
+        return this;
+    }
+
+    public IntegerValidator greaterThan(long min) {
+        constraints.add(GreaterThanInteger.apply(min));
+        return this;
+    }
+
+    public IntegerValidator greaterThan(long min, String message) {
+        constraints.add(GreaterThanInteger.apply(min).withMessage(message));
+        return this;
+    }
+
+    public IntegerValidator lessThan(long min) {
+        constraints.add(LessThanInteger.apply(min));
+        return this;
+    }
+
+    public IntegerValidator lessThan(long min, String message) {
+        constraints.add(LessThanInteger.apply(min).withMessage(message));
+        return this;
+    }
+
+    public IntegerValidator betweenExclusive(long min, long max) {
+        constraints.add(BetweenIntegerExclusive.apply(min, max));
+        return this;
+    }
+
+    public IntegerValidator betweenExclusive(long min, long max, String message) {
+        constraints.add(BetweenIntegerExclusive.apply(min, max).withMessage(message));
         return this;
     }
 }
