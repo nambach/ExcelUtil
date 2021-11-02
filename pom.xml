@@ -52,7 +52,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <org.apache.poi.version>5.0.0</org.apache.poi.version>
+        <org.apache.poi.version>5.1.0</org.apache.poi.version>
     </properties>
 
     <dependencies>
