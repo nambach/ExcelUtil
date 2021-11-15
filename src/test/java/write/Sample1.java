@@ -7,6 +7,7 @@ import io.github.nambach.excelutil.util.FileUtil;
 import model.Book;
 import model.Constant;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
+import org.apache.poi.ss.usermodel.IndexedColors;
 
 import java.io.InputStream;
 
@@ -33,7 +34,13 @@ public class Sample1 {
     static final Style HIGH_RATE = Style
             .builder().bold(true)
             .fontColorInHex("#008000")  // green
+            .backgroundColor(IndexedColors.WHITE)
             .build();
+
+    static final Style BROWN = Style
+            .builder()
+            .fontColor(IndexedColors.WHITE)
+            .backgroundColorInHex("#990000").build();
 
     static final Style FAVORITE_ONE = Style.builder().backgroundColorInHex("#FFB6C1").build();
 
