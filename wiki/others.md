@@ -8,7 +8,8 @@ Editor editor = new Editor();
 ...
 
 Workbook wb = editor.getPoiWorkbook();
-Sheet sheet = editor.getCurrentPoiSheet();
+Sheet sheet = editor.getCurrentPoiSheet(); // nullable
+Cell cell = editor.getCurrentPoiCell(); // nullable
 ```
 
 In `ReaderConfig<T>`, you can retrieve the POI `Cell` as below.
@@ -27,22 +28,35 @@ ReaderConfig<Book> READER_CONFIG = ReaderConfig
 
 # Write large data with POI `SXSSFWorkbook`
 
-**ExcelUtil** act as a wrapper of `Workbook`. Therefore you can provide a `SXSSFWorkbook` for processing large data (read more at [official page](http://poi.apache.org/components/spreadsheet/how-to.html#sxssf)).
+**ExcelUtil** acts as a wrapper of `Workbook`. Therefore you can provide an `SXSSFWorkbook` for processing large data (read more at [official page](http://poi.apache.org/components/spreadsheet/how-to.html#sxssf)).
 
 ```java
 SXSSFWorkbook wb = new SXSSFWorkbook(100); // specify the "window size" of 100 rows
 Editor editor = new Editor(wb);
 ```
 
-In order to let `SXSSFWorkbook` works effectively, please remember **not to set auto-size columns** for the sheet, since the calculation process is expensive.
+To let `SXSSFWorkbook` works effectively, please remember **not to set auto-size columns** for the sheet, since the calculation process is expensive.
 
-Here is the comparison when writing 10,000 rows into Excel file. 
-- The first benchmark (`LargeSample.testLargeXlsx`) uses `Editor` with the `SXSSFWorkbook` having "window size" of 100. Average runtime is 0.32s.
-- The second benchmark uses normal `Editor` with the default `XSSFWorkbook`. Average runtime is 1.26s.
+Here is the comparison when writing 10,000 rows.
+
+- The first benchmark (`LargeSample.testLargeXlsx`) uses `Editor` with the `SXSSFWorkbook` having "window size" of 100. The average runtime is 0.32s.
+- The second benchmark uses normal `Editor` with the default `XSSFWorkbook`. The average runtime is 1.26s.
 
 ![benchmark_writing](https://raw.githubusercontent.com/nambach/ExcelUtil/master/wiki/img/benchmark_writing.png)
 
-*(Benchmarks are performed using [**Java Microbenchmark Harness**](https://github.com/openjdk/jmh))*
+_(Benchmarks are performed using [**Java Microbenchmark Harness**](https://github.com/openjdk/jmh))_
+
+# Add comments
+
+To add comments to a cell, you can do as below. Notice that the size of the comment box will depend on the size of the cell.
+
+```java
+editor.goToCell("C4")
+      .writeComment(c -> c.content("Hello World")
+                          .colSpan(2));
+```
+
+![comments](https://raw.githubusercontent.com/nambach/ExcelUtil/master/wiki/img/comment.png)
 
 # Drop-down values for cells
 
