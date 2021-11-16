@@ -98,26 +98,33 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         return this.currentSheet;
     }
 
-    // Sheet navigation
-    private void resetPointer() {
-        enter();
+    public Cell getCurrentPoiCell() {
+        if (this.currentSheet == null) {
+            return null;
+        }
+        return getCellAt(currentSheet, navigation);
     }
 
+    // Sheet navigation
     private int getNextRowIndex() {
         return getSheet().getLastRowNum() + 1;
     }
 
     public Editor goToSheet(int index) {
+        // Empty workbook => create the first sheet
         if (workbook.getNumberOfSheets() == 0) {
             goToSheet("Sheet1");
-        } else if (index < 0) {
+            return this;
+        }
+
+        // Get the existing sheet
+        if (index < 0) {
             this.currentSheet = workbook.getSheetAt(0);
         } else if (index + 1 > workbook.getNumberOfSheets()) {
             this.currentSheet = workbook.getSheetAt(workbook.getNumberOfSheets() - 1);
         } else {
             this.currentSheet = workbook.getSheetAt(index);
         }
-        resetPointer();
         return this;
     }
 
@@ -127,7 +134,6 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         } else {
             this.currentSheet = workbook.createSheet(sheetName);
         }
-        resetPointer();
         return this;
     }
 
