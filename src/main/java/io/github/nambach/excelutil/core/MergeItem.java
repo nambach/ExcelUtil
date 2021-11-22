@@ -22,8 +22,8 @@ class MergeItem {
         if (this.needMerge()) {
             cell.getCellStyle().setWrapText(true);
             cell.getSheet()
-                .addMergedRegion(new CellRangeAddress(this.fromRow, this.toRow,
-                                                      cell.getColumnIndex(), cell.getColumnIndex()));
+                .addMergedRegionUnsafe(new CellRangeAddress(this.fromRow, this.toRow,
+                                                            cell.getColumnIndex(), cell.getColumnIndex()));
         }
     }
 
