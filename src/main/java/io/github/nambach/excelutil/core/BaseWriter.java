@@ -18,6 +18,9 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -43,6 +46,10 @@ class BaseWriter implements BaseEditor {
         o.put(Float.class, (cell, val) -> cell.setCellValue((float) val));
         o.put(Boolean.class, (cell, val) -> cell.setCellValue((boolean) val));
         o.put(Date.class, (cell, val) -> cell.setCellValue((Date) val));
+        o.put(LocalDateTime.class, (cell, val) -> cell.setCellValue((LocalDateTime) val));
+        o.put(LocalDate.class, (cell, val) -> cell.setCellValue((LocalDate) val));
+        o.put(Calendar.class, (cell, val) -> cell.setCellValue((Calendar) val));
+        o.put(RichTextString.class, (cell, val) -> cell.setCellValue((RichTextString) val));
     }
 
     final CacheStyle cachedStyles;
