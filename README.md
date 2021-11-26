@@ -1,8 +1,10 @@
-# Data Excel Exporter
+# ExcelUtil from Apache POI
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.3.4)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
 
-A Java wrapper using [Apache POI](http://poi.apache.org/components/spreadsheet/quick-guide.html) to read and write Excel file in declarative fashion.
+**ExcelUtil** is a Java wrapper using Apache POI to read and write Excel file in declarative fashion.
+
+This library is also introduced as ["Related Project"](http://poi.apache.org/related-projects.html) on Apache POI's official website.
 
 ## Installation
 
