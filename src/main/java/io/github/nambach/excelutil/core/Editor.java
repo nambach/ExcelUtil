@@ -110,6 +110,12 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         return getSheet().getLastRowNum() + 1;
     }
 
+    /**
+     * Navigate to sheet at provided index. If there is no sheet, "Sheet1" will be created
+     *
+     * @param index target index
+     * @return current editor
+     */
     public Editor goToSheet(int index) {
         // Empty workbook => create the first sheet
         if (workbook.getNumberOfSheets() == 0) {
@@ -125,15 +131,25 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
         } else {
             this.currentSheet = workbook.getSheetAt(index);
         }
+
+        resetPointer();
         return this;
     }
 
+    /**
+     * Navigate to sheet with provided name. If no sheet was found, a new sheet will be appended with provided name.
+     *
+     * @param sheetName name of sheet
+     * @return current editor
+     */
     public Editor goToSheet(String sheetName) {
         if (workbook.getSheet(sheetName) != null) {
             this.currentSheet = workbook.getSheet(sheetName);
         } else {
             this.currentSheet = workbook.createSheet(sheetName);
         }
+
+        resetPointer();
         return this;
     }
 
@@ -168,6 +184,10 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
     }
 
     // Cell navigation
+    private void resetPointer() {
+        goToCell(0, 0);
+    }
+
     @Override
     public Editor goToCell(String address) {
         navigation.goToCell(address);
