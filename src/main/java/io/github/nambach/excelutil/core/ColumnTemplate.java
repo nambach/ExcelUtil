@@ -25,18 +25,18 @@ public class ColumnTemplate<T> extends ArrayList<ColumnMapper<T>> {
     }
 
     /**
-     * Split the mapping rules to a new template.
+     * Filter the mapping rules to a new template.
      *
      * @param condition a {@link Predicate} that filters out mapping rules that need to keep
      * @return a copied template (which is not modified the original)
      */
-    public ColumnTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
-        return internalSplit(new ColumnTemplate<>(tClass), condition);
+    public ColumnTemplate<T> filter(Predicate<ColumnMapper<T>> condition) {
+        return internalFilter(new ColumnTemplate<>(tClass), condition);
     }
 
-    protected ColumnTemplate<T> internalSplit(ColumnTemplate<T> clone, Predicate<ColumnMapper<T>> condition) {
+    protected ColumnTemplate<T> internalFilter(ColumnTemplate<T> clone, Predicate<ColumnMapper<T>> condition) {
         Objects.requireNonNull(condition);
-        clone.removeIf(condition);
+        clone.removeIf(condition.negate());
         return clone;
     }
 

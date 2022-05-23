@@ -70,15 +70,15 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
     }
 
     /**
-     * Split the mapping rules to a new template.
+     * Filter the mapping rules to a new template.
      *
      * @param condition a {@link Predicate} that filters out mapping rules that need to keep
      * @return a copied template (which is not modified the original)
      */
     @Override
-    public DataTemplate<T> split(Predicate<ColumnMapper<T>> condition) {
+    public DataTemplate<T> filter(Predicate<ColumnMapper<T>> condition) {
         DataTemplate<T> clone = this.makeCopy();
-        this.internalSplit(clone, condition);
+        this.internalFilter(clone, condition);
         return clone;
     }
 
