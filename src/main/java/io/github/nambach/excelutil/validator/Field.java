@@ -5,6 +5,7 @@ import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -12,6 +13,7 @@ import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 @Getter(AccessLevel.PACKAGE)
+@Log4j2
 public class Field<T> {
     private final Class<T> tClass;
     private Function<T, ?> extractor;
@@ -51,7 +53,7 @@ public class Field<T> {
                 try {
                     return pd.getReadMethod().invoke(o);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
+                    log.error("Cannot read field '" + fieldName + "' of class '" + tClass.getName() + "'.", e);
                     return null;
                 }
             };

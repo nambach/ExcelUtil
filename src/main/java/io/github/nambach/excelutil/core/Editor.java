@@ -5,6 +5,7 @@ import io.github.nambach.excelutil.style.HSSFColorCache;
 import io.github.nambach.excelutil.style.Style;
 import io.github.nambach.excelutil.util.PixelUtil;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -30,6 +31,7 @@ import java.util.function.UnaryOperator;
 
 import static io.github.nambach.excelutil.util.ListUtil.groupBy;
 
+@Log4j2
 public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseable, Iterable<Sheet> {
     private final Workbook workbook;
     private final BaseWriter writer;
@@ -368,12 +370,13 @@ public class Editor implements BaseEditor, FreestyleWriter<Editor>, AutoCloseabl
             workbook.write(out);
             ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
             out.close();
-            System.out.println("Excel file was successfully saved\n" +
-                               (isDebug ? writer.cachedStyles.printTotalStyle() : ""));
+            log.info("Excel file was successfully saved.");
+            if (isDebug) {
+                log.info(writer.cachedStyles.printTotalStyle());
+            }
             return in;
         } catch (Exception e) {
-            System.err.println("There some error writing excel file:");
-            e.printStackTrace();
+            log.error("There some error writing excel file.", e);
             return null;
         }
     }

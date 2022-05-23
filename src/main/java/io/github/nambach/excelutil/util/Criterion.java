@@ -2,6 +2,7 @@ package io.github.nambach.excelutil.util;
 
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.extern.log4j.Log4j2;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 @Getter(AccessLevel.PACKAGE)
+@Log4j2
 public class Criterion<T> {
     private Function<T, ?> valueExtractor;
     private Direction direction = Direction.ASC;
@@ -66,7 +68,7 @@ public class Criterion<T> {
             try {
                 return pd.getReadMethod().invoke(object);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
+                log.error("Cannot read field '" + fieldName + "' of class '" + tClass.getName() + "'.", e);
                 return null;
             }
         }

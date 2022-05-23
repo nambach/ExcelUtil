@@ -53,6 +53,7 @@
     <properties>
         <java.version>1.8</java.version>
         <org.apache.poi.version>5.2.2</org.apache.poi.version>
+        <org.apache.logging.log4j>2.17.2</org.apache.logging.log4j>
     </properties>
 
     <dependencies>
@@ -71,6 +72,17 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${org.apache.poi.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${org.apache.logging.log4j}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>${org.apache.logging.log4j}</version>
         </dependency>
 
         <dependency>

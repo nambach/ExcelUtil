@@ -5,6 +5,7 @@ import io.github.nambach.excelutil.validator.builtin.TypeValidator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.log4j.Log4j2;
 import lombok.var;
 
 import java.beans.PropertyDescriptor;
@@ -25,6 +26,7 @@ import java.util.function.UnaryOperator;
  */
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
+@Log4j2
 public class Handler<T> {
 
     private static final Map<Class<?>, Function<ReaderCell, Object>> FIELD_READERS = new HashMap<>();
@@ -136,7 +138,7 @@ public class Handler<T> {
             try {
                 setter.invoke(object, cellValue);
             } catch (Exception e) {
-                System.err.println("Error while invoking setter: " + e.getMessage());
+                log.error("Error while invoking setter.", e);
             }
         };
 

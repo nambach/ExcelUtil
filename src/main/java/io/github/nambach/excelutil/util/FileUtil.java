@@ -1,5 +1,6 @@
 package io.github.nambach.excelutil.util;
 
+import lombok.extern.log4j.Log4j2;
 import org.apache.poi.util.IOUtils;
 
 import java.io.File;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.StandardCopyOption;
 
+@Log4j2
 public class FileUtil {
     private FileUtil() {
     }
@@ -22,8 +24,7 @@ public class FileUtil {
                     targetFile.toPath(),
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            System.err.println("Some error happened: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Some error happened while writing file to disk.", e);
         }
 
         if (closeQuietly) {

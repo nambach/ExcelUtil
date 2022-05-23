@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 import org.apache.poi.ss.util.CellAddress;
 
 import java.io.ByteArrayInputStream;
@@ -26,6 +27,7 @@ import java.util.function.UnaryOperator;
 @Getter(AccessLevel.PACKAGE)
 @Setter(AccessLevel.PACKAGE)
 @EqualsAndHashCode(callSuper = true)
+@Log4j2
 public class DataTemplate<T> extends ColumnTemplate<T> {
 
     private int rowAt;
@@ -243,7 +245,7 @@ public class DataTemplate<T> extends ColumnTemplate<T> {
     @SneakyThrows
     public ReaderConfig<T> getReaderConfig() {
         if (noHeader) {
-            System.err.println("WARNING: Source file must include header row; 'noHeader=true' found");
+            log.error("WARNING: Source file must include header row; 'noHeader=true' found.");
         }
         ReaderConfig<T> config = ReaderConfig.fromClass(tClass);
         config.titleAtRow(rowAt);
