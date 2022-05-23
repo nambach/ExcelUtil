@@ -1,6 +1,7 @@
 package io.github.nambach.excelutil.util;
 
 import lombok.SneakyThrows;
+import lombok.extern.log4j.Log4j2;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -11,6 +12,7 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+@Log4j2
 public class ReflectUtil {
 
     private static final Map<String, Map<String, PropertyDescriptor>> CACHED_SCHEME = new HashMap<>();
@@ -50,8 +52,7 @@ public class ReflectUtil {
                 map.put(pd.getName(), pd);
             }
         } catch (IntrospectionException e) {
-            System.err.println("Could not initialize property descriptor map.");
-            e.printStackTrace();
+            log.error("Could not initialize property descriptor map.", e);
         }
 
         // Save cache
@@ -72,7 +73,7 @@ public class ReflectUtil {
 
                 pd.getWriteMethod().invoke(source, value);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Merge object error.", e);
             }
         });
     }
@@ -94,8 +95,7 @@ public class ReflectUtil {
         try {
             return func.apply(input);
         } catch (Exception e) {
-            System.err.println("Error when applying function: " + e.getMessage());
-            e.printStackTrace();
+            log.error("Error when applying function.", e);
             return null;
         }
     }
@@ -105,8 +105,7 @@ public class ReflectUtil {
             try {
                 return function.apply(t);
             } catch (Exception e) {
-                System.err.println("Error while applying function: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error while applying function.", e);
                 return null;
             }
         };
@@ -117,8 +116,7 @@ public class ReflectUtil {
             try {
                 consumer.accept(t, u);
             } catch (Exception e) {
-                System.err.println("Error while applying BiConsumer: " + e.getMessage());
-                e.printStackTrace();
+                log.error("Error while applying BiConsumer.", e);
             }
         };
     }

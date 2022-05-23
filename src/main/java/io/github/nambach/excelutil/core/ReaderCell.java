@@ -6,6 +6,7 @@ import io.github.nambach.excelutil.util.TextUtil;
 import io.github.nambach.excelutil.validator.builtin.DecimalValidator;
 import io.github.nambach.excelutil.validator.builtin.IntegerValidator;
 import io.github.nambach.excelutil.validator.builtin.TypeValidator;
+import lombok.extern.log4j.Log4j2;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -18,6 +19,7 @@ import java.util.List;
 /**
  * Contains information of the current read cell.
  */
+@Log4j2
 public class ReaderCell extends ReaderController {
     /**
      * Original Apache POI {@link Cell}
@@ -84,7 +86,7 @@ public class ReaderCell extends ReaderController {
         try {
             return Double.parseDouble(s);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Cannot parse string to double.", e);
             return null;
         }
     }
@@ -93,7 +95,7 @@ public class ReaderCell extends ReaderController {
         try {
             return Boolean.parseBoolean(s);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Cannot parse string to boolean.", e);
             return null;
         }
     }
