@@ -20,7 +20,7 @@ ExcelUtil is using Apache POI version 5.2.2
 
 # Usage Guides
 
-For more detail guides & example, see the [Wiki page](https://github.com/nambach/ExcelUtil/wiki).
+For full detail guides & example, see the [Wiki page](https://github.com/nambach/ExcelUtil/wiki).
 
 # Quick Guides
 
