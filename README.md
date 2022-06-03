@@ -26,6 +26,24 @@ For more detail guides & example, see the [Wiki page](https://github.com/nambach
 
 ## Write Excel
 
+Here we have a simple class `Book`:
+
+```java
+class Book {
+    private String isbn;
+    private String title;
+    private double rating;
+    private String author;
+    private String subCategory;
+    private Category category;
+    
+    static class Category {
+        private long id;
+        private String name;
+    }
+}
+```
+
 ### **A very simple usage**
 
 The core building block to write data is `DataTemplate<T>`. It holds mapping rules of the DTO class you need to export Excel.
