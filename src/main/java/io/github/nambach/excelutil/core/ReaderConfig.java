@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 /**
  * A configuration object containing rules for reading
@@ -279,6 +280,16 @@ public class ReaderConfig<T> {
                     .goToCell(base.getRow(), base.getCol())
                     .readSection(this);
         }
+    }
+
+    /**
+     * Read data from Excel and convert to stream of data directly.
+     *
+     * @param stream byte stream
+     * @return stream of DTO
+     */
+    public Stream<T> readSheetToStream(InputStream stream, String sheetName) {
+        return readSheet(stream, sheetName).stream();
     }
 
     /**

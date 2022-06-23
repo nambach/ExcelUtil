@@ -22,18 +22,21 @@ DataTemplate<T> bookTemplate = ...
 ReaderConfig<Book> readerConfig = bookTemplate.getReaderConfig();
 ```
 
-The config provides 2 options: reading a single sheet as list, or reading multiple/all sheets as map of list.
+The config provides 2 options: reading a single sheet as list/stream, or reading multiple/all sheets as map of list.
 
 ```java
 InputStream stream = FileUtil.readFromDisk(".../book.xlsx");
 
-// Read a single sheet
+/* Read a single sheet */
 Result<Book> books = readerConfig.readSheet(stream);
 for (Book book : books) {
     // Result<Book> is iterable
 }
+// convert to stream directly
+Stream<Book> bookStream = readerConfig.readSheetToStream(stream);
 
-// Read multiple sheets
+
+/* Read multiple sheets */
 Map<String, Result<Book>> bookMap = readerConfig.readAllSheets(stream);
 bookMap.forEach((sheetName, bookList) -> {
     for (Book book : bookList) {
