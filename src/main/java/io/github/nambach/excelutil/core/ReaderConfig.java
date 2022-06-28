@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /**
@@ -270,7 +271,7 @@ public class ReaderConfig<T> {
      * @param sheetName name of sheet to read
      * @return list of DTO
      */
-    public List<T> readSheet(InputStream stream, String sheetName) {
+    public Result<T> readSheet(InputStream stream, String sheetName) {
         Pointer base = getBaseCoordinate();
         try (Editor editor = new Editor(stream)) {
             int index = editor.getPoiWorkbook().getSheetIndex(sheetName);
@@ -278,6 +279,71 @@ public class ReaderConfig<T> {
                     .goToSheet(index)
                     .goToCell(base.getRow(), base.getCol())
                     .readSection(this);
+        }
+    }
+
+    /**
+     * If no error, read data from Excel and convert to list of data, otherwise throw an exception.
+     *
+     * @param stream            byte stream
+     * @param sheetIndex        index of sheet to read
+     * @param exceptionFunction function that produces an exception to be thrown
+     * @param <X>               type of the exception to be thrown
+     * @return list of DTO
+     * @throws X                    if reading has errors
+     * @throws NullPointerException if reading has errors and the exception supplying function is {@code null}
+     */
+    public <X extends Throwable> List<T> readSheetOrThrow(
+            InputStream stream,
+            int sheetIndex,
+            Function<List<RowError>, ? extends X> exceptionFunction
+    ) throws X {
+        final Result<T> unsafeResult = readSheet(stream, sheetIndex);
+        if (unsafeResult.hasErrors()) {
+            throw exceptionFunction.apply(unsafeResult.getErrors());
+        } else {
+            return unsafeResult;
+        }
+    }
+
+    /**
+     * If no error, read data from Excel and convert to list of data, otherwise throw an exception.
+     *
+     * @param stream            byte stream
+     * @param exceptionFunction function that produces an exception to be thrown
+     * @param <X>               type of the exception to be thrown
+     * @return list of DTO
+     * @throws X                    if reading has errors
+     * @throws NullPointerException if reading has errors and the exception supplying function is {@code null}
+     */
+    public <X extends Throwable> List<T> readSheetOrThrow(
+            InputStream stream,
+            Function<List<RowError>, ? extends X> exceptionFunction
+    ) throws X {
+        return readSheetOrThrow(stream, 0, exceptionFunction);
+    }
+
+    /**
+     * If no error, read data from Excel and convert to list of data, otherwise throw an exception.
+     *
+     * @param stream            byte stream
+     * @param sheetName         name of sheet to read
+     * @param exceptionFunction function that produces an exception to be thrown
+     * @param <X>               type of the exception to be thrown
+     * @return list of DTO
+     * @throws X                    if reading has errors
+     * @throws NullPointerException if reading has errors and the exception supplying function is {@code null}
+     */
+    public <X extends Throwable> List<T> readSheetOrThrow(
+            InputStream stream,
+            String sheetName,
+            Function<List<RowError>, ? extends X> exceptionFunction
+    ) throws X {
+        final Result<T> unsafeResult = readSheet(stream, sheetName);
+        if (unsafeResult.hasErrors()) {
+            throw exceptionFunction.apply(unsafeResult.getErrors());
+        } else {
+            return unsafeResult;
         }
     }
 
