@@ -1,6 +1,6 @@
 # ExcelUtil from Apache POI
 
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.5.0)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.nambach/ExcelUtil?versionPrefix=2&versionSuffix=.5.1)](https://mvnrepository.com/artifact/io.github.nambach/ExcelUtil)
 
 **ExcelUtil** is a Java wrapper using Apache POI to read and write Excel file in declarative fashion.
 
@@ -8,13 +8,13 @@ This library is also introduced as ["Related Project"](http://poi.apache.org/rel
 
 ## Installation
 
-ExcelUtil is using Apache POI version 5.2.2
+ExcelUtil is using Apache POI version 5.2.5
 
 ```xml
 <dependency>
     <groupId>io.github.nambach</groupId>
     <artifactId>ExcelUtil</artifactId>
-    <version>2.5.0</version>
+    <version>2.5.1</version>
 </dependency>
 ```
 

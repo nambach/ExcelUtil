@@ -22,7 +22,7 @@ public class TestRead {
     @Test
     @SneakyThrows
     public void testFiction() {
-        InputStream stream = FileUtil.readFromDisk("C:\\Users\\Nam Bach\\Desktop\\fiction.xlsx");
+        InputStream stream = FileUtil.readFromDisk("src/test/java/resources/fiction.xlsx");
         Result<Book> fictions = CONFIG.readSheet(stream);
         int count = (int) fictions.stream().filter(book -> book.getSubCategory().equals("Fiction")).count();
         System.out.println(count);
@@ -32,7 +32,7 @@ public class TestRead {
     @Test
     @SneakyThrows
     public void testNonFiction() {
-        InputStream stream = FileUtil.readFromDisk("C:\\Users\\Nam Bach\\Desktop\\nonFiction.xlsx");
+        InputStream stream = FileUtil.readFromDisk("src/test/java/resources/nonFiction.xlsx");
         Result<Book> nonFictions = CONFIG.readSheet(stream);
         int count = (int) nonFictions.stream().filter(book -> book.getSubCategory().equals("Non-fiction")).count();
         System.out.println(count);
@@ -42,7 +42,7 @@ public class TestRead {
     @Test
     @SneakyThrows
     public void testScience() {
-        InputStream stream = FileUtil.readFromDisk("C:\\Users\\Nam Bach\\Desktop\\science.xlsx");
+        InputStream stream = FileUtil.readFromDisk("src/test/java/resources/science.xlsx");
         Result<Book> science = CONFIG.readSheet(stream);
         int count = (int) science.stream().filter(book -> book.getSubCategory().equals("Science")).count();
         System.out.println(count);

@@ -28,8 +28,8 @@ public class TestReadConfig {
             .makeCopy()
             .config(cf -> cf.noHeader(true));
 
-    static final String fileName = "C:\\Users\\Nam Bach\\Desktop\\test-books.xlsx";
-    static final String fileNameNoHeader = "C:\\Users\\Nam Bach\\Desktop\\test-books-no-header.xlsx";
+    static final String fileName = "src/test/java/resources/test-books.xlsx";
+    static final String fileNameNoHeader = "src/test/java/resources/test-books-no-header.xlsx";
 
     @Before
     public void initFile() {
